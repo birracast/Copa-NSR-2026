@@ -490,7 +490,7 @@ header {
         <input type="password" id="l-pass" class="finput" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
       <button class="btn-main" onclick="doLogin()" id="btn-login">ENTRAR →</button>
-      <div class="demo-hint">Demo: <strong>admin@bolao.com</strong> / <strong>admin123</strong></div>
+      <div class="demo-hint"></div>
     </div>
 
     <!-- REGISTER -->
@@ -1536,22 +1536,47 @@ function renderRanking() {
   document.getElementById('rank-table').innerHTML=html||'<div style="color:var(--muted);text-align:center;padding:40px">Nenhum participante ainda.</div>';
 }
 
+function isAdmin(){
+ const u=S.users[S.me];
+ return !!(u && u.isAdmin);
+}
+
 // ================================================================
 //  RENDER SETTINGS
 // ================================================================
 function renderSettingsPage() {
   updateDataSourceLabel();
+  const admin=isAdmin();
+
   document.getElementById('s-exact').value=S.settings.exact;
   document.getElementById('s-result').value=S.settings.result;
   document.getElementById('s-streak').value=S.settings.streak;
   document.getElementById('s-semi').value=S.settings.semi;
   document.getElementById('s-final').value=S.settings.final;
   document.getElementById('s-url').value=GS_URL;
-  const sel=document.getElementById('adm-game');
-  sel.innerHTML=GAMES.map(g=>`<option value="${g.id}">${g.hCode} vs ${g.aCode} (${formatDate(g.date)})</option>`).join('');
+
+  ['s-exact','s-result','s-streak','s-semi','s-final','s-url','adm-game','adm-a','adm-b','adm-status']
+  .forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.disabled=!admin;
+  });
+
+  document.querySelectorAll('#page-settings button').forEach(btn=>{
+    btn.disabled=!admin;
+    btn.style.opacity=admin?'1':'0.5';
+  });
+
+  let existing=document.getElementById('readonly-warning');
+
+  if(!admin && !existing){
+    const div=document.createElement('div');
+    div.id='readonly-warning';
+    div.innerHTML=`<div style="background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);padding:14px;margin-bottom:15px;border-radius:10px;color:var(--gold)">🔒 Modo somente leitura. Apenas administradores podem alterar configurações.</div>`;
+    document.querySelector('#page-settings').prepend(div);
+  }
 }
 
-function saveSettings() {
+function saveSettings() { if(!isAdmin()){toast('Apenas administradores podem alterar isso','warn');return;}
   S.settings.exact=parseInt(document.getElementById('s-exact').value)||10;
   S.settings.result=parseInt(document.getElementById('s-result').value)||5;
   S.settings.streak=parseInt(document.getElementById('s-streak').value)||5;
@@ -1561,14 +1586,14 @@ function saveSettings() {
   toast('Configurações salvas!','ok');
 }
 
-function saveGSConfig() {
+function saveGSConfig() { if(!isAdmin()){toast('Apenas administradores podem alterar isso','warn');return;}
   const url=document.getElementById('s-url').value.trim();
   GS_URL=url; localStorage.setItem('gs_url',url);
   toast('URL do Google Sheets salva! ✅','ok');
   refreshTournamentData();
 }
 
-function adminSetResult() {
+function adminSetResult() { if(!isAdmin()){toast('Acesso negado','err');return;}
   const id=parseInt(document.getElementById('adm-game').value);
   const h=parseInt(document.getElementById('adm-a').value);
   const a=parseInt(document.getElementById('adm-b').value);
