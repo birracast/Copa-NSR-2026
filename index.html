@@ -1304,8 +1304,16 @@ async function gsSave(email, gameId, h, a) {
 
 async function gsSaveUser(user) {
   if (!GS_URL || GS_URL.includes('COLE_AQUI')) return;
-  // Avatar nao e enviado via GET (muito grande) - fica no localStorage do usuario
-  try { await gsCall({ action:'saveUser', email:user.email, name:user.name, team:user.team, motto:user.motto }); } catch(e) {}
+  try { 
+    await gsCall({ 
+      action:'saveUser', 
+      email:user.email, 
+      name:user.name, 
+      team:user.team, 
+      motto:user.motto, 
+      avatar:user.avatar // <-- Agora o link da foto vai para o Sheets!
+    }); 
+  } catch(e) {}
 }
 
 async function gsLoadAll() {
