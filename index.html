@@ -843,7 +843,31 @@ header {
 const GS_URL = 'https://script.google.com/macros/s/AKfycbxbK2qzW1zxmoR9Tb3J3UnNK0xkbzn2AATWK35S1R_Av21pKjx-tWnIVO5IJR13DhwFKg/exec';
 // Exemplo: const GS_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
 
+// Dicionário Completo de Emojis de Bandeiras (Padrão FIFA)
+const FLAGS_MAP = {
+  // Américas (Sedes e Conmebol/Concacaf)
+  'BRA':'🇧🇷', 'ARG':'🇦🇷', 'USA':'🇺🇸', 'MEX':'🇲🇽', 'CAN':'🇨🇦', 
+  'URU':'🇺🇾', 'COL':'🇨🇴', 'ECU':'🇪🇨', 'PER':'🇵🇪', 'CHI':'🇨🇱', 
+  'VEN':'🇻🇪', 'PAR':'🇵🇾', 'BOL':'🇧🇴', 'CRC':'🇨🇷', 'PAN':'🇵🇦', 'JAM':'🇯🇲',
+  
+  // Europa (UEFA)
+  'FRA':'🇫🇷', 'ENG':'🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'ESP':'🇪🇸', 'GER':'🇩🇪', 'POR':'🇵🇹', 
+  'ITA':'🇮🇹', 'CRO':'🇭🇷', 'NED':'🇳🇱', 'BEL':'🇧🇪', 'SUI':'🇨🇭', 
+  'POL':'🇵🇱', 'DEN':'🇩🇰', 'SWE':'🇸🇪', 'SRB':'🇷🇸', 'WAL':'🏴󠁧󠁢󠁷󠁬󠁳󠁿', 
+  'SCO':'🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'UKR':'🇺🇦', 'AUT':'🇦🇹', 'TUR':'🇹🇷', 'CZE':'🇨🇿', 'HUN':'🇭🇺',
 
+  // África (CAF)
+  'SEN':'🇸🇳', 'MAR':'🇲🇦', 'CMR':'🇨🇲', 'GHA':'🇬🇭', 'TUN':'🇹🇳', 
+  'NGA':'🇳🇬', 'ALG':'🇩🇿', 'EGY':'🇪🇬', 'CIV':'🇨🇮', 'MLI':'🇲🇱',
+
+  // Ásia e Oceania (AFC e OFC)
+  'JPN':'🇯🇵', 'KOR':'🇰🇷', 'KSA':'🇸🇦', 'AUS':'🇦🇺', 'IRN':'🇮🇷', 
+  'QAT':'🇶🇦', 'NZL':'🇳🇿', 'IRQ':'🇮🇶', 'UAE':'🇦🇪'
+};
+
+function getFlag(code) { return FLAGS_MAP[code] || '🏳️'; }
+
+  
 // ================================================================
 //  FALLBACK GAMES DATA
 // ================================================================
@@ -879,7 +903,7 @@ function buildFallbackGames() {
 }
 
 function makeFallbackGame(data) {
-  return { ...data, hFlag:'🏳️', hName:`Equipe ${data.hCode}`, hLogo:'', aFlag:'🏳️', aName:`Equipe ${data.aCode}`, aLogo:'', venue:'A confirmar', status:'upcoming', result:{h:null,a:null,status:'upcoming'}, source:'fallback' };
+  return { ...data, hFlag:getFlag(data.hCode), hName:`Equipe ${data.hCode}`, hLogo:'', aFlag:getFlag(data.aCode), aName:`Equipe ${data.aCode}`, aLogo:'', venue:'A confirmar', status:'upcoming', result:{h:null,a:null,status:'upcoming'}, source:'fallback' };
 }
 
 // ================================================================
@@ -1204,8 +1228,8 @@ function normalizeClientGame(g) {
   const result = g.result || {};
   return {
     id:parseInt(g.id), apiId:g.apiId||null, phase:g.phase||'A definir', stage:g.stage||'', group:g.group||null,
-    hFlag:g.hFlag||'🏳️', hCode:g.hCode||'CASA', hName:g.hName||g.hCode||'Casa', hLogo:g.hLogo||'',
-    aFlag:g.aFlag||'🏳️', aCode:g.aCode||'FORA', aName:g.aName||g.aCode||'Fora', aLogo:g.aLogo||'',
+    hFlag:g.hFlag || getFlag(g.hCode || g.hName), hCode:g.hCode||'CASA', hName:g.hName||g.hCode||'Casa', hLogo:g.hLogo||'',
+    aFlag:g.aFlag || getFlag(g.aCode || g.aName), aCode:g.aCode||'FORA', aName:g.aName||g.aCode||'Fora', aLogo:g.aLogo||'',
     date:g.date||'', venue:g.venue||'A confirmar',
     status:result.status||g.status||'upcoming',
     result:{ h:result.h!=null?result.h:null, a:result.a!=null?result.a:null, status:result.status||g.status||'upcoming' }
