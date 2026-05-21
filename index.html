@@ -423,14 +423,12 @@ header {
 <body>
 <div id="app">
 
-<!-- ===== LOADING ===== -->
 <div id="loading-overlay">
   <div class="loading-trophy">🏆</div>
   <div class="loading-text">Carregando bolão...</div>
   <div class="loading-spin"></div>
 </div>
 
-<!-- ========== AUTH SCREEN ========== -->
 <div id="screen-auth" class="auth-screen hidden">
   <div class="auth-card">
     <div class="auth-logo">
@@ -444,7 +442,6 @@ header {
     </div>
     <div id="auth-msg"></div>
 
-    <!-- LOGIN -->
     <div id="form-login">
       <div class="fgroup">
         <label class="flabel">E-mail</label>
@@ -457,7 +454,6 @@ header {
       <button class="btn-main" onclick="doLogin()" id="btn-login">ENTRAR →</button>
     </div>
 
-    <!-- REGISTER -->
     <div id="form-reg" class="hidden">
       <div class="fgroup">
         <label class="flabel">Foto do Rosto (opcional)</label>
@@ -475,7 +471,6 @@ header {
   </div>
 </div>
 
-<!-- ========== CHANGE PASSWORD MODAL ========== -->
 <div id="change-pass-modal" class="modal-overlay hidden">
   <div class="modal-box" style="text-align:left">
     <div style="text-align:center;margin-bottom:20px">
@@ -490,7 +485,6 @@ header {
   </div>
 </div>
 
-<!-- ========== MAIN APP ========== -->
 <div id="screen-main" class="hidden">
   <header>
     <div class="header-top">
@@ -523,7 +517,6 @@ header {
     <div class="flag-stripe"></div>
   </header>
 
-  <!-- ===== GAMES PAGE ===== -->
   <div id="page-games" class="main-wrap">
     <div class="hero">
       <div class="sync-bar">
@@ -541,7 +534,6 @@ header {
     <div id="games-content"></div>
   </div>
 
-  <!-- ===== GROUPS PAGE ===== -->
   <div id="page-groups" class="main-wrap hidden">
     <div class="phase-hdr">
       <span class="phase-hdr-text">Classificação por Grupos</span>
@@ -558,7 +550,6 @@ header {
     <div class="groups-grid" id="groups-content"></div>
   </div>
 
-  <!-- ===== RANKING PAGE ===== -->
   <div id="page-ranking" class="main-wrap hidden">
     <div class="phase-hdr">
       <span class="phase-hdr-text">Ranking Geral</span>
@@ -567,7 +558,6 @@ header {
     <div class="rank-table" id="rank-table"></div>
   </div>
 
-  <!-- ===== HELP PAGE ===== -->
   <div id="page-help" class="main-wrap hidden">
     <div class="help-hero">
       <h1>🏆 Como jogar o Bolão?</h1>
@@ -647,33 +637,26 @@ header {
         <div class="help-step">
           <div class="help-step-num">2</div>
           <div class="help-step-body">
-            <h4>Configure o Apps Script (só o admin precisa fazer uma vez)</h4>
-            <p>Vá em <strong>⚙️ Config</strong> e cole a URL do Google Apps Script no campo indicado. Isso conecta o site ao Google Sheets e permite salvar palpites de qualquer dispositivo ou navegador.</p>
-          </div>
-        </div>
-        <div class="help-step">
-          <div class="help-step-num">3</div>
-          <div class="help-step-body">
             <h4>Faça seus palpites</h4>
             <p>Abra a aba <strong>⚽ Jogos</strong>, encontre um jogo que ainda não começou e preencha o placar que você acha que vai acontecer. Os palpites são salvos automaticamente no Google Sheets em segundos.</p>
           </div>
         </div>
         <div class="help-step">
-          <div class="help-step-num">4</div>
+          <div class="help-step-num">3</div>
           <div class="help-step-body">
             <h4>Acompanhe o ranking</h4>
             <p>Durante a Copa, acesse a aba <strong>🏆 Ranking</strong> para ver sua posição. Após cada jogo encerrado, os pontos são calculados e o ranking é atualizado automaticamente.</p>
           </div>
         </div>
         <div class="help-step">
-          <div class="help-step-num">5</div>
+          <div class="help-step-num">4</div>
           <div class="help-step-body">
             <h4>Sincronize sempre</h4>
             <p>O site sincroniza com o Google Sheets a cada 5 minutos automaticamente. Se quiser ver dados atualizados agora, clique em <strong>🔄 Sync</strong> no topo da página de Jogos.</p>
           </div>
         </div>
         <div class="help-step">
-          <div class="help-step-num">6</div>
+          <div class="help-step-num">5</div>
           <div class="help-step-body">
             <h4>Compartilhe com amigos</h4>
             <p>Envie o link do site para seus amigos. Cada um cria sua própria conta e os palpites de todos ficam centralizados no Google Sheets, visíveis para o grupo inteiro.</p>
@@ -693,7 +676,6 @@ header {
     </div>
   </div>
 
-  <!-- ===== SETTINGS PAGE ===== -->
   <div id="page-settings" class="main-wrap hidden">
     <div class="phase-hdr">
       <span class="phase-hdr-text">Configurações</span>
@@ -711,17 +693,12 @@ header {
       <div class="set-card">
         <h3>⚙️ Google Sheets</h3>
         <div class="fgroup">
-          <label class="flabel">Script Web App URL</label>
-          <input type="text" id="s-url" class="finput" placeholder="https://script.google.com/macros/s/..." style="font-size:12px">
-        </div>
-        <div style="margin-top:12px">
-          <button class="btn-gold" onclick="saveGSConfig()" style="width:100%">💾 SALVAR URL</button>
+          <label class="flabel">Script Web App URL (Fixa no código)</label>
+          <input type="text" class="finput" readonly style="font-size:12px; background: var(--dark4); opacity: 0.7; cursor: not-allowed;" value="Configurada no arquivo index.html">
         </div>
         <div style="margin-top:16px;padding:14px;background:var(--dark3);border-radius:10px;font-size:12px;color:var(--muted);line-height:1.7">
-          <strong style="color:var(--gold)">Como configurar:</strong><br>
-          1. Siga o guia no <strong style="color:var(--text)">SETUP.md</strong><br>
-          2. Cole a URL do Apps Script acima<br>
-          3. Todos os palpites e logins ficam no Google Sheets
+          <strong style="color:var(--gold)">Como alterar a URL:</strong><br>
+          A URL de conexão agora é fixa. Para mudar o servidor, você deve editar o arquivo <strong style="color:var(--text)">index.html</strong> no seu GitHub e alterar o valor da variável <strong style="color:var(--text)">GS_URL</strong>.
         </div>
       </div>
       <div class="set-card">
@@ -751,7 +728,6 @@ header {
     </div>
   </div>
 
-  <!-- ===== PROFILE PAGE ===== -->
   <div id="page-profile" class="main-wrap hidden">
     <div class="phase-hdr"><span class="phase-hdr-text">Meu Perfil</span></div>
     <div class="profile-layout">
@@ -793,7 +769,6 @@ header {
     </div>
   </div>
 
-  <!-- ===== ADMIN PAGE ===== -->
   <div id="page-admin" class="main-wrap hidden">
     <div class="phase-hdr">
       <span class="phase-hdr-text">🛡 Painel Admin</span>
@@ -830,7 +805,6 @@ header {
       <div id="admin-empty" style="text-align:center;padding:32px;color:var(--muted);display:none">Nenhum usuário encontrado.</div>
     </div>
 
-    <!-- Edit modal inline -->
     <div class="set-card" id="admin-edit-card" style="display:none;margin-bottom:20px;border-color:rgba(201,168,76,0.3)">
       <h3>✏️ Editando: <span id="admin-edit-email" style="color:var(--text);font-size:16px"></span></h3>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:16px">
@@ -852,10 +826,7 @@ header {
     </div>
   </div>
 
-</div><!-- #screen-main -->
-
-<!-- MODAL (lock warning) -->
-<div id="modal" class="modal-overlay hidden">
+</div><div id="modal" class="modal-overlay hidden">
   <div class="modal-box">
     <div class="modal-icon">🔒</div>
     <div class="modal-title">PALPITE BLOQUEADO</div>
@@ -865,20 +836,20 @@ header {
 </div>
 
 <div class="toast-wrap" id="toast-wrap"></div>
-</div><!-- #app -->
+</div><script>
+// ================================================================
+//  CONFIGURAÇÃO EXCLUSIVA - COLOQUE SUA URL AQUI ABAIXO
+// ================================================================
+const GS_URL = 'https://script.google.com/macros/s/AKfycbxbK2qzW1zxmoR9Tb3J3UnNK0xkbzn2AATWK35S1R_Av21pKjx-tWnIVO5IJR13DhwFKg/exec';
+// Exemplo: const GS_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
 
-<script>
-// ================================================================
-//  CONFIGURAÇÃO
-// ================================================================
-let GS_URL = localStorage.getItem('gs_url') || '';
 
 // ================================================================
 //  FALLBACK GAMES DATA
 // ================================================================
 const GROUP_KEYS     = 'ABCDEFGHIJKL'.split('');
 const GROUP_PAIRINGS = [['1','2'], ['3','4'], ['1','3'], ['2','4'], ['4','1'], ['2','3']];
-let DATA_META = { source:'fallback', updatedAt:null, error:'Configure o Apps Script para carregar a tabela oficial.' };
+let DATA_META = { source:'fallback', updatedAt:null, error:'Aguardando carregamento da tabela oficial.' };
 let STANDINGS = [];
 let GAMES = buildFallbackGames();
 
@@ -938,8 +909,6 @@ function hydrateSettings() {
     S.results  = d.results  || {};
     S.settings = { ...S.settings, ...(d.settings||{}) };
   }
-  const u = localStorage.getItem('gs_url');
-  if (u) GS_URL = u;
 
   // Session user (who is logged in)
   const session = localStorage.getItem('bolao26_session');
@@ -965,9 +934,10 @@ function clearSession() {
 // ================================================================
 async function boot() {
   hydrateSettings();
-  if (!GS_URL) {
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) {
     hideLoading();
     showAuth();
+    authMsg('Aviso: O administrador ainda não configurou a URL do servidor no código.', false);
     return;
   }
   // If we have a session, try to re-validate and load all users
@@ -1022,7 +992,7 @@ function previewAvatar(inp) {
 //  LOGIN — via Google Sheets
 // ================================================================
 async function doLogin() {
-  if (!GS_URL) { authMsg('Configure a URL do Apps Script em ⚙️ Config primeiro.'); return; }
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) { authMsg('Erro: URL do servidor não configurada no código-fonte (index.html).'); return; }
   const em = document.getElementById('l-email').value.trim().toLowerCase();
   const pw = document.getElementById('l-pass').value;
   if (!em || !pw) { authMsg('Preencha e-mail e senha.'); return; }
@@ -1053,7 +1023,7 @@ async function doLogin() {
       enterApp();
     }
   } catch(e) {
-    authMsg('Erro de conexão. Verifique a URL do Apps Script.');
+    authMsg('Erro de conexão. Verifique a URL do Apps Script no código.');
   } finally {
     btn.disabled = false; btn.textContent = 'ENTRAR →';
   }
@@ -1063,7 +1033,7 @@ async function doLogin() {
 //  REGISTER — via Google Sheets
 // ================================================================
 async function doRegister() {
-  if (!GS_URL) { authMsg('Configure a URL do Apps Script em ⚙️ Config primeiro. Recarregue a página.'); return; }
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) { authMsg('Erro: URL do servidor não configurada no código-fonte (index.html).'); return; }
   const name  = document.getElementById('r-name').value.trim();
   const em    = document.getElementById('r-email').value.trim().toLowerCase();
   const pw    = document.getElementById('r-pass').value;
@@ -1087,7 +1057,7 @@ async function doRegister() {
     enterApp();
     toast('Conta criada com sucesso! ✅','ok');
   } catch(e) {
-    authMsg('Erro de conexão. Verifique a URL do Apps Script.');
+    authMsg('Erro de conexão. Verifique a URL do Apps Script no código.');
   } finally {
     btn.disabled = false; btn.textContent = 'CRIAR CONTA ✓';
   }
@@ -1178,14 +1148,14 @@ function rerenderCurrentPage() { navTo(currentPage || 'games'); }
 //  GS HTTP HELPERS
 // ================================================================
 function gsActionUrl(action) {
-  if (!GS_URL) return '';
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) return '';
   const sep = GS_URL.includes('?') ? '&' : '?';
   return `${GS_URL}${sep}action=${encodeURIComponent(action)}`;
 }
 
 // Todas as chamadas usam GET para evitar bloqueio de CORS
 async function gsCall(params) {
-  if (!GS_URL) throw new Error('GS_URL nao configurada');
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) throw new Error('GS_URL nao configurada no index.html');
   const sep = GS_URL.includes('?') ? '&' : '?';
   const qs  = Object.entries(params)
     .filter(([,v]) => v !== undefined && v !== null && v !== '')
@@ -1205,8 +1175,8 @@ async function gsGet(action, extraParams) {
 //  TOURNAMENT DATA
 // ================================================================
 async function loadTournamentData(force=false) {
-  if (!GS_URL) {
-    DATA_META = { source:'fallback', updatedAt:null, error:'Configure a URL do Apps Script em Config.' };
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) {
+    DATA_META = { source:'fallback', updatedAt:null, error:'URL do Apps Script não configurada.' };
     updateDataSourceLabel(); return false;
   }
   try {
@@ -1275,18 +1245,18 @@ function updateDataSourceLabel() {
 //  GS INTEGRATION
 // ================================================================
 async function gsSave(email, gameId, h, a) {
-  if (!GS_URL) return;
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) return;
   try { await gsCall({ action:'saveBet', email:email, gameId:gameId, h:h, a:a }); } catch(e) { console.warn('GS save failed:', e); }
 }
 
 async function gsSaveUser(user) {
-  if (!GS_URL) return;
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) return;
   // Avatar nao e enviado via GET (muito grande) - fica no localStorage do usuario
   try { await gsCall({ action:'saveUser', email:user.email, name:user.name, team:user.team, motto:user.motto }); } catch(e) {}
 }
 
 async function gsLoadAll() {
-  if (!GS_URL) return null;
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) return null;
   try {
     const data = await gsGet('loadAll');
     if (data && data.ok) return data;
@@ -1330,7 +1300,7 @@ async function forceSyncAll() {
     toast('Sincronizado com Google Sheets! ✅','ok');
     rerenderCurrentPage();
   } else {
-    toast(DATA_META.error || 'Google Sheets não configurado.','info');
+    toast(DATA_META.error || 'Google Sheets não configurado no código.','info');
   }
   rerenderCurrentPage(); showSaving(false); resetSyncTimer();
 }
@@ -1500,363 +1470,4 @@ function renderGameCard(game) {
     let miniClass = '';
     if (r.status==='finished'&&ub&&r.h!==null) {
       if (ub.h===r.h&&ub.a===r.a) miniClass='exact-bet';
-      else if (getWDL(ub.h,ub.a)===getWDL(r.h,r.a)) miniClass='result-bet';
-    }
-    return `<div class="mini-bet ${miniClass}" title="${esc(u.name)}: ${ub.h}–${ub.a}"><div class="mini-bet-avatar">${u.avatar?`<img src="${u.avatar}">`:'🧑'}</div><span class="mini-bet-score">${ub.h}–${ub.a}</span></div>`;
-  }).join('');
-
-  return `<div class="game-card ${cardClass}${locked?' locked':''}" id="gc-${game.id}">
-    <div class="gcard-top"><span class="gcard-round">${game.group||game.phase}</span>${statusPill}</div>
-    <div class="gcard-top" style="margin-top:-8px;margin-bottom:10px"><span class="gcard-date">📅 ${formatDate(game.date)}</span><span class="gcard-date" style="font-size:10px">🏟 ${esc(game.venue)}</span></div>
-    <div class="teams-section">
-      <div class="team-col">${renderTeamMark(game,'h','team-flag')}<div class="team-code" title="${esc(game.hName||game.hCode)}">${esc(game.hCode)}</div></div>
-      <div class="center-col">${realScore}<div class="venue-text">${r.h!==null?'Resultado oficial':''}</div></div>
-      <div class="team-col">${renderTeamMark(game,'a','team-flag')}<div class="team-code" title="${esc(game.aName||game.aCode)}">${esc(game.aCode)}</div></div>
-    </div>
-    <div class="bet-row">${betSection}${badge}</div>
-    ${miniBets?`<div class="all-bets-row">${miniBets}</div>`:''}
-  </div>`;
-}
-
-// ================================================================
-//  RENDER GROUPS / STANDINGS
-// ================================================================
-function renderGroupsPage() {
-  updateDataSourceLabel();
-  const groups = [...new Set(GAMES.filter(g=>g.group).map(g=>g.group))].sort((a,b)=>String(a).localeCompare(String(b),'pt-BR',{numeric:true}));
-  const pill = document.getElementById('groups-count-pill'); if(pill) pill.textContent = `${groups.length} grupos`;
-  document.getElementById('groups-content').innerHTML = groups.map(renderGroupCard).join('') || '<div class="group-empty">Nenhum grupo carregado.</div>';
-}
-function renderGroupCard(group) {
-  const rows  = getGroupRows(group);
-  const games = GAMES.filter(g=>g.group===group).sort((a,b)=>new Date(a.date)-new Date(b.date));
-  const table = rows.length ? `<table class="standings-table"><thead><tr><th>#</th><th class="team-td">Seleção</th><th>J</th><th>V</th><th>E</th><th>D</th><th>SG</th><th>Pts</th></tr></thead><tbody>${rows.map(renderStandingRow).join('')}</tbody></table>` : '<div class="group-empty">Classificação ainda não disponível.</div>';
-  const gamesHtml = games.length ? games.map(renderGroupGameRow).join('') : '<div class="group-empty">Jogos ainda não disponíveis.</div>';
-  return `<section class="group-card"><div class="group-card-head"><div class="group-title">${esc(group)}</div><div class="group-meta">${games.length} jogos</div></div>${table}<div class="group-games">${gamesHtml}</div></section>`;
-}
-function getGroupRows(group) {
-  const standing = STANDINGS.find(s=>s.group===group);
-  if (standing&&standing.table&&standing.table.length) return standing.table;
-  const teams = new Map();
-  GAMES.filter(g=>g.group===group).forEach(g => {
-    ['h','a'].forEach(side => {
-      const code = g[side+'Code'];
-      if (!code||teams.has(code)) return;
-      teams.set(code, { position:teams.size+1, team:{code, name:g[side+'Name']||code, logo:g[side+'Logo']||'', flag:g[side+'Flag']||'🏳️'}, played:0,won:0,draw:0,lost:0,gf:0,ga:0,gd:0,points:0 });
-    });
-  });
-  return [...teams.values()].sort((a,b)=>String(a.team.code).localeCompare(String(b.team.code),'pt-BR',{numeric:true}));
-}
-function renderStandingRow(row) {
-  const team = row.team||{};
-  return `<tr><td>${row.position||''}</td><td class="team-td"><div class="team-line">${renderTeamLogo(team.logo,team.flag)}<span class="team-name" title="${esc(team.name||team.code)}">${esc(team.code||team.name||'A definir')}</span></div></td><td>${row.played||0}</td><td>${row.won||0}</td><td>${row.draw||0}</td><td>${row.lost||0}</td><td>${row.gd||0}</td><td class="points-cell">${row.points||0}</td></tr>`;
-}
-function renderGroupGameRow(game) {
-  const r = S.results[game.id]||game.result||{h:null,a:null,status:'upcoming'};
-  return `<div class="group-game-row" title="${esc(game.venue||'A confirmar')}"><div class="group-game-date">${game.date?formatShortDate(game.date):'A definir'}</div><div class="group-game-team">${renderTeamMark(game,'h','team-mini-logo')}<span class="team-code-small">${esc(game.hCode)}</span></div><div class="group-game-score">${r.h!==null?`${r.h}–${r.a}`:'vs'}</div><div class="group-game-team away"><span class="team-code-small">${esc(game.aCode)}</span>${renderTeamMark(game,'a','team-mini-logo')}</div></div>`;
-}
-function renderTeamLogo(logo, flag) { return logo ? `<img class="team-logo" src="${esc(logo)}" alt="">` : `<span class="team-logo placeholder">${flag||'🏳️'}</span>`; }
-function renderTeamMark(game, side, className) {
-  const logo = game[side+'Logo']; const flag = game[side+'Flag']||'🏳️';
-  if (logo) return `<img class="${className==='team-flag'?'team-crest':className}" src="${esc(logo)}" alt="">`;
-  return `<span class="${className}">${flag}</span>`;
-}
-
-// ================================================================
-//  BET INPUT
-// ================================================================
-function checkLock(gameId, el) {
-  const game = GAMES.find(g=>g.id===gameId);
-  if (game && isLocked(game)) {
-    el.blur();
-    const mins = minsUntil(game);
-    document.getElementById('modal-msg').textContent = mins<=0
-      ? 'Este jogo já começou. Palpites encerrados.'
-      : `Este jogo começa em ${mins} minuto(s). Prazo encerrado.`;
-    document.getElementById('modal').classList.remove('hidden');
-  }
-}
-function onBetInput(gameId) {
-  const game = GAMES.find(g=>g.id===gameId); if(game&&isLocked(game)) return;
-  const hEl = document.getElementById(`bi-h-${gameId}`);
-  const aEl = document.getElementById(`bi-a-${gameId}`);
-  if (!hEl||!aEl) return;
-  const h = hEl.value; const a = aEl.value;
-  if (h===''||a==='') return;
-  const user = S.users[S.me]; if(!user.bets) user.bets={};
-  user.bets[gameId] = { h:parseInt(h), a:parseInt(a) };
-  persistSettings();
-  if (saveTimers[gameId]) clearTimeout(saveTimers[gameId]);
-  const si = document.getElementById(`si-${gameId}`); if(si) si.classList.remove('hidden');
-  saveTimers[gameId] = setTimeout(async () => {
-    await gsSave(S.me, gameId, parseInt(h), parseInt(a));
-    if(si) si.classList.add('hidden'); updateNavPts(); renderStats();
-  }, 800);
-}
-
-// ================================================================
-//  RANKING
-// ================================================================
-function calcRankAll() {
-  return Object.values(S.users).map(u=>({...u,pts:calcPoints(u)}))
-    .sort((a,b) => { if(b.pts.total!==a.pts.total)return b.pts.total-a.pts.total; if(b.pts.exact!==a.pts.exact)return b.pts.exact-a.pts.exact; return b.pts.res-a.pts.res; });
-}
-function renderRanking() {
-  const ranked = calcRankAll();
-  document.getElementById('rank-count-pill').textContent = `${ranked.length} participantes`;
-  const html = ranked.map((u,i) => {
-    const pos=i+1; const nc=pos===1?'n1':pos===2?'n2':pos===3?'n3':'';
-    const rc=u.email===S.me?'me':pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
-    const medal=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
-    return `<div class="rank-row ${rc}">
-      <div class="rank-num ${nc}">${medal}</div>
-      <div class="rank-avatar-wrap">${u.avatar?`<img src="${u.avatar}">`:'🧑'}</div>
-      <div class="rank-info">
-        <div class="rank-name">${esc(u.name)}${u.email===S.me?' <span style="font-size:11px;background:rgba(201,168,76,0.2);color:var(--gold);padding:2px 8px;border-radius:10px">você</span>':''}</div>
-        <div class="rank-sub">⚽ ${esc(u.team||'—')}${u.motto?' • "'+esc(u.motto)+'"':''}</div>
-        <div class="rank-detail"><span class="rank-detail-pill e">⭐ ${u.pts.exact} exatos</span><span class="rank-detail-pill r">✅ ${u.pts.res} resultados</span></div>
-      </div>
-      <div class="rank-pts-col"><div class="rank-pts-val">${u.pts.total}</div><div class="rank-pts-lbl">pontos</div></div>
-    </div>`;
-  }).join('');
-  document.getElementById('rank-table').innerHTML = html || '<div style="color:var(--muted);text-align:center;padding:40px">Nenhum participante ainda.</div>';
-}
-
-// ================================================================
-//  SETTINGS
-// ================================================================
-function isAdmin() { const u = S.users[S.me]; return !!(u&&u.isAdmin); }
-function renderSettingsPage() {
-  updateDataSourceLabel();
-  const admin = isAdmin();
-  document.getElementById('s-exact').value  = S.settings.exact;
-  document.getElementById('s-result').value = S.settings.result;
-  document.getElementById('s-streak').value = S.settings.streak;
-  document.getElementById('s-semi').value   = S.settings.semi;
-  document.getElementById('s-final').value  = S.settings.final;
-  document.getElementById('s-url').value    = GS_URL;
-  ['s-exact','s-result','s-streak','s-semi','s-final','s-url','adm-game','adm-a','adm-b','adm-status'].forEach(id => {
-    const el = document.getElementById(id); if(el) el.disabled = !admin;
-  });
-  document.querySelectorAll('#page-settings button').forEach(btn => { btn.disabled=!admin; btn.style.opacity=admin?'1':'0.5'; });
-  let ex = document.getElementById('readonly-warning');
-  if (!admin && !ex) {
-    const div = document.createElement('div'); div.id='readonly-warning';
-    div.innerHTML = `<div style="background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);padding:14px;margin-bottom:15px;border-radius:10px;color:var(--gold)">🔒 Modo somente leitura. Apenas administradores podem alterar configurações.</div>`;
-    document.querySelector('#page-settings').prepend(div);
-  }
-  // Populate game select
-  const sel = document.getElementById('adm-game');
-  if (sel) { sel.innerHTML = GAMES.map(g=>`<option value="${g.id}">#${g.id} ${g.hCode} vs ${g.aCode}</option>`).join(''); }
-}
-
-function saveSettings() {
-  if (!isAdmin()) { toast('Apenas administradores podem alterar isso','warn'); return; }
-  S.settings.exact  = parseInt(document.getElementById('s-exact').value)||10;
-  S.settings.result = parseInt(document.getElementById('s-result').value)||5;
-  S.settings.streak = parseInt(document.getElementById('s-streak').value)||5;
-  S.settings.semi   = parseInt(document.getElementById('s-semi').value)||15;
-  S.settings.final  = parseInt(document.getElementById('s-final').value)||25;
-  persistSettings(); toast('Configurações salvas!','ok');
-}
-
-function saveGSConfig() {
-  const url = document.getElementById('s-url').value.trim();
-  GS_URL = url; localStorage.setItem('gs_url', url);
-  toast('URL do Google Sheets salva! ✅','ok');
-  refreshTournamentData();
-}
-
-function adminSetResult() {
-  if (!isAdmin()) { toast('Acesso negado','err'); return; }
-  const id = parseInt(document.getElementById('adm-game').value);
-  const h  = parseInt(document.getElementById('adm-a').value);
-  const a  = parseInt(document.getElementById('adm-b').value);
-  const st = document.getElementById('adm-status').value;
-  S.results[id] = { h, a, status:st }; persistSettings();
-  toast(`Resultado do jogo ${id} atualizado! ⚽`,'ok');
-}
-
-// ================================================================
-//  PROFILE
-// ================================================================
-function renderProfile() {
-  const u = S.users[S.me]; if(!u) return;
-  const pts = calcPoints(u);
-  const ranked = calcRankAll(); const pos = ranked.findIndex(r=>r.email===S.me)+1;
-  const pav = document.getElementById('pav-display');
-  pav.innerHTML = u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '🧑';
-  document.getElementById('p-name').textContent = u.name;
-  document.getElementById('p-team').textContent = (u.team||'')+(u.motto?' • "'+u.motto+'"':'');
-  document.getElementById('p-stats').innerHTML = `
-    <div class="profile-stat"><div class="profile-stat-v">${pts.total}</div><div class="profile-stat-l">Pontos</div></div>
-    <div class="profile-stat"><div class="profile-stat-v">${pos||'-'}º</div><div class="profile-stat-l">Posição</div></div>
-    <div class="profile-stat"><div class="profile-stat-v">${pts.exact}</div><div class="profile-stat-l">Exatos</div></div>
-    <div class="profile-stat"><div class="profile-stat-v">${pts.res}</div><div class="profile-stat-l">Resultados</div></div>
-  `;
-  document.getElementById('pe-name').value  = u.name;
-  document.getElementById('pe-team').value  = u.team||'';
-  document.getElementById('pe-motto').value = u.motto||'';
-  const history = GAMES.filter(g=>(S.results[g.id]||{}).status==='finished'&&(u.bets||{})[g.id]).map(g => {
-    const r=S.results[g.id]; const b=u.bets[g.id];
-    let label='❌ Errou', cls='var(--red)', p=0;
-    if (b.h===r.h&&b.a===r.a) { label=`⭐ Exato`; cls='var(--green)'; p=S.settings.exact; }
-    else if (getWDL(b.h,b.a)===getWDL(r.h,r.a)) { label='✅ Resultado'; cls='#7b8fe8'; p=S.settings.result; }
-    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--dark3);border-radius:8px;margin-bottom:6px;border-left:3px solid ${cls}"><span style="font-size:13px">${g.hCode} ${b.h}–${b.a} ${g.aCode}</span><span style="font-size:12px;color:var(--muted)">Real: ${r.h}–${r.a}</span><span style="font-size:13px;font-weight:600;color:${cls}">${label} +${p}pts</span></div>`;
-  }).join('') || '<div style="color:var(--muted);font-size:13px;padding:16px 0">Nenhum jogo encerrado ainda.</div>';
-  document.getElementById('p-history').innerHTML = history;
-}
-
-function handleProfileAvatar(inp) {
-  const f = inp.files[0]; if (!f||f.size>2e6) { toast('Foto muito grande','err'); return; }
-  const r = new FileReader(); r.onload = e => {
-    S.users[S.me].avatar = e.target.result;
-    saveSession(S.users[S.me]);
-    persistSettings();
-    const pav = document.getElementById('pav-display');
-    pav.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-    refreshNavUser(); gsSaveUser(S.users[S.me]); toast('Foto atualizada! 📸','ok');
-  }; r.readAsDataURL(f);
-}
-
-function saveProfileEdits() {
-  const u = S.users[S.me];
-  u.name  = document.getElementById('pe-name').value.trim()  || u.name;
-  u.team  = document.getElementById('pe-team').value.trim();
-  u.motto = document.getElementById('pe-motto').value.trim();
-  saveSession(u); persistSettings(); refreshNavUser(); gsSaveUser(u); toast('Perfil salvo! ✅','ok'); renderProfile();
-}
-
-// ================================================================
-//  ADMIN PANEL
-// ================================================================
-async function loadAdminUsers() {
-  if (!isAdmin()) { toast('Acesso negado','err'); navTo('games'); return; }
-  if (!GS_URL)    { toast('Configure a URL do Apps Script','warn'); return; }
-  try {
-    const data = await gsGet('adminListUsers', { callerEmail: S.me });
-    if (!data.ok) { toast(data.error || 'Erro ao carregar usuários','err'); return; }
-    adminUsers = data.users || [];
-    document.getElementById('adm-total-users').textContent = adminUsers.length;
-    document.getElementById('adm-reset-count').textContent = adminUsers.filter(u=>u.mustChangePass).length;
-    document.getElementById('adm-admin-count').textContent = adminUsers.filter(u=>u.isAdmin).length;
-    renderAdminTable();
-  } catch(e) {
-    toast('Erro de conexão ao carregar usuários','err');
-  }
-}
-
-function renderAdminTable() {
-  const filter = (document.getElementById('adm-filter')||{}).value?.toLowerCase() || '';
-  const filtered = adminUsers.filter(u =>
-    !filter || u.email.toLowerCase().includes(filter) || u.name.toLowerCase().includes(filter)
-  );
-  const tbody = document.getElementById('admin-tbody');
-  const empty = document.getElementById('admin-empty');
-  if (!filtered.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
-  empty.style.display = 'none';
-  tbody.innerHTML = filtered.map(u => `
-    <tr>
-      <td><strong>${esc(u.name)}</strong>${u.isAdmin?` <span class="admin-badge is-admin">👑 Admin</span>`:''}</td>
-      <td style="color:var(--muted);font-size:12px">${esc(u.email)}</td>
-      <td style="font-size:12px">${esc(u.team||'—')}</td>
-      <td style="font-size:11px;color:var(--muted)">${esc(u.since||'—')}</td>
-      <td>${u.mustChangePass?'<span class="admin-badge reset-needed">🔑 Reset pendente</span>':'<span style="color:var(--green);font-size:12px">✅ OK</span>'}</td>
-      <td class="admin-actions">
-        <button class="btn-sm" onclick="openAdminEdit('${esc(u.email)}')">✏️ Editar</button>
-      </td>
-    </tr>
-  `).join('');
-}
-
-function openAdminEdit(email) {
-  const u = adminUsers.find(x=>x.email===email);
-  if (!u) return;
-  adminEditTarget = email;
-  document.getElementById('admin-edit-email').textContent = email;
-  document.getElementById('ae-name').value  = u.name  || '';
-  document.getElementById('ae-team').value  = u.team  || '';
-  document.getElementById('ae-motto').value = u.motto || '';
-  document.getElementById('ae-admin').value = u.isAdmin ? 'true' : 'false';
-  const card = document.getElementById('admin-edit-card');
-  card.style.display = 'block';
-  card.scrollIntoView({ behavior:'smooth', block:'nearest' });
-}
-function closeAdminEdit() {
-  adminEditTarget = null;
-  document.getElementById('admin-edit-card').style.display = 'none';
-}
-
-async function submitAdminEdit() {
-  if (!adminEditTarget) return;
-  const name    = document.getElementById('ae-name').value.trim();
-  const team    = document.getElementById('ae-team').value.trim();
-  const motto   = document.getElementById('ae-motto').value.trim();
-  const isAdm   = document.getElementById('ae-admin').value === 'true';
-  try {
-    const res = await gsCall({ action:'adminUpdateUser', callerEmail:S.me, targetEmail:adminEditTarget, name, team, motto, isAdmin:isAdm });
-    if (!res.ok) { toast(res.error||'Erro ao salvar','err'); return; }
-    toast('Usuário atualizado! ✅','ok');
-    closeAdminEdit();
-    loadAdminUsers();
-  } catch(e) { toast('Erro de conexão','err'); }
-}
-
-async function submitAdminResetPass() {
-  if (!adminEditTarget) return;
-  if (!confirm(`Resetar a senha de "${adminEditTarget}" para "adminpirata"? O usuário precisará criar uma nova senha no próximo login.`)) return;
-  try {
-    const res = await gsCall({ action:'adminResetPass', callerEmail:S.me, targetEmail:adminEditTarget });
-    if (!res.ok) { toast(res.error||'Erro ao resetar senha','err'); return; }
-    toast(`🔑 Senha de ${adminEditTarget} resetada! Ele usará "adminpirata" e criará uma nova senha.`,'ok');
-    closeAdminEdit();
-    loadAdminUsers();
-  } catch(e) { toast('Erro de conexão','err'); }
-}
-
-// ================================================================
-//  UTILS
-// ================================================================
-function refreshNavUser() {
-  const u = S.users[S.me]; if(!u) return;
-  document.getElementById('nav-name').textContent = u.name;
-  updateNavPts();
-  const av = document.getElementById('nav-av');
-  av.innerHTML = u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '🧑';
-}
-function updateNavPts() {
-  const u = S.users[S.me]; if(!u) return;
-  document.getElementById('nav-pts').textContent = calcPoints(u).total + ' pts';
-}
-function formatDate(d) {
-  const dt = new Date(d);
-  if (!Number.isFinite(dt.getTime())) return 'A definir';
-  return dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})+' '+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-}
-function formatShortDate(d) {
-  const dt = new Date(d);
-  if (!Number.isFinite(dt.getTime())) return 'A definir';
-  return dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
-}
-function formatDateTime(d) {
-  const dt = new Date(d);
-  if (!Number.isFinite(dt.getTime())) return 'A definir';
-  return dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-}
-function esc(v) { return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch])); }
-function toast(msg, type='info') {
-  const w = document.getElementById('toast-wrap');
-  const el = document.createElement('div'); el.className=`toast ${type}`;
-  const ic = {ok:'✅',err:'❌',info:'ℹ️',warn:'⚠️'}[type]||'ℹ️';
-  el.innerHTML = `<span>${ic}</span><span>${msg}</span>`;
-  w.appendChild(el);
-  setTimeout(()=>{ el.style.animation='toastOut .3s ease forwards'; setTimeout(()=>el.remove(),300); }, 3000);
-}
-
-// ================================================================
-//  BOOT
-// ================================================================
-boot();
-</script>
-</body>
-</html>
+      else if (getWDL(ub.h,ub
