@@ -401,6 +401,28 @@ header {
 @keyframes toastIn  { from { transform: translateX(100%); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes toastOut { from { opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
 
+/* ===== ANIMAÇÃO PARA QUEM TEM FOTO ===== */
+@keyframes entradaChip {
+  0% { transform: translateY(15px) scale(0.8); opacity: 0; }
+  70% { transform: translateY(-3px) scale(1.03); opacity: 0.9; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes flutuarChip {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.chip-com-foto {
+  /* Primeiro faz o movimento de entrada ao carregar, depois ativa a flutuação contínua */
+  animation: entradaChip 0.6s ease-out forwards, flutuarChip 3s ease-in-out infinite 0.6s;
+  border-color: var(--gold) !important; /* Dá um leve destaque dourado na borda de quem tem foto */
+  box-shadow: 0 4px 12px rgba(201, 168, 76, 0.15);
+}
+
+
+  
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   /* Novo Menu Responsivo */
@@ -1447,12 +1469,19 @@ function renderStats() {
 function renderUserChips() {
   const chips = Object.values(S.users).map(u => {
     const active = (S.viewingUser||S.me)===u.email;
+    
+    // VERIFICAÇÃO: Se tiver foto, aplica a classe de animação que criamos no CSS
+    const classeAnimacao = u.avatar ? 'chip-com-foto' : '';
+    
     const av = u.avatar ? `<div class="user-chip-avatar"><img src="${u.avatar}"></div>` : `<div class="user-chip-avatar">🧑</div>`;
     const you = u.email===S.me ? ' (você)' : '';
-    return `<div class="user-chip ${active?'active':''}" onclick="setViewUser('${u.email}')">${av}${esc(u.name)}${you}</div>`;
+    
+    // Adicionada a variável classeAnimacao na linha abaixo
+    return `<div class="user-chip ${active?'active':''} ${classeAnimacao}" onclick="setViewUser('${u.email}')">${av}${esc(u.name)}${you}</div>`;
   }).join('');
   document.getElementById('user-chips').innerHTML = chips;
 }
+  
 function setViewUser(email) { S.viewingUser = email; renderGames(); renderUserChips(); }
 
 // ================================================================
