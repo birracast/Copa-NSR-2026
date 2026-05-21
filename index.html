@@ -1723,16 +1723,36 @@ function renderProfile() {
   document.getElementById('p-history').innerHTML = history;
 }
 
-function handleProfileAvatar(inp) {
-  const f = inp.files[0]; if (!f||f.size>2e6) { toast('Foto muito grande','err'); return; }
-  const r = new FileReader(); r.onload = e => {
-    S.users[S.me].avatar = e.target.result;
-    saveSession(S.users[S.me]);
-    persistSettings();
-    const pav = document.getElementById('pav-display');
-    pav.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-    refreshNavUser(); gsSaveUser(S.users[S.me]); toast('Foto atualizada! 📸','ok');
-  }; r.readAsDataURL(f);
+async function handleProfileAvatar(inp) {
+  const f = inp.files[0]; 
+  if (!f||f.size>2e6) { toast('Foto muito grande (máx 2MB)','err'); return; }
+
+  const pav = document.getElementById('pav-display');
+  const htmlAntigo = pav.innerHTML;
+  pav.innerHTML = `<span class="save-spin" style="margin-top:35px"></span>`;
+
+  const formData = new FormData();
+  formData.append('image', f);
+
+  try {
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.success) {
+      S.users[S.me].avatar = data.data.url; // Salva o link no perfil
+      saveSession(S.users[S.me]);
+      persistSettings();
+      pav.innerHTML = `<img src="${data.data.url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+      refreshNavUser(); 
+      gsSaveUser(S.users[S.me]); // Envia o link curtinho pro Sheets
+      toast('Foto atualizada com sucesso! 📸','ok');
+    } else {
+      pav.innerHTML = htmlAntigo;
+      toast('Erro ao enviar foto','err');
+    }
+  } catch(e) {
+    pav.innerHTML = htmlAntigo;
+    toast('Erro de conexão com servidor de imagens','err');
+  }
 }
 
 function saveProfileEdits() {
