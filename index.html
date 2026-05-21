@@ -1470,4 +1470,356 @@ function renderGameCard(game) {
     let miniClass = '';
     if (r.status==='finished'&&ub&&r.h!==null) {
       if (ub.h===r.h&&ub.a===r.a) miniClass='exact-bet';
-      else if (getWDL(ub.h,ub
+      else if (getWDL(ub.h,ub.a)===getWDL(r.h,r.a)) miniClass='result-bet';
+    }
+    return `<div class="mini-bet ${miniClass}" title="${esc(u.name)}: ${ub.h}–${ub.a}"><div class="mini-bet-avatar">${u.avatar?`<img src="${u.avatar}">`:'🧑'}</div><span class="mini-bet-score">${ub.h}–${ub.a}</span></div>`;
+  }).join('');
+
+  return `<div class="game-card ${cardClass}${locked?' locked':''}" id="gc-${game.id}">
+    <div class="gcard-top"><span class="gcard-round">${game.group||game.phase}</span>${statusPill}</div>
+    <div class="gcard-top" style="margin-top:-8px;margin-bottom:10px"><span class="gcard-date">📅 ${formatDate(game.date)}</span><span class="gcard-date" style="font-size:10px">🏟 ${esc(game.venue)}</span></div>
+    <div class="teams-section">
+      <div class="team-col">${renderTeamMark(game,'h','team-flag')}<div class="team-code" title="${esc(game.hName||game.hCode)}">${esc(game.hCode)}</div></div>
+      <div class="center-col">${realScore}<div class="venue-text">${r.h!==null?'Resultado oficial':''}</div></div>
+      <div class="team-col">${renderTeamMark(game,'a','team-flag')}<div class="team-code" title="${esc(game.aName||game.aCode)}">${esc(game.aCode)}</div></div>
+    </div>
+    <div class="bet-row">${betSection}${badge}</div>
+    ${miniBets?`<div class="all-bets-row">${miniBets}</div>`:''}
+  </div>`;
+}
+
+// ================================================================
+//  RENDER GROUPS / STANDINGS
+// ================================================================
+function renderGroupsPage() {
+  updateDataSourceLabel();
+  const groups = [...new Set(GAMES.filter(g=>g.group).map(g=>g.group))].sort((a,b)=>String(a).localeCompare(String(b),'pt-BR',{numeric:true}));
+  const pill = document.getElementById('groups-count-pill'); if(pill) pill.textContent = `${groups.length} grupos`;
+  document.getElementById('groups-content').innerHTML = groups.map(renderGroupCard).join('') || '<div class="group-empty">Nenhum grupo carregado.</div>';
+}
+function renderGroupCard(group) {
+  const rows  = getGroupRows(group);
+  const games = GAMES.filter(g=>g.group===group).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const table = rows.length ? `<table class="standings-table"><thead><tr><th>#</th><th class="team-td">Seleção</th><th>J</th><th>V</th><th>E</th><th>D</th><th>SG</th><th>Pts</th></tr></thead><tbody>${rows.map(renderStandingRow).join('')}</tbody></table>` : '<div class="group-empty">Classificação ainda não disponível.</div>';
+  const gamesHtml = games.length ? games.map(renderGroupGameRow).join('') : '<div class="group-empty">Jogos ainda não disponíveis.</div>';
+  return `<section class="group-card"><div class="group-card-head"><div class="group-title">${esc(group)}</div><div class="group-meta">${games.length} jogos</div></div>${table}<div class="group-games">${gamesHtml}</div></section>`;
+}
+function getGroupRows(group) {
+  const standing = STANDINGS.find(s=>s.group===group);
+  if (standing&&standing.table&&standing.table.length) return standing.table;
+  const teams = new Map();
+  GAMES.filter(g=>g.group===group).forEach(g => {
+    ['h','a'].forEach(side => {
+      const code = g[side+'Code'];
+      if (!code||teams.has(code)) return;
+      teams.set(code, { position:teams.size+1, team:{code, name:g[side+'Name']||code, logo:g[side+'Logo']||'', flag:g[side+'Flag']||'🏳️'}, played:0,won:0,draw:0,lost:0,gf:0,ga:0,gd:0,points:0 });
+    });
+  });
+  return [...teams.values()].sort((a,b)=>String(a.team.code).localeCompare(String(b.team.code),'pt-BR',{numeric:true}));
+}
+function renderStandingRow(row) {
+  const team = row.team||{};
+  return `<tr><td>${row.position||''}</td><td class="team-td"><div class="team-line">${renderTeamLogo(team.logo,team.flag)}<span class="team-name" title="${esc(team.name||team.code)}">${esc(team.code||team.name||'A definir')}</span></div></td><td>${row.played||0}</td><td>${row.won||0}</td><td>${row.draw||0}</td><td>${row.lost||0}</td><td>${row.gd||0}</td><td class="points-cell">${row.points||0}</td></tr>`;
+}
+function renderGroupGameRow(game) {
+  const r = S.results[game.id]||game.result||{h:null,a:null,status:'upcoming'};
+  return `<div class="group-game-row" title="${esc(game.venue||'A confirmar')}"><div class="group-game-date">${game.date?formatShortDate(game.date):'A definir'}</div><div class="group-game-team">${renderTeamMark(game,'h','team-mini-logo')}<span class="team-code-small">${esc(game.hCode)}</span></div><div class="group-game-score">${r.h!==null?`${r.h}–${r.a}`:'vs'}</div><div class="group-game-team away"><span class="team-code-small">${esc(game.aCode)}</span>${renderTeamMark(game,'a','team-mini-logo')}</div></div>`;
+}
+function renderTeamLogo(logo, flag) { return logo ? `<img class="team-logo" src="${esc(logo)}" alt="">` : `<span class="team-logo placeholder">${flag||'🏳️'}</span>`; }
+function renderTeamMark(game, side, className) {
+  const logo = game[side+'Logo']; const flag = game[side+'Flag']||'🏳️';
+  if (logo) return `<img class="${className==='team-flag'?'team-crest':className}" src="${esc(logo)}" alt="">`;
+  return `<span class="${className}">${flag}</span>`;
+}
+
+// ================================================================
+//  BET INPUT
+// ================================================================
+function checkLock(gameId, el) {
+  const game = GAMES.find(g=>g.id===gameId);
+  if (game && isLocked(game)) {
+    el.blur();
+    const mins = minsUntil(game);
+    document.getElementById('modal-msg').textContent = mins<=0
+      ? 'Este jogo já começou. Palpites encerrados.'
+      : `Este jogo começa em ${mins} minuto(s). Prazo encerrado.`;
+    document.getElementById('modal').classList.remove('hidden');
+  }
+}
+function onBetInput(gameId) {
+  const game = GAMES.find(g=>g.id===gameId); if(game&&isLocked(game)) return;
+  const hEl = document.getElementById(`bi-h-${gameId}`);
+  const aEl = document.getElementById(`bi-a-${gameId}`);
+  if (!hEl||!aEl) return;
+  const h = hEl.value; const a = aEl.value;
+  if (h===''||a==='') return;
+  const user = S.users[S.me]; if(!user.bets) user.bets={};
+  user.bets[gameId] = { h:parseInt(h), a:parseInt(a) };
+  persistSettings();
+  if (saveTimers[gameId]) clearTimeout(saveTimers[gameId]);
+  const si = document.getElementById(`si-${gameId}`); if(si) si.classList.remove('hidden');
+  saveTimers[gameId] = setTimeout(async () => {
+    await gsSave(S.me, gameId, parseInt(h), parseInt(a));
+    if(si) si.classList.add('hidden'); updateNavPts(); renderStats();
+  }, 800);
+}
+
+// ================================================================
+//  RANKING
+// ================================================================
+function calcRankAll() {
+  return Object.values(S.users).map(u=>({...u,pts:calcPoints(u)}))
+    .sort((a,b) => { if(b.pts.total!==a.pts.total)return b.pts.total-a.pts.total; if(b.pts.exact!==a.pts.exact)return b.pts.exact-a.pts.exact; return b.pts.res-a.pts.res; });
+}
+function renderRanking() {
+  const ranked = calcRankAll();
+  document.getElementById('rank-count-pill').textContent = `${ranked.length} participantes`;
+  const html = ranked.map((u,i) => {
+    const pos=i+1; const nc=pos===1?'n1':pos===2?'n2':pos===3?'n3':'';
+    const rc=u.email===S.me?'me':pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
+    const medal=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
+    return `<div class="rank-row ${rc}">
+      <div class="rank-num ${nc}">${medal}</div>
+      <div class="rank-avatar-wrap">${u.avatar?`<img src="${u.avatar}">`:'🧑'}</div>
+      <div class="rank-info">
+        <div class="rank-name">${esc(u.name)}${u.email===S.me?' <span style="font-size:11px;background:rgba(201,168,76,0.2);color:var(--gold);padding:2px 8px;border-radius:10px">você</span>':''}</div>
+        <div class="rank-sub">⚽ ${esc(u.team||'—')}${u.motto?' • "'+esc(u.motto)+'"':''}</div>
+        <div class="rank-detail"><span class="rank-detail-pill e">⭐ ${u.pts.exact} exatos</span><span class="rank-detail-pill r">✅ ${u.pts.res} resultados</span></div>
+      </div>
+      <div class="rank-pts-col"><div class="rank-pts-val">${u.pts.total}</div><div class="rank-pts-lbl">pontos</div></div>
+    </div>`;
+  }).join('');
+  document.getElementById('rank-table').innerHTML = html || '<div style="color:var(--muted);text-align:center;padding:40px">Nenhum participante ainda.</div>';
+}
+
+// ================================================================
+//  SETTINGS
+// ================================================================
+function isAdmin() { const u = S.users[S.me]; return !!(u&&u.isAdmin); }
+function renderSettingsPage() {
+  updateDataSourceLabel();
+  const admin = isAdmin();
+  document.getElementById('s-exact').value  = S.settings.exact;
+  document.getElementById('s-result').value = S.settings.result;
+  document.getElementById('s-streak').value = S.settings.streak;
+  document.getElementById('s-semi').value   = S.settings.semi;
+  document.getElementById('s-final').value  = S.settings.final;
+  
+  ['s-exact','s-result','s-streak','s-semi','s-final','adm-game','adm-a','adm-b','adm-status'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.disabled = !admin;
+  });
+  document.querySelectorAll('#page-settings button').forEach(btn => { btn.disabled=!admin; btn.style.opacity=admin?'1':'0.5'; });
+  let ex = document.getElementById('readonly-warning');
+  if (!admin && !ex) {
+    const div = document.createElement('div'); div.id='readonly-warning';
+    div.innerHTML = `<div style="background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);padding:14px;margin-bottom:15px;border-radius:10px;color:var(--gold)">🔒 Modo somente leitura. Apenas administradores podem alterar configurações.</div>`;
+    document.querySelector('#page-settings').prepend(div);
+  }
+  // Populate game select
+  const sel = document.getElementById('adm-game');
+  if (sel) { sel.innerHTML = GAMES.map(g=>`<option value="${g.id}">#${g.id} ${g.hCode} vs ${g.aCode}</option>`).join(''); }
+}
+
+function saveSettings() {
+  if (!isAdmin()) { toast('Apenas administradores podem alterar isso','warn'); return; }
+  S.settings.exact  = parseInt(document.getElementById('s-exact').value)||10;
+  S.settings.result = parseInt(document.getElementById('s-result').value)||5;
+  S.settings.streak = parseInt(document.getElementById('s-streak').value)||5;
+  S.settings.semi   = parseInt(document.getElementById('s-semi').value)||15;
+  S.settings.final  = parseInt(document.getElementById('s-final').value)||25;
+  persistSettings(); toast('Configurações salvas!','ok');
+}
+
+function adminSetResult() {
+  if (!isAdmin()) { toast('Acesso negado','err'); return; }
+  const id = parseInt(document.getElementById('adm-game').value);
+  const h  = parseInt(document.getElementById('adm-a').value);
+  const a  = parseInt(document.getElementById('adm-b').value);
+  const st = document.getElementById('adm-status').value;
+  S.results[id] = { h, a, status:st }; persistSettings();
+  toast(`Resultado do jogo ${id} atualizado! ⚽`,'ok');
+}
+
+// ================================================================
+//  PROFILE
+// ================================================================
+function renderProfile() {
+  const u = S.users[S.me]; if(!u) return;
+  const pts = calcPoints(u);
+  const ranked = calcRankAll(); const pos = ranked.findIndex(r=>r.email===S.me)+1;
+  const pav = document.getElementById('pav-display');
+  pav.innerHTML = u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '🧑';
+  document.getElementById('p-name').textContent = u.name;
+  document.getElementById('p-team').textContent = (u.team||'')+(u.motto?' • "'+u.motto+'"':'');
+  document.getElementById('p-stats').innerHTML = `
+    <div class="profile-stat"><div class="profile-stat-v">${pts.total}</div><div class="profile-stat-l">Pontos</div></div>
+    <div class="profile-stat"><div class="profile-stat-v">${pos||'-'}º</div><div class="profile-stat-l">Posição</div></div>
+    <div class="profile-stat"><div class="profile-stat-v">${pts.exact}</div><div class="profile-stat-l">Exatos</div></div>
+    <div class="profile-stat"><div class="profile-stat-v">${pts.res}</div><div class="profile-stat-l">Resultados</div></div>
+  `;
+  document.getElementById('pe-name').value  = u.name;
+  document.getElementById('pe-team').value  = u.team||'';
+  document.getElementById('pe-motto').value = u.motto||'';
+  const history = GAMES.filter(g=>(S.results[g.id]||{}).status==='finished'&&(u.bets||{})[g.id]).map(g => {
+    const r=S.results[g.id]; const b=u.bets[g.id];
+    let label='❌ Errou', cls='var(--red)', p=0;
+    if (b.h===r.h&&b.a===r.a) { label=`⭐ Exato`; cls='var(--green)'; p=S.settings.exact; }
+    else if (getWDL(b.h,b.a)===getWDL(r.h,r.a)) { label='✅ Resultado'; cls='#7b8fe8'; p=S.settings.result; }
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--dark3);border-radius:8px;margin-bottom:6px;border-left:3px solid ${cls}"><span style="font-size:13px">${g.hCode} ${b.h}–${b.a} ${g.aCode}</span><span style="font-size:12px;color:var(--muted)">Real: ${r.h}–${r.a}</span><span style="font-size:13px;font-weight:600;color:${cls}">${label} +${p}pts</span></div>`;
+  }).join('') || '<div style="color:var(--muted);font-size:13px;padding:16px 0">Nenhum jogo encerrado ainda.</div>';
+  document.getElementById('p-history').innerHTML = history;
+}
+
+function handleProfileAvatar(inp) {
+  const f = inp.files[0]; if (!f||f.size>2e6) { toast('Foto muito grande','err'); return; }
+  const r = new FileReader(); r.onload = e => {
+    S.users[S.me].avatar = e.target.result;
+    saveSession(S.users[S.me]);
+    persistSettings();
+    const pav = document.getElementById('pav-display');
+    pav.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    refreshNavUser(); gsSaveUser(S.users[S.me]); toast('Foto atualizada! 📸','ok');
+  }; r.readAsDataURL(f);
+}
+
+function saveProfileEdits() {
+  const u = S.users[S.me];
+  u.name  = document.getElementById('pe-name').value.trim()  || u.name;
+  u.team  = document.getElementById('pe-team').value.trim();
+  u.motto = document.getElementById('pe-motto').value.trim();
+  saveSession(u); persistSettings(); refreshNavUser(); gsSaveUser(u); toast('Perfil salvo! ✅','ok'); renderProfile();
+}
+
+// ================================================================
+//  ADMIN PANEL
+// ================================================================
+async function loadAdminUsers() {
+  if (!isAdmin()) { toast('Acesso negado','err'); navTo('games'); return; }
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) { toast('Configure a URL do Apps Script no index.html','warn'); return; }
+  try {
+    const data = await gsGet('adminListUsers', { callerEmail: S.me });
+    if (!data.ok) { toast(data.error || 'Erro ao carregar usuários','err'); return; }
+    adminUsers = data.users || [];
+    document.getElementById('adm-total-users').textContent = adminUsers.length;
+    document.getElementById('adm-reset-count').textContent = adminUsers.filter(u=>u.mustChangePass).length;
+    document.getElementById('adm-admin-count').textContent = adminUsers.filter(u=>u.isAdmin).length;
+    renderAdminTable();
+  } catch(e) {
+    toast('Erro de conexão ao carregar usuários','err');
+  }
+}
+
+function renderAdminTable() {
+  const filter = (document.getElementById('adm-filter')||{}).value?.toLowerCase() || '';
+  const filtered = adminUsers.filter(u =>
+    !filter || u.email.toLowerCase().includes(filter) || u.name.toLowerCase().includes(filter)
+  );
+  const tbody = document.getElementById('admin-tbody');
+  const empty = document.getElementById('admin-empty');
+  if (!filtered.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = filtered.map(u => `
+    <tr>
+      <td><strong>${esc(u.name)}</strong>${u.isAdmin?` <span class="admin-badge is-admin">👑 Admin</span>`:''}</td>
+      <td style="color:var(--muted);font-size:12px">${esc(u.email)}</td>
+      <td style="font-size:12px">${esc(u.team||'—')}</td>
+      <td style="font-size:11px;color:var(--muted)">${esc(u.since||'—')}</td>
+      <td>${u.mustChangePass?'<span class="admin-badge reset-needed">🔑 Reset pendente</span>':'<span style="color:var(--green);font-size:12px">✅ OK</span>'}</td>
+      <td class="admin-actions">
+        <button class="btn-sm" onclick="openAdminEdit('${esc(u.email)}')">✏️ Editar</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openAdminEdit(email) {
+  const u = adminUsers.find(x=>x.email===email);
+  if (!u) return;
+  adminEditTarget = email;
+  document.getElementById('admin-edit-email').textContent = email;
+  document.getElementById('ae-name').value  = u.name  || '';
+  document.getElementById('ae-team').value  = u.team  || '';
+  document.getElementById('ae-motto').value = u.motto || '';
+  document.getElementById('ae-admin').value = u.isAdmin ? 'true' : 'false';
+  const card = document.getElementById('admin-edit-card');
+  card.style.display = 'block';
+  card.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+function closeAdminEdit() {
+  adminEditTarget = null;
+  document.getElementById('admin-edit-card').style.display = 'none';
+}
+
+async function submitAdminEdit() {
+  if (!adminEditTarget) return;
+  const name    = document.getElementById('ae-name').value.trim();
+  const team    = document.getElementById('ae-team').value.trim();
+  const motto   = document.getElementById('ae-motto').value.trim();
+  const isAdm   = document.getElementById('ae-admin').value === 'true';
+  try {
+    const res = await gsCall({ action:'adminUpdateUser', callerEmail:S.me, targetEmail:adminEditTarget, name, team, motto, isAdmin:isAdm });
+    if (!res.ok) { toast(res.error||'Erro ao salvar','err'); return; }
+    toast('Usuário atualizado! ✅','ok');
+    closeAdminEdit();
+    loadAdminUsers();
+  } catch(e) { toast('Erro de conexão','err'); }
+}
+
+async function submitAdminResetPass() {
+  if (!adminEditTarget) return;
+  if (!confirm(`Resetar a senha de "${adminEditTarget}" para "adminpirata"? O usuário precisará criar uma nova senha no próximo login.`)) return;
+  try {
+    const res = await gsCall({ action:'adminResetPass', callerEmail:S.me, targetEmail:adminEditTarget });
+    if (!res.ok) { toast(res.error||'Erro ao resetar senha','err'); return; }
+    toast(`🔑 Senha de ${adminEditTarget} resetada! Ele usará "adminpirata" e criará uma nova senha.`,'ok');
+    closeAdminEdit();
+    loadAdminUsers();
+  } catch(e) { toast('Erro de conexão','err'); }
+}
+
+// ================================================================
+//  UTILS
+// ================================================================
+function refreshNavUser() {
+  const u = S.users[S.me]; if(!u) return;
+  document.getElementById('nav-name').textContent = u.name;
+  updateNavPts();
+  const av = document.getElementById('nav-av');
+  av.innerHTML = u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '🧑';
+}
+function updateNavPts() {
+  const u = S.users[S.me]; if(!u) return;
+  document.getElementById('nav-pts').textContent = calcPoints(u).total + ' pts';
+}
+function formatDate(d) {
+  const dt = new Date(d);
+  if (!Number.isFinite(dt.getTime())) return 'A definir';
+  return dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})+' '+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+function formatShortDate(d) {
+  const dt = new Date(d);
+  if (!Number.isFinite(dt.getTime())) return 'A definir';
+  return dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+}
+function formatDateTime(d) {
+  const dt = new Date(d);
+  if (!Number.isFinite(dt.getTime())) return 'A definir';
+  return dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+function esc(v) { return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch])); }
+function toast(msg, type='info') {
+  const w = document.getElementById('toast-wrap');
+  const el = document.createElement('div'); el.className=`toast ${type}`;
+  const ic = {ok:'✅',err:'❌',info:'ℹ️',warn:'⚠️'}[type]||'ℹ️';
+  el.innerHTML = `<span>${ic}</span><span>${msg}</span>`;
+  w.appendChild(el);
+  setTimeout(()=>{ el.style.animation='toastOut .3s ease forwards'; setTimeout(()=>el.remove(),300); }, 3000);
+}
+
+// ================================================================
+//  BOOT
+// ================================================================
+boot();
+</script>
+</body>
+</html>
