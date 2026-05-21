@@ -882,7 +882,7 @@ function getFlag(code) {
   return '🏳️'; 
 }
 
-
+const IMGBB_API_KEY = '5c74c4e1ebba127ec7d8480464ae3cce';
   
 // ================================================================
 //  FALLBACK GAMES DATA
@@ -1017,17 +1017,30 @@ function authMsg(msg, ok) {
 }
 
 let tempAvatar = null;
-function previewAvatar(inp) {
+async function previewAvatar(inp) {
   const f = inp.files[0];
   if (!f || f.size > 2e6) { toast('Foto muito grande (máx 2MB)','err'); return; }
-  const r = new FileReader();
-  r.onload = e => {
-    tempAvatar = e.target.result;
-    document.getElementById('av-preview').innerHTML = `<img src="${e.target.result}" class="avatar-preview-img"><div class="avatar-area-text">✅ Foto selecionada</div>`;
-  };
-  r.readAsDataURL(f);
-}
 
+  // Mostra que está carregando
+  document.getElementById('av-preview').innerHTML = `<div class="save-spin" style="margin: 0 auto 10px;"></div><div class="avatar-area-text">Enviando foto para a nuvem...</div>`;
+
+  const formData = new FormData();
+  formData.append('image', f);
+
+  try {
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.success) {
+      tempAvatar = data.data.url; // Pega o link oficial da imagem
+      document.getElementById('av-preview').innerHTML = `<img src="${tempAvatar}" class="avatar-preview-img"><div class="avatar-area-text">✅ Foto enviada!</div>`;
+    } else {
+      toast('Erro ao enviar foto','err');
+      document.getElementById('av-preview').innerHTML = `<div class="avatar-area-icon">📸</div><div class="avatar-area-text">Clique para tentar novamente</div>`;
+    }
+  } catch(e) {
+    toast('Erro de conexão com servidor de imagens','err');
+  }
+}
 // ================================================================
 //  LOGIN — via Google Sheets
 // ================================================================
