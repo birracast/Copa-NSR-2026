@@ -1228,8 +1228,8 @@ function normalizeClientGame(g) {
   const result = g.result || {};
   return {
     id:parseInt(g.id), apiId:g.apiId||null, phase:g.phase||'A definir', stage:g.stage||'', group:g.group||null,
-    hFlag:g.hFlag || getFlag(g.hCode || g.hName), hCode:g.hCode||'CASA', hName:g.hName||g.hCode||'Casa', hLogo:g.hLogo||'',
-    aFlag:g.aFlag || getFlag(g.aCode || g.aName), aCode:g.aCode||'FORA', aName:g.aName||g.aCode||'Fora', aLogo:g.aLogo||'',
+    hFlag: getFlag(g.hCode || g.hName), hCode:g.hCode||'CASA', hName:g.hName||g.hCode||'Casa', hLogo:g.hLogo||'',
+    aFlag: getFlag(g.aCode || g.aName), aCode:g.aCode||'FORA', aName:g.aName||g.aCode||'Fora', aLogo:g.aLogo||'',
     date:g.date||'', venue:g.venue||'A confirmar',
     status:result.status||g.status||'upcoming',
     result:{ h:result.h!=null?result.h:null, a:result.a!=null?result.a:null, status:result.status||g.status||'upcoming' }
