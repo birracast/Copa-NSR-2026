@@ -403,9 +403,19 @@ header {
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-  .header-top { padding: 10px 14px; }
-  .nav-tabs { gap: 0; }
-  .nav-tab { padding: 8px 8px; font-size: 12px; }
+  /* Novo Menu Responsivo */
+  .header-top { flex-wrap: wrap; justify-content: space-between; padding: 12px 16px 0; }
+  .logo-wrap { order: 1; }
+  .nav-user { order: 2; margin-left: 0; }
+  .nav-tabs { 
+    order: 3; width: 100%; flex-wrap: nowrap; overflow-x: auto; 
+    gap: 6px; margin-top: 16px; padding-bottom: 2px; 
+    -ms-overflow-style: none; scrollbar-width: none; 
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-tab { white-space: nowrap; font-size: 13px; padding: 10px 14px; }
+  
+  /* Restante das regras originais que já estavam aí */
   .main-wrap { padding: 16px; }
   .games-grid { grid-template-columns: 1fr; }
   .groups-grid { grid-template-columns: 1fr; }
@@ -843,29 +853,35 @@ header {
 const GS_URL = 'https://script.google.com/macros/s/AKfycbxbK2qzW1zxmoR9Tb3J3UnNK0xkbzn2AATWK35S1R_Av21pKjx-tWnIVO5IJR13DhwFKg/exec';
 // Exemplo: const GS_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
 
-// Dicionário Completo de Emojis de Bandeiras (Padrão FIFA)
-const FLAGS_MAP = {
-  // Américas (Sedes e Conmebol/Concacaf)
-  'BRA':'🇧🇷', 'ARG':'🇦🇷', 'USA':'🇺🇸', 'MEX':'🇲🇽', 'CAN':'🇨🇦', 
-  'URU':'🇺🇾', 'COL':'🇨🇴', 'ECU':'🇪🇨', 'PER':'🇵🇪', 'CHI':'🇨🇱', 
-  'VEN':'🇻🇪', 'PAR':'🇵🇾', 'BOL':'🇧🇴', 'CRC':'🇨🇷', 'PAN':'🇵🇦', 'JAM':'🇯🇲',
-  
-  // Europa (UEFA)
-  'FRA':'🇫🇷', 'ENG':'🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'ESP':'🇪🇸', 'GER':'🇩🇪', 'POR':'🇵🇹', 
-  'ITA':'🇮🇹', 'CRO':'🇭🇷', 'NED':'🇳🇱', 'BEL':'🇧🇪', 'SUI':'🇨🇭', 
-  'POL':'🇵🇱', 'DEN':'🇩🇰', 'SWE':'🇸🇪', 'SRB':'🇷🇸', 'WAL':'🏴󠁧󠁢󠁷󠁬󠁳󠁿', 
-  'SCO':'🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'UKR':'🇺🇦', 'AUT':'🇦🇹', 'TUR':'🇹🇷', 'CZE':'🇨🇿', 'HUN':'🇭🇺',
-
-  // África (CAF)
-  'SEN':'🇸🇳', 'MAR':'🇲🇦', 'CMR':'🇨🇲', 'GHA':'🇬🇭', 'TUN':'🇹🇳', 
-  'NGA':'🇳🇬', 'ALG':'🇩🇿', 'EGY':'🇪🇬', 'CIV':'🇨🇮', 'MLI':'🇲🇱',
-
-  // Ásia e Oceania (AFC e OFC)
-  'JPN':'🇯🇵', 'KOR':'🇰🇷', 'KSA':'🇸🇦', 'AUS':'🇦🇺', 'IRN':'🇮🇷', 
-  'QAT':'🇶🇦', 'NZL':'🇳🇿', 'IRQ':'🇮🇶', 'UAE':'🇦🇪'
+// Dicionário convertido para Imagens (Resolve o problema do Windows)
+const ISO_MAP = {
+  // Américas
+  'BRA':'br', 'ARG':'ar', 'USA':'us', 'MEX':'mx', 'CAN':'ca', 
+  'URU':'uy', 'COL':'co', 'ECU':'ec', 'PER':'pe', 'CHI':'cl', 
+  'VEN':'ve', 'PAR':'py', 'BOL':'bo', 'CRC':'cr', 'PAN':'pa', 'JAM':'jm',
+  // Europa
+  'FRA':'fr', 'ENG':'gb-eng', 'ESP':'es', 'GER':'de', 'POR':'pt', 
+  'ITA':'it', 'CRO':'hr', 'NED':'nl', 'BEL':'be', 'SUI':'ch', 
+  'POL':'pl', 'DEN':'dk', 'SWE':'se', 'SRB':'rs', 'WAL':'gb-wls', 
+  'SCO':'gb-sct', 'UKR':'ua', 'AUT':'at', 'TUR':'tr', 'CZE':'cz', 'HUN':'hu',
+  // África
+  'SEN':'sn', 'MAR':'ma', 'CMR':'cm', 'GHA':'gh', 'TUN':'tn', 
+  'NGA':'ng', 'ALG':'dz', 'EGY':'eg', 'CIV':'ci', 'MLI':'ml', 'COD':'cd', 'RSA':'za',
+  // Ásia/Oceania
+  'JPN':'jp', 'KOR':'kr', 'KSA':'sa', 'AUS':'au', 'IRN':'ir', 
+  'QAT':'qa', 'NZL':'nz', 'IRQ':'iq', 'UAE':'ae', 'JOR':'jo', 
+  'UZB':'uz', 'OMA':'om', 'BHR':'bh'
 };
 
-function getFlag(code) { return FLAGS_MAP[code] || '🏳️'; }
+function getFlag(code) { 
+  const iso = ISO_MAP[code];
+  if (iso) {
+    // Retorna uma imagem da bandeira que se ajusta automaticamente ao tamanho da fonte
+    return `<img src="https://flagcdn.com/w40/${iso}.png" srcset="https://flagcdn.com/w80/${iso}.png 2x" alt="${code}" style="width: 1em; height: auto; border-radius: 3px; vertical-align: middle; box-shadow: 0 1px 3px rgba(0,0,0,0.4);">`;
+  }
+  return '🏳️'; 
+}
+
 
   
 // ================================================================
