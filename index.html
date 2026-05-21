@@ -1031,7 +1031,7 @@ async function doLogin() {
   btn.disabled = true; btn.textContent = 'Verificando...';
 
   try {
-    const res = await gsPost({ action:'login', email:em, pass:pw });
+    const res = await gsCall({ action:'login', email:em, pass:pw });
     if (!res.ok) { authMsg(res.error || 'Credenciais inválidas.'); return; }
 
     const user = res.user;
@@ -1075,10 +1075,10 @@ async function doRegister() {
   btn.disabled = true; btn.textContent = 'Criando conta...';
 
   try {
-    const res = await gsPost({ action:'register', email:em, name, pass:pw, team, avatar: tempAvatar || '' });
+    const res = await gsCall({ action:'register', email:em, name:name, pass:pw, team:team });
     if (!res.ok) { authMsg(res.error || 'Erro ao criar conta.'); return; }
 
-    const user = { ...res.user, bets:{} };
+    const user = { ...res.user, bets:{}, avatar: tempAvatar || '' };
     S.me = em;
     S.users[em] = user;
     saveSession(user);
@@ -1104,7 +1104,7 @@ async function submitChangePass() {
   if (newPass !== confirm) { msgEl.innerHTML='<div class="err-msg">As senhas não conferem.</div>'; return; }
 
   try {
-    const res = await gsPost({ action:'changePass', email:S.me, newPass });
+    const res = await gsCall({ action:'changePass', email:S.me, newPass:newPass });
     if (!res.ok) { msgEl.innerHTML=`<div class="err-msg">${res.error}</div>`; return; }
     S.users[S.me].mustChangePass = false;
     saveSession(S.users[S.me]);
@@ -1122,7 +1122,7 @@ async function doChangePass() {
   if (!oldPass || !newPass) { msgEl.innerHTML='<div class="err-msg">Preencha todos os campos.</div>'; return; }
   if (newPass.length < 6)   { msgEl.innerHTML='<div class="err-msg">Nova senha deve ter ao menos 6 caracteres.</div>'; return; }
   try {
-    const res = await gsPost({ action:'changePass', email:S.me, oldPass, newPass });
+    const res = await gsCall({ action:'changePass', email:S.me, oldPass:oldPass, newPass:newPass });
     if (!res.ok) { msgEl.innerHTML=`<div class="err-msg">${res.error}</div>`; return; }
     S.users[S.me].mustChangePass = false;
     saveSession(S.users[S.me]);
@@ -1183,22 +1183,22 @@ function gsActionUrl(action) {
   return `${GS_URL}${sep}action=${encodeURIComponent(action)}`;
 }
 
-async function gsPost(body) {
-  if (!GS_URL) throw new Error('GS_URL não configurada');
-  const res = await fetch(GS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type':'application/json' },
-    body: JSON.stringify(body),
-    mode: 'cors'
-  });
-  return res.json();
-}
-
-async function gsGet(action, extraParams = {}) {
-  let url = gsActionUrl(action);
-  Object.entries(extraParams).forEach(([k,v]) => { url += `&${k}=${encodeURIComponent(v)}`; });
+// Todas as chamadas usam GET para evitar bloqueio de CORS
+async function gsCall(params) {
+  if (!GS_URL) throw new Error('GS_URL nao configurada');
+  const sep = GS_URL.includes('?') ? '&' : '?';
+  const qs  = Object.entries(params)
+    .filter(([,v]) => v !== undefined && v !== null && v !== '')
+    .map(([k,v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v))
+    .join('&');
+  const url = GS_URL + sep + qs;
   const res = await fetch(url, { mode:'cors' });
   return res.json();
+}
+// Alias para chamadas de torneio/loadAll
+async function gsGet(action, extraParams) {
+  extraParams = extraParams || {};
+  return gsCall(Object.assign({ action }, extraParams));
 }
 
 // ================================================================
@@ -1276,12 +1276,13 @@ function updateDataSourceLabel() {
 // ================================================================
 async function gsSave(email, gameId, h, a) {
   if (!GS_URL) return;
-  try { await gsPost({ action:'saveBet', email, gameId, h, a }); } catch(e) { console.warn('GS save failed:', e); }
+  try { await gsCall({ action:'saveBet', email:email, gameId:gameId, h:h, a:a }); } catch(e) { console.warn('GS save failed:', e); }
 }
 
 async function gsSaveUser(user) {
   if (!GS_URL) return;
-  try { await gsPost({ action:'saveUser', email:user.email, name:user.name, team:user.team, motto:user.motto }); } catch(e) {}
+  // Avatar nao e enviado via GET (muito grande) - fica no localStorage do usuario
+  try { await gsCall({ action:'saveUser', email:user.email, name:user.name, team:user.team, motto:user.motto }); } catch(e) {}
 }
 
 async function gsLoadAll() {
@@ -1793,7 +1794,7 @@ async function submitAdminEdit() {
   const motto   = document.getElementById('ae-motto').value.trim();
   const isAdm   = document.getElementById('ae-admin').value === 'true';
   try {
-    const res = await gsPost({ action:'adminUpdateUser', callerEmail:S.me, targetEmail:adminEditTarget, name, team, motto, isAdmin:isAdm });
+    const res = await gsCall({ action:'adminUpdateUser', callerEmail:S.me, targetEmail:adminEditTarget, name, team, motto, isAdmin:isAdm });
     if (!res.ok) { toast(res.error||'Erro ao salvar','err'); return; }
     toast('Usuário atualizado! ✅','ok');
     closeAdminEdit();
@@ -1805,7 +1806,7 @@ async function submitAdminResetPass() {
   if (!adminEditTarget) return;
   if (!confirm(`Resetar a senha de "${adminEditTarget}" para "adminpirata"? O usuário precisará criar uma nova senha no próximo login.`)) return;
   try {
-    const res = await gsPost({ action:'adminResetPass', callerEmail:S.me, targetEmail:adminEditTarget });
+    const res = await gsCall({ action:'adminResetPass', callerEmail:S.me, targetEmail:adminEditTarget });
     if (!res.ok) { toast(res.error||'Erro ao resetar senha','err'); return; }
     toast(`🔑 Senha de ${adminEditTarget} resetada! Ele usará "adminpirata" e criará uma nova senha.`,'ok');
     closeAdminEdit();
