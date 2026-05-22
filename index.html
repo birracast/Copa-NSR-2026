@@ -948,11 +948,12 @@ function makeFallbackGame(data) {
 //  STATE
 // ================================================================
 let S = {
-  users: {},        // email -> user object (loaded from GS)
-  me: null,         // logged-in email
-  results: {},      // gameId -> {h, a, status}
+  users: {},        
+  me: null,         
+  results: {},      
   settings: { exact:10, result:5, streak:5, semi:15, final:25 },
   viewingUser: null,
+  bosta: {} 
 };
 let saveTimers = {};
 let adminUsers = []; // cache for admin panel
@@ -1007,7 +1008,7 @@ async function boot() {
     try {
       await loadTournamentData(false);
       const data = await gsLoadAll();
-      if (data && data.users) mergeRemoteUsers(data.users);
+      if (data && data.users) mergeRemoteData(data);
     } catch(e) {}
     hideLoading();
     enterApp();
@@ -1087,7 +1088,7 @@ async function doLogin() {
 
     // Load all users from GS
     const data = await gsLoadAll();
-    if (data && data.users) mergeRemoteUsers(data.users);
+    if (data && data.users) mergeRemoteData(data);
 
     await loadTournamentData(false);
 
@@ -1347,30 +1348,27 @@ async function gsLoadAll() {
   return null;
 }
 
-function mergeRemoteUsers(remoteUsers) {
-  remoteUsers.forEach(row => {
-    const email = row.email;
-    if (!email) return;
-    const existing = S.users[email] || {};
-    const bets = {};
-    GAMES.forEach(g => {
-      const h = row[`g${g.id}_h`]; const a = row[`g${g.id}_a`];
-      if (h !== '' && h != null && a !== '' && a != null) bets[g.id] = { h:parseInt(h), a:parseInt(a) };
+function mergeRemoteData(data) {
+  if (data.users) {
+    data.users.forEach(row => {
+      const email = row.email;
+      if (!email) return;
+      const existing = S.users[email] || {};
+      const bets = {};
+      GAMES.forEach(g => {
+        const h = row[`g${g.id}_h`]; const a = row[`g${g.id}_a`];
+        if (h !== '' && h != null && a !== '' && a != null) bets[g.id] = { h:parseInt(h), a:parseInt(a) };
+      });
+      S.users[email] = {
+        email, name: row.name || existing.name || email, team: row.team || existing.team || '',
+        motto: row.motto || existing.motto || '', avatar: row.avatar || existing.avatar || '',
+        isAdmin: row.isAdmin || existing.isAdmin || false, mustChangePass: row.mustChangePass || false,
+        since: row.since || existing.since || '', bets: { ...existing.bets, ...bets }
+      };
+      if (email === S.me) saveSession(S.users[email]);
     });
-    S.users[email] = {
-      email,
-      name:    row.name   || existing.name   || email,
-      team:    row.team   || existing.team   || '',
-      motto:   row.motto  || existing.motto  || '',
-      avatar:  row.avatar || existing.avatar || '',
-      isAdmin: row.isAdmin || existing.isAdmin || false,
-      mustChangePass: row.mustChangePass || false,
-      since:   row.since  || existing.since  || '',
-      bets:    { ...existing.bets, ...bets }
-    };
-    // Update session if it's the logged-in user
-    if (email === S.me) saveSession(S.users[email]);
-  });
+  }
+  S.bosta = data.bosta || {}; 
 }
 
 async function forceSyncAll() {
@@ -1378,7 +1376,7 @@ async function forceSyncAll() {
   await loadTournamentData(true);
   const data = await gsLoadAll();
   if (data && data.users) {
-    mergeRemoteUsers(data.users);
+    mergeRemoteData(data);
     persistSettings();
     toast('Sincronizado com Google Sheets! ✅','ok');
     rerenderCurrentPage();
@@ -1429,9 +1427,79 @@ function getGameStatus(game) {
 }
 
 // ================================================================
-//  POINTS
+//  POINTS E PIRATECAS
 // ================================================================
 function getWDL(h,a) { if(h>a)return'H'; if(a>h)return'A'; return'D'; }
+
+function getRodada(id) {
+  if (id <= 24) return 1; if (id <= 48) return 2; if (id <= 72) return 3;
+  if (id <= 88) return 4; if (id <= 96) return 5; if (id <= 100) return 6;
+  if (id <= 102) return 7; return 8;
+}
+
+function calcGamePoints(user, gameId) {
+  if (!user) return 0;
+  const s = S.settings; const r = S.results[gameId]; const b = (user.bets||{})[gameId];
+  if (!r || r.status !== 'finished' || !b || r.h === null) return 0;
+  let pts = 0;
+  if (b.h === r.h && b.a === r.a) {
+    pts += s.exact;
+    const game = GAMES.find(g=>g.id===gameId);
+    if (game && game.phase === 'Semifinal') pts += s.semi;
+    if (game && game.phase === 'Final') pts += s.final;
+  } else if (getWDL(b.h,b.a) === getWDL(r.h,r.a)) { pts += s.result; }
+  return pts;
+}
+
+function calcUserPiratecas(email) {
+  let balance = 100;
+  const u = S.users[email];
+  if(!u) return balance;
+
+  const rodadas = {};
+  GAMES.forEach(g => {
+    const r = S.results[g.id];
+    if(r && r.status === 'finished' && r.h !== null) {
+       const rodada = getRodada(g.id);
+       if(!rodadas[rodada]) rodadas[rodada] = { users: {} };
+       Object.values(S.users).forEach(user => {
+         if(!rodadas[rodada].users[user.email]) rodadas[rodada].users[user.email] = 0;
+         rodadas[rodada].users[user.email] += calcGamePoints(user, g.id);
+       });
+    }
+  });
+
+  Object.keys(rodadas).forEach(rodada => {
+     const rData = rodadas[rodada];
+     const ptsArray = Object.values(rData.users).sort((a,b)=>a-b);
+     const maxPts = ptsArray[ptsArray.length-1];
+     const minPts = ptsArray[0];
+     let medPts = (ptsArray.length % 2 === 0) ? (ptsArray[ptsArray.length/2 - 1] + ptsArray[ptsArray.length/2]) / 2 : ptsArray[Math.floor(ptsArray.length/2)];
+
+     if (maxPts !== minPts) { 
+       const myPts = rData.users[email];
+       if (myPts === maxPts) balance += 5; 
+       else if (myPts === minPts) balance -= 5; 
+       else if (myPts === medPts) balance -= 1; 
+       else if (myPts < medPts && myPts > minPts) balance -= 1; 
+     }
+  });
+
+  Object.keys(S.bosta || {}).forEach(key => {
+     const parts = key.split('_'); const gId = parseInt(parts[1]); const target = parts[2];
+     const voters = S.bosta[key];
+     if (voters.includes(email)) {
+        const r = S.results[gId];
+        if (r && r.status === 'finished' && r.h !== null) {
+           const targetPts = calcGamePoints(S.users[target], gId);
+           if (targetPts === 0) balance += 2; 
+           else balance -= 2; 
+        }
+     }
+  });
+  return balance;
+}
+
 function calcPoints(user) {
   const s = S.settings; let total=0, exact=0, res=0, streak=0, maxStreak=0;
   GAMES.forEach(g => {
@@ -1442,7 +1510,7 @@ function calcPoints(user) {
     else { streak=0; }
   });
   if (maxStreak>=3) total+=s.streak;
-  return { total, exact, res };
+  return { total, exact, res, piratecas: calcUserPiratecas(user.email) }; 
 }
 
 // ================================================================
@@ -1455,11 +1523,11 @@ function renderStats() {
   const finished = Object.values(S.results).filter(r=>r.status==='finished').length;
   document.getElementById('stats-row').innerHTML = `
     <div class="stat-box"><div class="sv gold">${pts.total}</div><div class="sl">Meus Pontos</div></div>
+    <div class="stat-box"><div class="sv" style="color:#C9A84C;">${pts.piratecas}</div><div class="sl">Piratecas 🏴‍☠️</div></div>
     <div class="stat-box"><div class="sv">${pos||'-'}º</div><div class="sl">Posição</div></div>
     <div class="stat-box"><div class="sv green">${pts.exact}</div><div class="sl">Placares Exatos</div></div>
     <div class="stat-box"><div class="sv blue">${pts.res}</div><div class="sl">Resultados</div></div>
     <div class="stat-box"><div class="sv red">${finished}</div><div class="sl">Jogos Encerrados</div></div>
-    <div class="stat-box"><div class="sv">${Object.keys(S.users).length}</div><div class="sl">Participantes</div></div>
   `;
 }
 
@@ -1565,6 +1633,28 @@ function renderGameCard(game) {
     return `<div class="mini-bet ${miniClass}" title="${esc(u.name)}: ${ub.h}–${ub.a}"><div class="mini-bet-avatar">${u.avatar?`<img src="${u.avatar}">`:'🧑'}</div><span class="mini-bet-score">${ub.h}–${ub.a}</span></div>`;
   }).join('');
 
+  let bostaHtml = '';
+  if (bet) {
+    const bostaKey = `bosta_${game.id}_${viewUser}`;
+    const voters = (S.bosta || {})[bostaKey] || [];
+    const hasVoted = voters.includes(S.me);
+    
+    if (!locked) {
+      bostaHtml = `<button class="btn-sm" onclick="voteBosta(${game.id}, '${viewUser}')" style="margin-top:8px; border-color: ${hasVoted ? 'var(--gold)' : 'var(--border)'}; background: ${hasVoted ? 'rgba(201,168,76,0.1)' : 'var(--dark3)'}; width:100%; color: ${hasVoted ? 'var(--gold)' : 'var(--text)'}">💩 Apostar "Palpite Bosta" (-2/+2)</button>`;
+      if (voters.length > 0) bostaHtml += `<div style="font-size:10px; color:var(--muted); text-align:center; margin-top:4px;">${voters.length} apostaram contra esse palpite</div>`;
+    } else if (r.status === 'finished' && r.h !== null) {
+      if (hasVoted) {
+         const targetPts = calcGamePoints(viewUserObj, game.id);
+         const winBosta = targetPts === 0;
+         bostaHtml = `<div style="margin-top:8px; padding:6px; text-align:center; border-radius:8px; font-size:12px; font-weight:bold; background: ${winBosta ? 'rgba(60,172,59,0.15)' : 'rgba(230,29,37,0.1)'}; color: ${winBosta ? 'var(--green)' : '#ff7b7b'}; border: 1px solid ${winBosta ? 'rgba(60,172,59,0.25)' : 'rgba(230,29,37,0.2)'};">💩 Aposta Bosta: Você ${winBosta ? 'GANHOU +2' : 'PERDEU -2'} 🏴‍☠️</div>`;
+      } else if (voters.length > 0) {
+         bostaHtml += `<div style="font-size:10px; color:var(--muted); text-align:center; margin-top:4px;">${voters.length} apostaram contra esse palpite</div>`;
+      }
+    } else {
+      if (voters.length > 0) bostaHtml += `<div style="font-size:10px; color:var(--muted); text-align:center; margin-top:8px;">💩 ${voters.length} apostaram contra esse palpite</div>`;
+    }
+  }
+
   return `<div class="game-card ${cardClass}${locked?' locked':''}" id="gc-${game.id}">
     <div class="gcard-top"><span class="gcard-round">${game.group||game.phase}</span>${statusPill}</div>
     <div class="gcard-top" style="margin-top:-8px;margin-bottom:10px"><span class="gcard-date">📅 ${formatDate(game.date)}</span><span class="gcard-date" style="font-size:10px">🏟 ${esc(game.venue)}</span></div>
@@ -1573,7 +1663,7 @@ function renderGameCard(game) {
       <div class="center-col">${realScore}<div class="venue-text">${r.h!==null?'Resultado oficial':''}</div></div>
       <div class="team-col">${renderTeamMark(game,'a','team-flag')}<div class="team-code" title="${esc(game.aName||game.aCode)}">${esc(game.aCode)}</div></div>
     </div>
-    <div class="bet-row">${betSection}${badge}</div>
+    <div class="bet-row">${betSection}${badge}${bostaHtml}</div>
     ${miniBets?`<div class="all-bets-row">${miniBets}</div>`:''}
   </div>`;
 }
@@ -1676,7 +1766,7 @@ function renderRanking() {
         <div class="rank-sub">⚽ ${esc(u.team||'—')}${u.motto?' • "'+esc(u.motto)+'"':''}</div>
         <div class="rank-detail"><span class="rank-detail-pill e">⭐ ${u.pts.exact} exatos</span><span class="rank-detail-pill r">✅ ${u.pts.res} resultados</span></div>
       </div>
-      <div class="rank-pts-col"><div class="rank-pts-val">${u.pts.total}</div><div class="rank-pts-lbl">pontos</div></div>
+      <div class="rank-pts-col"><div class="rank-pts-val">${u.pts.total}</div><div class="rank-pts-lbl">pontos</div><div style="font-size:12px; font-weight:700; color:#C9A84C; margin-top:2px;">${u.pts.piratecas} 🏴‍☠️</div></div>
     </div>`;
   }).join('');
   document.getElementById('rank-table').innerHTML = html || '<div style="color:var(--muted);text-align:center;padding:40px">Nenhum participante ainda.</div>';
@@ -1899,7 +1989,7 @@ function refreshNavUser() {
 }
 function updateNavPts() {
   const u = S.users[S.me]; if(!u) return;
-  document.getElementById('nav-pts').textContent = calcPoints(u).total + ' pts';
+  document.getElementById('nav-pts').innerHTML = `${calcPoints(u).total} pts <span style="color:#C9A84C; font-size:12px; margin-left:6px; border-left:1px solid #333; padding-left:6px;">${calcPoints(u).piratecas} 🏴‍☠️</span>`;
 }
 function formatDate(d) {
   const dt = new Date(d);
@@ -1926,6 +2016,26 @@ function toast(msg, type='info') {
   setTimeout(()=>{ el.style.animation='toastOut .3s ease forwards'; setTimeout(()=>el.remove(),300); }, 3000);
 }
 
+async function voteBosta(gameId, target) {
+  if (!S.bosta) S.bosta = {};
+  const key = `bosta_${gameId}_${target}`;
+  const voters = S.bosta[key] || [];
+  if (voters.includes(S.me)) {
+    toast('Você já apostou que esse palpite é bosta!', 'info');
+    return;
+  }
+  voters.push(S.me);
+  S.bosta[key] = voters;
+  renderGames(); 
+  
+  try {
+    await gsCall({ action:'voteBosta', gameId: gameId, targetEmail: target, voterEmail: S.me });
+    toast('Aposta no Palpite Bosta registrada! 💩', 'ok');
+  } catch(e) {
+    toast('Erro ao registrar aposta.', 'err');
+  }
+}
+  
 // ================================================================
 //  BOOT
 // ================================================================
