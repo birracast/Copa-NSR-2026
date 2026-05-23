@@ -743,6 +743,17 @@ header {
       </div>
       <div class="set-card" style="grid-column:1/-1">
         <h3>⚽ Inserir Resultado (Admin)</h3>
+        <div style="background:var(--dark3); border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:16px;">
+          <strong style="color:var(--gold)">🧪 Modo de Teste</strong>
+          <p style="font-size:12px; color:var(--muted); margin:4px 0 10px;">Ligue o modo teste para sobrescrever os resultados oficiais da API com os placares que você inserir abaixo. Quando desligar, tudo volta ao oficial.</p>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <button class="btn-sm" id="btn-test-on" onclick="setTestMode('true')" style="border-color:var(--gold); color:var(--gold);">LIGAR</button>
+            <button class="btn-sm" id="btn-test-off" onclick="setTestMode('false')" style="border-color:var(--red); color:var(--red);">DESLIGAR</button>
+            <span id="test-mode-status" style="font-size:13px; font-weight:bold; margin-left:8px;"></span>
+          </div>
+        </div>
+
+        
         <div class="admin-result-form">
           <div style="flex:2;min-width:180px"><label class="flabel">Jogo</label><select class="finput" id="adm-game" style="font-size:13px"></select></div>
           <div style="width:64px"><label class="flabel">Gols A</label><input type="number" id="adm-a" class="score-inp" value="0" min="0" max="20" style="width:100%"></div>
@@ -948,16 +959,11 @@ function makeFallbackGame(data) {
 //  STATE
 // ================================================================
 let S = {
-  users: {},        
-  me: null,         
-  results: {},      
+  users: {}, me: null, results: {},
   settings: { exact:10, result:5, streak:5, semi:15, final:25 },
-  viewingUser: null,
-  bosta: {} 
+  viewingUser: null, apostas: {}, testMode: false
 };
-let saveTimers = {};
-let adminUsers = []; // cache for admin panel
-let adminEditTarget = null;
+let saveTimers = {}; let adminUsers = []; let adminEditTarget = null;
 
 // ================================================================
 //  PERSIST SETTINGS (only settings in localStorage, not users)
@@ -1273,6 +1279,7 @@ function applyTournamentPayload(data) {
   GAMES = data.games.map(normalizeClientGame).sort((a,b)=>a.id-b.id);
   STANDINGS = Array.isArray(data.standings) ? data.standings : [];
   DATA_META = { source:data.source||'API', updatedAt:data.updatedAt||new Date().toISOString(), error:null };
+  S.testMode = data.testMode === true; // Avisa o site se o modo teste está ligado
   applyOfficialResults(); updateDataSourceLabel();
 }
 
@@ -1351,10 +1358,8 @@ async function gsLoadAll() {
 function mergeRemoteData(data) {
   if (data.users) {
     data.users.forEach(row => {
-      const email = row.email;
-      if (!email) return;
-      const existing = S.users[email] || {};
-      const bets = {};
+      const email = row.email; if (!email) return;
+      const existing = S.users[email] || {}; const bets = {};
       GAMES.forEach(g => {
         const h = row[`g${g.id}_h`]; const a = row[`g${g.id}_a`];
         if (h !== '' && h != null && a !== '' && a != null) bets[g.id] = { h:parseInt(h), a:parseInt(a) };
@@ -1368,7 +1373,7 @@ function mergeRemoteData(data) {
       if (email === S.me) saveSession(S.users[email]);
     });
   }
-  S.bosta = data.bosta || {}; 
+  S.apostas = data.apostas || {}; 
 }
 
 async function forceSyncAll() {
@@ -1494,6 +1499,78 @@ function calcUserPiratecas(email) {
            const targetPts = calcGamePoints(S.users[target], gId);
            if (targetPts === 0) balance += 2; 
            else balance -= 2; 
+        }
+     }
+  });
+  return balance;
+}
+
+function getWDL(h,a) { if(h>a)return'H'; if(a>h)return'A'; return'D'; }
+function getRodada(id) {
+  if (id <= 24) return 1; if (id <= 48) return 2; if (id <= 72) return 3;
+  if (id <= 88) return 4; if (id <= 96) return 5; if (id <= 100) return 6;
+  if (id <= 102) return 7; return 8;
+}
+
+function calcGamePoints(user, gameId) {
+  if (!user) return 0;
+  const s = S.settings; const r = S.results[gameId]; const b = (user.bets||{})[gameId];
+  if (!r || r.status !== 'finished' || !b || r.h === null) return 0;
+  let pts = 0;
+  if (b.h === r.h && b.a === r.a) {
+    pts += s.exact;
+    const game = GAMES.find(g=>g.id===gameId);
+    if (game && game.phase === 'Semifinal') pts += s.semi;
+    if (game && game.phase === 'Final') pts += s.final;
+  } else if (getWDL(b.h,b.a) === getWDL(r.h,r.a)) { pts += s.result; }
+  return pts;
+}
+
+function calcUserPiratecas(email) {
+  let balance = 100;
+  const u = S.users[email];
+  if(!u) return balance;
+
+  const rodadas = {};
+  GAMES.forEach(g => {
+    const r = S.results[g.id];
+    if(r && r.status === 'finished' && r.h !== null) {
+       const rodada = getRodada(g.id);
+       if(!rodadas[rodada]) rodadas[rodada] = { users: {} };
+       Object.values(S.users).forEach(user => {
+         if(!rodadas[rodada].users[user.email]) rodadas[rodada].users[user.email] = 0;
+         rodadas[rodada].users[user.email] += calcGamePoints(user, g.id);
+       });
+    }
+  });
+
+  Object.keys(rodadas).forEach(rodada => {
+     const rData = rodadas[rodada];
+     const ptsArray = Object.values(rData.users).sort((a,b)=>a-b);
+     const maxPts = ptsArray[ptsArray.length-1];
+     const minPts = ptsArray[0];
+     let medPts = (ptsArray.length % 2 === 0) ? (ptsArray[ptsArray.length/2 - 1] + ptsArray[ptsArray.length/2]) / 2 : ptsArray[Math.floor(ptsArray.length/2)];
+
+     if (maxPts !== minPts) { 
+       const myPts = rData.users[email];
+       if (myPts === maxPts) balance += 5; 
+       else if (myPts === minPts) balance -= 5; 
+       else if (myPts === medPts) balance -= 1; 
+       else if (myPts < medPts && myPts > minPts) balance -= 1; 
+     }
+  });
+
+  Object.keys(S.apostas || {}).forEach(key => {
+     const parts = key.split('_'); const gId = parseInt(parts[1]); const target = parts[2];
+     const votersObj = S.apostas[key];
+     if (votersObj[email]) {
+        const type = votersObj[email]; 
+        const r = S.results[gId];
+        if (r && r.status === 'finished' && r.h !== null) {
+           const targetPts = calcGamePoints(S.users[target], gId);
+           const targetHit = targetPts > 0;
+           if (type === 'bosta') { if (!targetHit) balance += 2; else balance -= 2; } 
+           else if (type === 'mestre') { if (targetHit) balance += 2; else balance -= 2; }
         }
      }
   });
@@ -1633,25 +1710,30 @@ function renderGameCard(game) {
     return `<div class="mini-bet ${miniClass}" title="${esc(u.name)}: ${ub.h}–${ub.a}"><div class="mini-bet-avatar">${u.avatar?`<img src="${u.avatar}">`:'🧑'}</div><span class="mini-bet-score">${ub.h}–${ub.a}</span></div>`;
   }).join('');
 
-  let bostaHtml = '';
-  if (bet) {
-    const bostaKey = `bosta_${game.id}_${viewUser}`;
-    const voters = (S.bosta || {})[bostaKey] || [];
-    const hasVoted = voters.includes(S.me);
-    
+  // Lógica de Apostas Bosta/Mestre
+  let extraHtml = '';
+  if (bet && viewUser !== S.me) {
+    const apostaKey = `aposta_${game.id}_${viewUser}`;
+    const votersObj = (S.apostas || {})[apostaKey] || {};
+    const myVote = votersObj[S.me];
+    const bostaCount = Object.values(votersObj).filter(v => v === 'bosta').length;
+    const mestreCount = Object.values(votersObj).filter(v => v === 'mestre').length;
+
     if (!locked) {
-      bostaHtml = `<button class="btn-sm" onclick="voteBosta(${game.id}, '${viewUser}')" style="margin-top:8px; border-color: ${hasVoted ? 'var(--gold)' : 'var(--border)'}; background: ${hasVoted ? 'rgba(201,168,76,0.1)' : 'var(--dark3)'}; width:100%; color: ${hasVoted ? 'var(--gold)' : 'var(--text)'}">💩 Apostar "Palpite Bosta" (-2/+2)</button>`;
-      if (voters.length > 0) bostaHtml += `<div style="font-size:10px; color:var(--muted); text-align:center; margin-top:4px;">${voters.length} apostaram contra esse palpite</div>`;
-    } else if (r.status === 'finished' && r.h !== null) {
-      if (hasVoted) {
-         const targetPts = calcGamePoints(viewUserObj, game.id);
-         const winBosta = targetPts === 0;
-         bostaHtml = `<div style="margin-top:8px; padding:6px; text-align:center; border-radius:8px; font-size:12px; font-weight:bold; background: ${winBosta ? 'rgba(60,172,59,0.15)' : 'rgba(230,29,37,0.1)'}; color: ${winBosta ? 'var(--green)' : '#ff7b7b'}; border: 1px solid ${winBosta ? 'rgba(60,172,59,0.25)' : 'rgba(230,29,37,0.2)'};">💩 Aposta Bosta: Você ${winBosta ? 'GANHOU +2' : 'PERDEU -2'} 🏴‍☠️</div>`;
-      } else if (voters.length > 0) {
-         bostaHtml += `<div style="font-size:10px; color:var(--muted); text-align:center; margin-top:4px;">${voters.length} apostaram contra esse palpite</div>`;
+      if (!myVote) {
+         extraHtml = `<div style="display:flex; gap:6px; margin-top:8px;"><button class="btn-sm" onclick="voteExtra(${game.id}, '${viewUser}', 'bosta')" style="flex:1; border-color:var(--border); background:var(--dark3); color:var(--text)">💩 Bosta</button><button class="btn-sm" onclick="voteExtra(${game.id}, '${viewUser}', 'mestre')" style="flex:1; border-color:var(--border); background:var(--dark3); color:var(--text)">✅ Mestre</button></div>`;
+      } else {
+         extraHtml = `<div style="margin-top:8px; text-align:center; padding:6px; border-radius:8px; font-size:12px; font-weight:600; background:rgba(201,168,76,0.1); color:var(--gold); border:1px solid rgba(201,168,76,0.3);">Sua Aposta: ${myVote === 'bosta' ? '💩 Bosta' : '✅ Mestre'} (-2/+2)</div>`;
       }
+      if (bostaCount > 0 || mestreCount > 0) extraHtml += `<div style="font-size:10px; color:var(--muted); text-align:center; margin-top:4px;">Apostas do Grupo: 💩 ${bostaCount} | ✅ ${mestreCount}</div>`;
+    } else if (r.status === 'finished' && r.h !== null) {
+      if (myVote) {
+         const targetPts = calcGamePoints(viewUserObj, game.id);
+         const win = (myVote === 'bosta') ? (targetPts === 0) : (targetPts > 0);
+         extraHtml = `<div style="margin-top:8px; padding:6px; text-align:center; border-radius:8px; font-size:12px; font-weight:bold; background: ${win ? 'rgba(60,172,59,0.15)' : 'rgba(230,29,37,0.1)'}; color: ${win ? 'var(--green)' : '#ff7b7b'}; border: 1px solid ${win ? 'rgba(60,172,59,0.25)' : 'rgba(230,29,37,0.2)'};">${myVote === 'bosta' ? '💩 Bosta' : '✅ Mestre'}: Você ${win ? 'GANHOU +2' : 'PERDEU -2'} 🏴‍☠️</div>`;
+      } else if (bostaCount > 0 || mestreCount > 0) extraHtml += `<div style="font-size:10px; color:var(--muted); text-align:center; margin-top:4px;">Apostas do Grupo: 💩 ${bostaCount} | ✅ ${mestreCount}</div>`;
     } else {
-      if (voters.length > 0) bostaHtml += `<div style="font-size:10px; color:var(--muted); text-align:center; margin-top:8px;">💩 ${voters.length} apostaram contra esse palpite</div>`;
+      if (bostaCount > 0 || mestreCount > 0) extraHtml += `<div style="font-size:10px; color:var(--muted); text-align:center; margin-top:8px;">Apostas do Grupo: 💩 ${bostaCount} | ✅ ${mestreCount}</div>`;
     }
   }
 
@@ -1663,7 +1745,7 @@ function renderGameCard(game) {
       <div class="center-col">${realScore}<div class="venue-text">${r.h!==null?'Resultado oficial':''}</div></div>
       <div class="team-col">${renderTeamMark(game,'a','team-flag')}<div class="team-code" title="${esc(game.aName||game.aCode)}">${esc(game.aCode)}</div></div>
     </div>
-    <div class="bet-row">${betSection}${badge}${bostaHtml}</div>
+    <div class="bet-row">${betSection}${badge}${extraHtml}</div>
     ${miniBets?`<div class="all-bets-row">${miniBets}</div>`:''}
   </div>`;
 }
@@ -1798,6 +1880,18 @@ function renderSettingsPage() {
   // Populate game select
   const sel = document.getElementById('adm-game');
   if (sel) { sel.innerHTML = GAMES.map(g=>`<option value="${g.id}">#${g.id} ${g.hCode} vs ${g.aCode}</option>`).join(''); }
+
+  // Atualiza o status da Chavinha de Teste na tela
+  const tmStatus = document.getElementById('test-mode-status');
+  if (tmStatus) {
+    if (S.testMode) {
+      tmStatus.textContent = '🔴 LIGADO';
+      tmStatus.style.color = '#ff7b7b';
+    } else {
+      tmStatus.textContent = '⚫ DESLIGADO';
+      tmStatus.style.color = 'var(--muted)';
+    }
+  }
 }
 
 function saveSettings() {
@@ -2033,6 +2127,39 @@ async function voteBosta(gameId, target) {
     toast('Aposta no Palpite Bosta registrada! 💩', 'ok');
   } catch(e) {
     toast('Erro ao registrar aposta.', 'err');
+  }
+}
+
+// ================================================================
+//  AÇÕES EXTRAS (APOSTAS E MODO TESTE)
+// ================================================================
+async function voteExtra(gameId, target, type) {
+  if (!S.apostas) S.apostas = {};
+  const key = `aposta_${gameId}_${target}`;
+  if (!S.apostas[key]) S.apostas[key] = {};
+  if (S.apostas[key][S.me]) { toast('Você já fez sua aposta neste palpite!', 'info'); return; }
+
+  // Atualiza imediatamente na tela do usuário
+  S.apostas[key][S.me] = type;
+  renderGames(); 
+  
+  try {
+    await gsCall({ action:'voteExtra', gameId: gameId, targetEmail: target, voterEmail: S.me, type: type });
+    toast(`Aposta registrada! ${type === 'bosta' ? '💩' : '✅'}`, 'ok');
+  } catch(e) { 
+    toast('Erro ao registrar aposta.', 'err'); 
+  }
+}
+
+async function setTestMode(mode) {
+  if (!isAdmin()) { toast('Acesso negado','err'); return; }
+  toast('Alterando modo de teste...', 'info');
+  try {
+    await gsCall({ action:'adminSetTestMode', callerEmail:S.me, testMode:mode });
+    toast(`Modo de teste ${mode==='true'?'LIGADO':'DESLIGADO'}! Sincronizando...`, 'ok');
+    forceSyncAll(); // Força a atualização da tela com a tabela esmagada/oficial
+  } catch(e) { 
+    toast('Erro de conexão', 'err'); 
   }
 }
   
