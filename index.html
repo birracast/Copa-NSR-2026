@@ -423,6 +423,82 @@ header {
 
   
 
+/* ===== RANKING DUPLO ===== */
+.rank-dual { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.rank-col-header {
+  font-family: var(--font-display); font-size: 18px; font-weight: 800;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 12px 18px; border-radius: 10px 10px 0 0;
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 0;
+}
+.rank-col-header.pontos  { background: linear-gradient(135deg, rgba(201,168,76,0.2), rgba(201,168,76,0.05)); border: 1px solid rgba(201,168,76,0.3); color: var(--gold); border-bottom: none; }
+.rank-col-header.piratecas { background: linear-gradient(135deg, rgba(230,29,37,0.15), rgba(230,29,37,0.03)); border: 1px solid rgba(230,29,37,0.3); color: #ff7b7b; border-bottom: none; }
+.rank-col-body { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--border); border-radius: 0 0 10px 10px; padding: 10px; background: var(--dark2); }
+.rank-row-mini {
+  background: var(--dark3); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px; transition: .2s;
+}
+.rank-row-mini:hover { border-color: var(--dark4); }
+.rank-row-mini.me { border-color: var(--gold); background: rgba(201,168,76,0.07); }
+.rank-row-mini.p1 { border-color: var(--gold); background: rgba(201,168,76,0.1); }
+.rank-row-mini.p2 { border-color: #b0bec5; }
+.rank-row-mini.p3 { border-color: #cd7f32; }
+.rank-mini-num { font-family: var(--font-display); font-size: 24px; font-weight: 800; min-width: 36px; text-align: center; }
+.rank-mini-num.n1 { color: var(--gold); text-shadow: 0 0 12px rgba(201,168,76,0.5); }
+.rank-mini-num.n2 { color: #b0bec5; }
+.rank-mini-num.n3 { color: #cd7f32; }
+.rank-mini-av { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--border); overflow: hidden; background: var(--dark4); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.rank-mini-av img { width: 100%; height: 100%; object-fit: cover; }
+.rank-mini-info { flex: 1; min-width: 0; }
+.rank-mini-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rank-mini-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.rank-mini-pts { text-align: right; flex-shrink: 0; }
+.rank-mini-pts-val { font-family: var(--font-display); font-size: 24px; font-weight: 800; line-height: 1; }
+.rank-mini-pts-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+.rank-mini-pts-val.gold { color: var(--gold); }
+.rank-mini-pts-val.red  { color: #ff7b7b; }
+
+/* ===== HIGHLIGHTS ===== */
+.highlights-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+.highlight-card {
+  background: var(--dark2); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  transition: .25s; position: relative;
+}
+.highlight-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
+.hl-label-row { display: flex; gap: 8px; align-items: center; padding: 12px 14px 8px; }
+.hl-badge { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: 1px; text-transform: uppercase; }
+.hl-badge.quente   { background: rgba(60,172,59,0.2);  color: var(--green); border: 1px solid rgba(60,172,59,0.3); }
+.hl-badge.frio     { background: rgba(230,29,37,0.15); color: #ff7b7b; border: 1px solid rgba(230,29,37,0.25); }
+.hl-badge.meio     { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.25); }
+.hl-badge.rodada   { background: rgba(42,57,141,0.2);  color: #7b8fe8; border: 1px solid rgba(42,57,141,0.3); }
+.hl-badge.jogo     { background: rgba(201,168,76,0.1); color: var(--gold); border: 1px solid rgba(201,168,76,0.2); }
+.hl-title { font-family: var(--font-display); font-size: 15px; font-weight: 800; letter-spacing: 1px; flex: 1; }
+.hl-canvas-wrap { position: relative; width: 100%; aspect-ratio: 1; background: var(--dark3); cursor: pointer; }
+.hl-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+.hl-share-btn {
+  position: absolute; bottom: 10px; right: 10px;
+  background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px; padding: 6px 14px;
+  color: #fff; font-size: 12px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; gap: 6px;
+  transition: .2s; backdrop-filter: blur(4px);
+}
+.hl-share-btn:hover { background: rgba(37,211,102,0.8); border-color: transparent; }
+.hl-info { padding: 10px 14px 14px; }
+.hl-user-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.hl-user-av { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: var(--dark3); display: flex; align-items: center; justify-content: center; font-size: 14px; border: 1px solid var(--border); flex-shrink: 0; }
+.hl-user-av img { width: 100%; height: 100%; object-fit: cover; }
+.hl-user-name { font-size: 13px; font-weight: 600; }
+.hl-user-pts { font-family: var(--font-display); font-size: 20px; font-weight: 800; color: var(--gold); margin-left: auto; }
+.hl-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.hl-tab { font-family: var(--font-display); font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--dark2); color: var(--muted); cursor: pointer; transition: .2s; }
+.hl-tab:hover { color: var(--text); border-color: var(--dark4); }
+.hl-tab.active { background: var(--dark3); color: var(--text); border-color: var(--gold); }
+.hl-empty { color: var(--muted); font-size: 14px; text-align: center; padding: 40px; }
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   /* Novo Menu Responsivo */
@@ -437,6 +513,7 @@ header {
   .nav-tabs::-webkit-scrollbar { display: none; }
   .nav-tab { white-space: nowrap; font-size: 13px; padding: 10px 14px; }
   
+  .rank-dual { grid-template-columns: 1fr; }
   /* Restante das regras originais que já estavam aí */
   .main-wrap { padding: 16px; }
   .games-grid { grid-template-columns: 1fr; }
@@ -532,6 +609,7 @@ header {
         <button class="nav-tab active" id="nt-games"   onclick="navTo('games')">⚽ Jogos</button>
         <button class="nav-tab"        id="nt-groups"  onclick="navTo('groups')">📊 Grupos</button>
         <button class="nav-tab"        id="nt-ranking" onclick="navTo('ranking')"><img src="taca.png" alt="Troféu" style="height: 1.2em; vertical-align: text-bottom; margin-right: 4px;"> Ranking</button>
+        <button class="nav-tab"        id="nt-highlights" onclick="navTo('highlights')">🏆 Highlights</button>
         <button class="nav-tab"        id="nt-help"    onclick="navTo('help')">❓ Ajuda</button>
         <button class="nav-tab"        id="nt-settings" onclick="navTo('settings')">⚙️ Config</button>
         <button class="nav-tab"        id="nt-profile" onclick="navTo('profile')">👤 Perfil</button>
@@ -587,7 +665,28 @@ header {
       <span class="phase-hdr-text">Ranking Geral</span>
       <span class="phase-pill final" id="rank-count-pill">... participantes</span>
     </div>
-    <div class="rank-table" id="rank-table"></div>
+    <div class="rank-dual">
+      <div>
+        <div class="rank-col-header pontos">🏆 Ranking de Pontos</div>
+        <div class="rank-col-body" id="rank-table-pontos"></div>
+      </div>
+      <div>
+        <div class="rank-col-header piratecas">🏴‍☠️ Ranking de Piratecas</div>
+        <div class="rank-col-body" id="rank-table-piratecas"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="page-highlights" class="main-wrap hidden">
+    <div class="phase-hdr">
+      <span class="phase-hdr-text">🏆 Highlights</span>
+      <span class="phase-pill final">Destaques do Bolão</span>
+    </div>
+    <div class="hl-tabs">
+      <button class="hl-tab active" id="hlt-rodadas" onclick="hlTab('rodadas')">Por Rodada</button>
+      <button class="hl-tab"        id="hlt-jogos"   onclick="hlTab('jogos')">Por Jogo</button>
+    </div>
+    <div id="highlights-content"></div>
   </div>
 
   <div id="page-help" class="main-wrap hidden">
@@ -1209,7 +1308,7 @@ function enterApp() {
 // ================================================================
 //  NAVIGATION
 // ================================================================
-const pages = ['games','groups','ranking','help','settings','profile','admin'];
+const pages = ['games','groups','ranking','highlights','help','settings','profile','admin'];
 let currentPage = 'games';
 function navTo(p) {
   currentPage = p;
@@ -1217,12 +1316,13 @@ function navTo(p) {
     document.getElementById('page-'+x).classList.toggle('hidden', x!==p);
     const n = document.getElementById('nt-'+x); if(n) n.classList.toggle('active', x===p);
   });
-  if(p==='games')    { renderGames(); renderStats(); }
-  if(p==='groups')   renderGroupsPage();
-  if(p==='ranking')  renderRanking();
-  if(p==='settings') renderSettingsPage();
-  if(p==='profile')  renderProfile();
-  if(p==='admin')    loadAdminUsers();
+  if(p==='games')      { renderGames(); renderStats(); }
+  if(p==='groups')     renderGroupsPage();
+  if(p==='ranking')    renderRanking();
+  if(p==='highlights') renderHighlights();
+  if(p==='settings')   renderSettingsPage();
+  if(p==='profile')    renderProfile();
+  if(p==='admin')      loadAdminUsers();
 }
 function rerenderCurrentPage() { navTo(currentPage || 'games'); }
 
@@ -1505,12 +1605,6 @@ function calcUserPiratecas(email) {
   return balance;
 }
 
-function getWDL(h,a) { if(h>a)return'H'; if(a>h)return'A'; return'D'; }
-function getRodada(id) {
-  if (id <= 24) return 1; if (id <= 48) return 2; if (id <= 72) return 3;
-  if (id <= 88) return 4; if (id <= 96) return 5; if (id <= 100) return 6;
-  if (id <= 102) return 7; return 8;
-}
 
 function calcGamePoints(user, gameId) {
   if (!user) return 0;
@@ -1827,36 +1921,342 @@ function onBetInput(gameId) {
 }
 
 // ================================================================
-//  RANKING
+//  RANKING (DUPLO: PONTOS + PIRATECAS)
 // ================================================================
 function calcRankAll() {
   return Object.values(S.users).map(u=>({...u,pts:calcPoints(u)}))
     .sort((a,b) => { if(b.pts.total!==a.pts.total)return b.pts.total-a.pts.total; if(b.pts.exact!==a.pts.exact)return b.pts.exact-a.pts.exact; return b.pts.res-a.pts.res; });
 }
+function calcRankPiratecas() {
+  return Object.values(S.users).map(u=>({...u,pts:calcPoints(u)}))
+    .sort((a,b) => b.pts.piratecas - a.pts.piratecas);
+}
+function renderRankRow(u, pos) {
+  const nc = pos===1?'n1':pos===2?'n2':pos===3?'n3':'';
+  const rc = u.email===S.me?'me':pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
+  const medal = pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
+  const youTag = u.email===S.me ? '<span style="font-size:9px;background:rgba(201,168,76,0.2);color:var(--gold);padding:1px 5px;border-radius:8px;margin-left:3px">você</span>' : '';
+  return `<div class="rank-row-mini ${rc}">
+    <div class="rank-mini-num ${nc}">${medal}</div>
+    <div class="rank-mini-av">${u.avatar?`<img src="${u.avatar}">`:'🧑'}</div>
+    <div class="rank-mini-info">
+      <div class="rank-mini-name">${esc(u.name)}${youTag}</div>
+      <div class="rank-mini-sub">⚽ ${esc(u.team||'—')}</div>
+    </div>
+    <div class="rank-mini-pts">
+      <div class="rank-mini-pts-val gold">${u.pts.total}</div>
+      <div class="rank-mini-pts-lbl">pontos</div>
+    </div>
+  </div>`;
+}
+function renderRankRowPiratecas(u, pos) {
+  const nc = pos===1?'n1':pos===2?'n2':pos===3?'n3':'';
+  const rc = u.email===S.me?'me':pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
+  const medal = pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
+  const youTag = u.email===S.me ? '<span style="font-size:9px;background:rgba(201,168,76,0.2);color:var(--gold);padding:1px 5px;border-radius:8px;margin-left:3px">você</span>' : '';
+  return `<div class="rank-row-mini ${rc}">
+    <div class="rank-mini-num ${nc}">${medal}</div>
+    <div class="rank-mini-av">${u.avatar?`<img src="${u.avatar}">`:'🧑'}</div>
+    <div class="rank-mini-info">
+      <div class="rank-mini-name">${esc(u.name)}${youTag}</div>
+      <div class="rank-mini-sub">⚽ ${esc(u.team||'—')}</div>
+    </div>
+    <div class="rank-mini-pts">
+      <div class="rank-mini-pts-val red">${u.pts.piratecas}</div>
+      <div class="rank-mini-pts-lbl">piratecas 🏴‍☠️</div>
+    </div>
+  </div>`;
+}
 function renderRanking() {
   const ranked = calcRankAll();
+  const rankedP = calcRankPiratecas();
   document.getElementById('rank-count-pill').textContent = `${ranked.length} participantes`;
-  const html = ranked.map((u,i) => {
-    const pos=i+1; const nc=pos===1?'n1':pos===2?'n2':pos===3?'n3':'';
-    const rc=u.email===S.me?'me':pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
-    const medal=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
-    return `<div class="rank-row ${rc}">
-      <div class="rank-num ${nc}">${medal}</div>
-      <div class="rank-avatar-wrap">${u.avatar?`<img src="${u.avatar}">`:'🧑'}</div>
-      <div class="rank-info">
-        <div class="rank-name">${esc(u.name)}${u.email===S.me?' <span style="font-size:11px;background:rgba(201,168,76,0.2);color:var(--gold);padding:2px 8px;border-radius:10px">você</span>':''}</div>
-        <div class="rank-sub">⚽ ${esc(u.team||'—')}${u.motto?' • "'+esc(u.motto)+'"':''}</div>
-        <div class="rank-detail"><span class="rank-detail-pill e">⭐ ${u.pts.exact} exatos</span><span class="rank-detail-pill r">✅ ${u.pts.res} resultados</span></div>
-      </div>
-      <div class="rank-pts-col"><div class="rank-pts-val">${u.pts.total}</div><div class="rank-pts-lbl">pontos</div><div style="font-size:12px; font-weight:700; color:#C9A84C; margin-top:2px;">${u.pts.piratecas} 🏴‍☠️</div></div>
-    </div>`;
-  }).join('');
-  document.getElementById('rank-table').innerHTML = html || '<div style="color:var(--muted);text-align:center;padding:40px">Nenhum participante ainda.</div>';
+  const htmlPontos = ranked.map((u,i) => renderRankRow(u, i+1)).join('') || '<div class="hl-empty">Nenhum participante ainda.</div>';
+  const htmlPiratecas = rankedP.map((u,i) => renderRankRowPiratecas(u, i+1)).join('') || '<div class="hl-empty">Nenhum participante ainda.</div>';
+  document.getElementById('rank-table-pontos').innerHTML = htmlPontos;
+  document.getElementById('rank-table-piratecas').innerHTML = htmlPiratecas;
 }
 
 // ================================================================
-//  SETTINGS
+//  HIGHLIGHTS
 // ================================================================
+let hlCurrentTab = 'rodadas';
+function hlTab(tab) {
+  hlCurrentTab = tab;
+  ['rodadas','jogos'].forEach(t => {
+    document.getElementById('hlt-'+t).classList.toggle('active', t===tab);
+  });
+  renderHighlights();
+}
+
+// Imagens no GitHub — ajuste o caminho base conforme seu repositório
+const HL_IMG_BASE = 'https://raw.githubusercontent.com/SEU_USUARIO/SEU_REPO/main/';
+// Posição do círculo do rosto nas imagens (px, para canvas 500x500)
+const FACE_CIRCLE = { x: 250, y: 215, r: 95 };
+
+function calcRodadaHighlights(rodada) {
+  // Jogos da rodada com resultado
+  const jogos = GAMES.filter(g => getRodada(g.id) === rodada && (S.results[g.id]||{}).status === 'finished' && S.results[g.id].h !== null);
+  if (!jogos.length) return null;
+  const users = Object.values(S.users);
+  const scores = users.map(u => {
+    let pts = 0;
+    jogos.forEach(g => { pts += calcGamePoints(u, g.id); });
+    const piratecas = calcUserPiratecas(u.email);
+    return { ...u, rodadaPts: pts, piratecas, total: pts + piratecas };
+  });
+  const maxPts = Math.max(...scores.map(s => s.rodadaPts));
+  const minPts = Math.min(...scores.map(s => s.rodadaPts));
+  if (maxPts === minPts) return null;
+  const hot   = scores.filter(s => s.rodadaPts === maxPts);
+  const cold  = scores.filter(s => s.rodadaPts === minPts);
+  const sorted = [...scores].sort((a,b)=>a.rodadaPts-b.rodadaPts);
+  const medIdx = Math.floor(sorted.length/2);
+  const medPts = sorted[medIdx].rodadaPts;
+  const mid    = scores.filter(s => s.rodadaPts === medPts && s.rodadaPts !== maxPts && s.rodadaPts !== minPts);
+  return { rodada, hot, cold, mid, maxPts, minPts, jogos: jogos.length, partial: true };
+}
+
+function calcGameHighlights(gameId) {
+  const game = GAMES.find(g => g.id === gameId);
+  const r = S.results[gameId];
+  if (!game || !r || r.status !== 'finished' || r.h === null) return null;
+  const users = Object.values(S.users);
+  const scores = users.map(u => ({
+    ...u,
+    gamePts: calcGamePoints(u, gameId),
+    piratecas: calcUserPiratecas(u.email)
+  }));
+  const maxPts = Math.max(...scores.map(s => s.gamePts));
+  const minPts = Math.min(...scores.map(s => s.gamePts));
+  if (maxPts === minPts) return null;
+  const hot  = scores.filter(s => s.gamePts === maxPts);
+  const cold = scores.filter(s => s.gamePts === minPts);
+  const sorted = [...scores].sort((a,b)=>a.gamePts-b.gamePts);
+  const medIdx = Math.floor(sorted.length/2);
+  const medPts = sorted[medIdx].gamePts;
+  const mid = scores.filter(s => s.gamePts === medPts && s.gamePts !== maxPts && s.gamePts !== minPts);
+  return { game, hot, cold, mid, maxPts, minPts };
+}
+
+
+function renderHighlights() {
+  const content = document.getElementById('highlights-content');
+  if (!content) return;
+  if (hlCurrentTab === 'rodadas') renderHighlightsRodadas(content);
+  else renderHighlightsJogos(content);
+}
+
+function renderHighlightsRodadas(container) {
+  const rodadas = [...new Set(GAMES.map(g => getRodada(g.id)))].sort((a,b)=>a-b);
+  let html = '';
+  rodadas.forEach(r => {
+    const data = calcRodadaHighlights(r);
+    if (!data) return;
+    const label = `Rodada ${r}`;
+    // Pé Quente
+    data.hot.forEach(u => {
+      html += buildHighlightCard(u, 'quente', label, `${data.maxPts} pts`, `🔥 PÉ QUENTE`, 'sortudo.png', 'rodada', r);
+    });
+    // Pé Frio
+    data.cold.forEach(u => {
+      html += buildHighlightCard(u, 'frio', label, `${data.minPts} pts`, `🥶 PÉ FRIO`, 'pefrio.png', 'rodada', r);
+    });
+    // Nem fede nem cheira
+    data.mid.forEach(u => {
+      html += buildHighlightCard(u, 'meio', label, `${u.rodadaPts} pts`, `😐 NEM FEDE NEM CHEIRA`, 'meio.png', 'rodada', r);
+    });
+  });
+  container.innerHTML = html ? `<div class="highlights-grid">${html}</div>` : '<div class="hl-empty">Aguardando jogos encerrados para gerar highlights! ⏳</div>';
+  // Render all canvases
+  container.querySelectorAll('canvas[data-hl]').forEach(cv => drawHighlightCanvas(cv));
+}
+
+function renderHighlightsJogos(container) {
+  const finished = GAMES.filter(g => (S.results[g.id]||{}).status === 'finished' && S.results[g.id].h !== null);
+  let html = '';
+  finished.forEach(game => {
+    const data = calcGameHighlights(game.id);
+    if (!data) return;
+    const label = `${game.hCode} ${S.results[game.id].h}–${S.results[game.id].a} ${game.aCode}`;
+    data.hot.forEach(u => {
+      html += buildHighlightCard(u, 'quente', label, `${data.maxPts} pts`, `🔥 PÉ QUENTE`, 'sortudo.png', 'jogo', game.id);
+    });
+    data.cold.forEach(u => {
+      html += buildHighlightCard(u, 'frio', label, `${data.minPts} pts`, `🥶 PÉ FRIO`, 'pefrio.png', 'jogo', game.id);
+    });
+    data.mid.forEach(u => {
+      html += buildHighlightCard(u, 'meio', label, `${u.gamePts} pts`, `😐 NEM FEDE NEM CHEIRA`, 'meio.png', 'jogo', game.id);
+    });
+  });
+  container.innerHTML = html ? `<div class="highlights-grid">${html}</div>` : '<div class="hl-empty">Nenhum jogo encerrado ainda! ⏳</div>';
+  container.querySelectorAll('canvas[data-hl]').forEach(cv => drawHighlightCanvas(cv));
+}
+
+function buildHighlightCard(user, tipo, label, pts, title, imgFile, scope, scopeId) {
+  const uid = `hl_${tipo}_${scope}_${scopeId}_${user.email.replace(/[@.]/g,'_')}`;
+  const badgeClass = tipo === 'quente' ? 'quente' : tipo === 'frio' ? 'frio' : 'meio';
+  const scopeBadge = scope === 'rodada' ? `<span class="hl-badge rodada">Rodada ${scopeId}</span>` : `<span class="hl-badge jogo">Jogo</span>`;
+  const av = user.avatar ? `<img src="${user.avatar}">` : '🧑';
+  return `<div class="highlight-card">
+    <div class="hl-label-row">
+      ${scopeBadge}
+      <span class="hl-badge ${badgeClass}">${title}</span>
+    </div>
+    <div class="hl-canvas-wrap" onclick="shareHighlight('${uid}')">
+      <canvas id="${uid}"
+        data-hl="1"
+        data-img="${imgFile}"
+        data-avatar="${user.avatar||''}"
+        data-name="${esc(user.name)}"
+        data-label="${esc(label)}"
+        data-pts="${esc(pts)}"
+        data-title="${esc(title)}"
+        data-tipo="${tipo}"
+        width="500" height="500"></canvas>
+      <button class="hl-share-btn" onclick="event.stopPropagation();shareHighlight('${uid}')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17 2a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-1.89-.68l-6.41 3.7A3 3 0 0 1 9 12a3 3 0 0 1-.3 1.3l6.41 3.38A3 3 0 0 1 17 16a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 .3-1.3L7.89 14.3A3 3 0 0 1 6 15a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 1.89.68l6.41-3.7A3 3 0 0 1 14 5a3 3 0 0 1 3-3z"/></svg>
+        WhatsApp
+      </button>
+    </div>
+    <div class="hl-info">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">${esc(label)}</div>
+      <div class="hl-user-row">
+        <div class="hl-user-av">${av}</div>
+        <span class="hl-user-name">${esc(user.name)}</span>
+        <span class="hl-user-pts">${pts}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+const _hlImgCache = {};
+function loadImgCached(src) {
+  if (_hlImgCache[src]) return Promise.resolve(_hlImgCache[src]);
+  return new Promise(resolve => {
+    const img = new Image(); img.crossOrigin='anonymous';
+    img.onload = () => { _hlImgCache[src] = img; resolve(img); };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+async function drawHighlightCanvas(cv) {
+  const ctx = cv.getContext('2d');
+  const W = 500, H = 500;
+  ctx.clearRect(0, 0, W, H);
+
+  // Background gradient per tipo
+  const tipo = cv.dataset.tipo;
+  const grad = ctx.createLinearGradient(0,0,W,H);
+  if (tipo==='quente') { grad.addColorStop(0,'#0d1a0d'); grad.addColorStop(1,'#112611'); }
+  else if (tipo==='frio') { grad.addColorStop(0,'#1a0d0d'); grad.addColorStop(1,'#260d11'); }
+  else { grad.addColorStop(0,'#1a160a'); grad.addColorStop(1,'#231e0d'); }
+  ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
+
+  // Load background image
+  const bgSrc = HL_IMG_BASE + cv.dataset.img;
+  const bgImg = await loadImgCached(bgSrc);
+  if (bgImg) { ctx.drawImage(bgImg, 0, 0, W, H); }
+  else {
+    // Fallback: draw placeholder circle
+    ctx.fillStyle = tipo==='quente'?'#3CAC3B':tipo==='frio'?'#E61D25':'#C9A84C';
+    ctx.beginPath(); ctx.arc(FACE_CIRCLE.x, FACE_CIRCLE.y, FACE_CIRCLE.r, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='bold 64px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(tipo==='quente'?'🔥':tipo==='frio'?'🥶':'😐', FACE_CIRCLE.x, FACE_CIRCLE.y);
+  }
+
+  // Avatar inside the circle
+  const avatarSrc = cv.dataset.avatar;
+  if (avatarSrc) {
+    const avImg = await loadImgCached(avatarSrc);
+    if (avImg) {
+      const { x, y, r } = FACE_CIRCLE;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.clip();
+      ctx.drawImage(avImg, x-r, y-r, r*2, r*2);
+      ctx.restore();
+      // Ring
+      ctx.beginPath(); ctx.arc(x, y, r+2, 0, Math.PI*2);
+      ctx.strokeStyle = tipo==='quente'?'#3CAC3B':tipo==='frio'?'#E61D25':'#C9A84C';
+      ctx.lineWidth = 4; ctx.stroke();
+    }
+  }
+
+  // Name & info overlay at bottom
+  const name  = cv.dataset.name;
+  const label = cv.dataset.label;
+  const pts   = cv.dataset.pts;
+  const title = cv.dataset.title;
+
+  // Bottom pill background
+  ctx.fillStyle = 'rgba(0,0,0,0.72)';
+  roundRect(ctx, 18, H-110, W-36, 92, 14);
+  ctx.fill();
+
+  // Title
+  ctx.fillStyle = tipo==='quente'?'#7de87c':tipo==='frio'?'#ff7b7b':'#F0C040';
+  ctx.font = 'bold 18px "Barlow Condensed", sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.fillText(title, W/2, H-102);
+
+  // Name
+  ctx.fillStyle = '#F0F0F0';
+  ctx.font = 'bold 26px "Barlow Condensed", sans-serif';
+  ctx.fillText(name, W/2, H-78);
+
+  // Label + pts
+  ctx.fillStyle = '#888888';
+  ctx.font = '14px "Barlow", sans-serif';
+  ctx.fillText(label + ' • ' + pts, W/2, H-48);
+
+  // Bolão watermark
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.font = 'bold 13px "Barlow Condensed", sans-serif';
+  ctx.fillText('BOLÃO COPA 26 🏴‍☠️', W/2, H-26);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y); ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w, y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r, y+h); ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x, y+r); ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+}
+
+async function shareHighlight(canvasId) {
+  const cv = document.getElementById(canvasId);
+  if (!cv) return;
+  // Ensure canvas is drawn
+  await drawHighlightCanvas(cv);
+  try {
+    const blob = await new Promise(resolve => cv.toBlob(resolve, 'image/png'));
+    if (!blob) { toast('Não foi possível gerar a imagem','err'); return; }
+    // Try Web Share API (mobile - native share sheet including WhatsApp)
+    if (navigator.canShare && navigator.canShare({ files: [new File([blob],'highlight.png',{type:'image/png'})] })) {
+      await navigator.share({
+        files: [new File([blob], 'highlight-bolao.png', { type: 'image/png' })],
+        title: 'Bolão Copa 26 — Highlight',
+        text: '🏴‍☠️ Olha o highlight do nosso bolão!'
+      });
+      return;
+    }
+    // Fallback: download image + open WhatsApp
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'highlight-bolao.png'; a.click();
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+      const text = encodeURIComponent('🏴‍☠️ Olha o highlight do Bolão Copa 26! Baixe a imagem acima e envie no grupo!');
+      window.open(`https://wa.me/?text=${text}`, '_blank');
+    }, 600);
+  } catch(e) {
+    if (e.name !== 'AbortError') toast('Compartilhamento cancelado ou não suportado','warn');
+  }
+}
+
+
 function isAdmin() { const u = S.users[S.me]; return !!(u&&u.isAdmin); }
 function renderSettingsPage() {
   updateDataSourceLabel();
