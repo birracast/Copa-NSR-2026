@@ -1501,13 +1501,19 @@ function startSyncTimer() {
   if (syncTimer) clearInterval(syncTimer);
   syncSecs = 300;
   syncTimer = setInterval(() => {
-    syncSecs--;
     const el = document.getElementById('sync-countdown');
+    if (S.testMode) {
+      if (el) el.textContent = '⏸ TESTE';
+      return; // pausa o countdown enquanto modo teste estiver ligado
+    }
+    syncSecs--;
     if (el) { const m=Math.floor(syncSecs/60).toString().padStart(2,'0'); const s=(syncSecs%60).toString().padStart(2,'0'); el.textContent = m+':'+s; }
     if (syncSecs <= 0) { forceSyncAll(); syncSecs = 300; }
   }, 1000);
 }
-function resetSyncTimer() { syncSecs = 300; }
+function resetSyncTimer() {
+  if (!S.testMode) syncSecs = 300;
+}
 
 // ================================================================
 //  GAME LOCK
@@ -1990,7 +1996,7 @@ function hlTab(tab) {
 }
 
 // Imagens no GitHub — ajuste o caminho base conforme seu repositório
-const HL_IMG_BASE = 'https://raw.githubusercontent.com/birracast/Copa-NSR-2026/main/';
+const HL_IMG_BASE = 'https://raw.githubusercontent.com/SEU_USUARIO/SEU_REPO/main/';
 // Posição do círculo do rosto nas imagens (px, para canvas 500x500)
 const FACE_CIRCLE = { x: 250, y: 215, r: 95 };
 
