@@ -691,122 +691,134 @@ header {
 
   <div id="page-help" class="main-wrap hidden">
     <div class="help-hero">
-      <h1><img src="taca.png" alt="Troféu" style="height: 1em; vertical-align: middle; margin-right: 8px;"> Como jogar o Bolão?</h1>
-      <p>Tudo que você precisa saber para participar, fazer seus palpites e subir no ranking da Copa 2026!</p>
+      <h1><img src="taca.png" alt="Troféu" style="height: 1em; vertical-align: middle; margin-right: 8px;"> Manual de Sobrevivência do Bolão</h1>
+      <p>Tudo o que você precisa saber para mitar nos palpites, acumular Piratecas, humilhar os amigos e dominar o Bolão da Copa 2026!</p>
     </div>
 
     <div class="help-grid">
       <div class="help-card">
-        <div class="help-card-icon">🎯</div>
-        <h3>O que é o bolão?</h3>
-        <p>O Bolão Copa 26 é um jogo de palpites entre amigos. Você prevê o placar de cada jogo da Copa do Mundo antes do apito inicial. Quanto mais certeiro, mais pontos você ganha — e sobe no ranking!</p>
-      </div>
-
-      <div class="help-card">
-        <div class="help-card-icon">⚽</div>
-        <h3>Como fazer palpites</h3>
-        <ul>
-          <li><span>1. Vá na aba <strong>⚽ Jogos</strong></span></li>
-          <li><span>2. Encontre o jogo que deseja palpitar</span></li>
-          <li><span>3. Digite os gols de cada time nos campos</span></li>
-          <li><span>4. O palpite é salvo automaticamente no Google Sheets</span></li>
-          <li><span>5. Você pode editar até <strong>10 minutos antes do jogo</strong></span></li>
-        </ul>
-        <div class="help-tip">
-          <h4>⚠️ ATENÇÃO</h4>
-          <p style="font-size:13px;color:var(--muted)">Os palpites ficam <strong style="color:var(--text)">bloqueados 10 minutos antes do início de cada jogo</strong>. Planeje-se!</p>
-        </div>
-      </div>
-
-      <div class="help-card">
         <div class="help-card-icon">🏅</div>
-        <h3>Sistema de pontuação</h3>
+        <h3>Pontuação Clássica</h3>
+        <p>Acerte os placares e suba no Ranking de Pontos. A regra é simples:</p>
         <table class="help-pts-table">
-          <tr><td>⭐ Placar exato (ex: 2-1 acertou 2-1)</td><td class="help-pts-val">10 pts</td></tr>
+          <tr><td>⭐ Placar exato (ex: apostou 2-1, deu 2-1)</td><td class="help-pts-val">10 pts</td></tr>
           <tr><td>✅ Resultado certo (ganhou/empatou/perdeu)</td><td class="help-pts-val">5 pts</td></tr>
-          <tr><td>🌟 Bônus: 3 placares exatos seguidos</td><td class="help-pts-val">+5 pts</td></tr>
-          <tr><td><img src="taca.png" alt="Troféu" style="height: 1.2em; vertical-align: text-bottom; margin-right: 4px;"> Bônus: placar exato na Semifinal</td><td class="help-pts-val">+15 pts</td></tr>
-          <tr><td>🥇 Bônus: placar exato na Final</td><td class="help-pts-val">+25 pts</td></tr>
-          <tr><td>❌ Resultado errado</td><td class="help-pts-val">0 pts</td></tr>
+          <tr><td>🌟 Bônus: 3 exatos seguidos</td><td class="help-pts-val">+5 pts</td></tr>
+          <tr><td><img src="taca.png" alt="Troféu" style="height: 1.2em; vertical-align: text-bottom; margin-right: 4px;"> Bônus: exato na Semifinal</td><td class="help-pts-val">+15 pts</td></tr>
+          <tr><td>🥇 Bônus: exato na Final</td><td class="help-pts-val">+25 pts</td></tr>
+          <tr><td>❌ Errou feio, errou rude</td><td class="help-pts-val">0 pts</td></tr>
         </table>
       </div>
 
+      <div class="help-card" style="border-color: rgba(230,29,37,0.4); background: linear-gradient(180deg, rgba(230,29,37,0.05) 0%, transparent 100%);">
+        <div class="help-card-icon">🏴‍☠️</div>
+        <h3 style="color: #ff7b7b;">As Famosas Piratecas</h3>
+        <p>O <strong>Ranking de Piratecas</strong> é um jogo à parte! Todo mundo começa com <strong style="color:var(--gold)">100 Piratecas</strong>. Como você ganha ou perde?</p>
+        <ul>
+          <li><span>🔥 <strong>O Rei da Rodada:</strong> Quem faz mais pontos na rodada inteira ganha <strong>+5 Piratecas</strong>.</span></li>
+          <li><span>🥶 <strong>O Saco de Pancadas:</strong> Quem faz menos pontos perde <strong>-5 Piratecas</strong>.</span></li>
+          <li><span>😐 <strong>O Medíocre:</strong> Ficou na média da galera? Perde <strong>-1 Pirateca</strong> por não se destacar.</span></li>
+          <li><span>🎯 <strong>Apostas Bosta/Mestre:</strong> Rende +2 ou tira -2 (explicado abaixo).</span></li>
+        </ul>
+      </div>
+
       <div class="help-card">
-        <div class="help-card-icon">👁️</div>
-        <h3>Ver palpites dos amigos</h3>
-        <p>Na aba <strong>⚽ Jogos</strong>, você vê chips com o nome de cada participante no topo da página. Clique em qualquer pessoa para ver os palpites dela. Os mini-palpites de todos aparecem embaixo de cada jogo (em verde = exato, azul = resultado certo).</p>
+        <div class="help-card-icon">🕵️</div>
+        <h3>Palpite 💩 Bosta e ✅ Mestre</h3>
+        <p>Olhou o palpite do seu amigo e achou um absurdo? Aposte contra ele! Vá na aba Jogos, clique no nome do amigo no topo e faça sua aposta no card do jogo:</p>
+        <ul>
+          <li><span>💩 <strong>Bosta:</strong> Você aposta que ele vai <strong>zerar</strong> (0 pts). Se ele zerar, você ganha <strong>+2 Piratecas</strong>. Se ele pontuar, você perde <strong>-2</strong>.</span></li>
+          <li><span>✅ <strong>Mestre:</strong> Você aposta que ele vai <strong>pontuar</strong> (5 ou 10 pts). Se ele pontuar, você ganha <strong>+2 Piratecas</strong>. Se ele zerar, perde <strong>-2</strong>.</span></li>
+          <li><span>✏️ <strong>Edição Livre:</strong> Arrependeu? Mude seu voto à vontade até 10 minutos antes do jogo!</span></li>
+          <li><span>ℹ️ <strong>Painel X9:</strong> Nos jogos com apostas, clique no ícone "ℹ️" para abrir um modal e ver quem votou no quê.</span></li>
+        </ul>
       </div>
 
       <div class="help-card">
         <div class="help-card-icon">📊</div>
-        <h3>Ranking e grupos</h3>
-        <p>A aba <strong>🏆 Ranking</strong> mostra todos os participantes ordenados por pontuação em tempo real. A aba <strong>📊 Grupos</strong> exibe a classificação oficial de cada grupo e os resultados dos jogos (quando a API estiver configurada).</p>
+        <h3>Rankings e Modais de Histórico</h3>
+        <p>Chega de dúvidas sobre de onde vieram seus pontos ou por que você perdeu Piratecas!</p>
+        <ul>
+          <li><span>Temos dois rankings lado a lado: o <strong>Clássico (Pontos)</strong> e o de <strong>Piratecas</strong>.</span></li>
+          <li><span><strong>Clique no card de qualquer usuário</strong> dentro do ranking para abrir o <strong>Modal de Histórico</strong> correspondente.</span></li>
+          <li><span><strong>No Ranking Normal:</strong> O modal mostra jogo a jogo de onde vieram os pontos, incluindo bônus e o placar apostado vs oficial.</span></li>
+          <li><span><strong>No Ranking Piratecas:</strong> O modal vira um "extrato bancário", mostrando seu saldo atual e detalhando ganhos/perdas de rodadas e apostas Bosta/Mestre.</span></li>
+        </ul>
       </div>
 
       <div class="help-card">
-        <div class="help-card-icon">👤</div>
-        <h3>Seu perfil</h3>
+        <div class="help-card-icon">📸</div>
+        <h3>Highlights e Compartilhamento</h3>
+        <p>No menu <strong>🏆 Highlights</strong>, o sistema gera automaticamente cards comemorativos incríveis ao final de cada Jogo e Rodada:</p>
         <ul>
-          <li><span>Adicione uma foto de perfil</span></li>
-          <li><span>Edite seu nome e time do coração</span></li>
-          <li><span>Veja seu histórico de palpites</span></li>
-          <li><span>Confira quantos exatos e resultados você acertou</span></li>
+          <li><span>🔥 <strong>Pé Quente:</strong> Para o grande vencedor que cravou os placares.</span></li>
+          <li><span>🥶 <strong>Pé Frio:</strong> Para o lanterninha do grupo.</span></li>
+          <li><span>😐 <strong>Nem Fede Nem Cheira:</strong> Para quem fez o básico e ficou na média.</span></li>
         </ul>
+        <div class="help-tip" style="margin-top:10px; padding:12px;">
+          <p style="margin:0; font-size:12px;">📲 Clique no botão <strong>WhatsApp</strong> dentro de qualquer card de highlight para gerar uma imagem exclusiva (com o rosto e os dados da pessoa) e compartilhar na hora no grupo da galera!</p>
+        </div>
+      </div>
+
+      <div class="help-card">
+        <div class="help-card-icon">⏰</div>
+        <h3>A Regra Sagrada dos 10 Minutos</h3>
+        <p>Para evitar trapaças e o famoso palpite com a bola rolando, os palpites são <strong>bloqueados e cadeados exatamente 10 minutos antes</strong> do horário oficial de início de cada partida.</p>
+        <p style="margin-top: 8px;">A mesma regra vale para votar em <strong>Palpite Bosta ou Mestre</strong>. Tudo tranca 10 minutos antes. Fique esperto e deixe tudo preenchido com antecedência!</p>
       </div>
     </div>
 
     <div class="set-card">
-      <h3>🚀 Primeiros passos (User Story)</h3>
+      <h3>🚀 A Jornada do Jogador (Primeiros Passos)</h3>
       <div style="padding-top:8px">
         <div class="help-step">
           <div class="help-step-num">1</div>
           <div class="help-step-body">
-            <h4>Crie sua conta</h4>
-            <p>Na tela inicial, clique em <strong>CRIAR CONTA</strong>. Preencha seu nome, e-mail, senha e o time que você torce. Opcionalmente, envie uma foto. Clique em <strong>CRIAR CONTA ✓</strong>. Pronto — seu perfil é criado e salvo automaticamente no Google Sheets do bolão.</p>
+            <h4>Crie seu perfil com estilo</h4>
+            <p>Cadastre-se, escolha o time do seu coração e, muito importante, suba uma <strong>Foto do Rosto</strong>. Perfis com foto deixam os Rankings e os Highlights de WhatsApp muito mais divertidos e personalizados!</p>
           </div>
         </div>
         <div class="help-step">
           <div class="help-step-num">2</div>
           <div class="help-step-body">
-            <h4>Faça seus palpites</h4>
-            <p>Abra a aba <strong>⚽ Jogos</strong>, encontre um jogo que ainda não começou e preencha o placar que você acha que vai acontecer. Os palpites são salvos automaticamente no Google Sheets em segundos.</p>
+            <h4>Faça seus palpites iniciais</h4>
+            <p>Vá na aba <strong>⚽ Jogos</strong> e preencha os placares. Tudo é salvo automaticamente em nuvem em questão de segundos. Você pode editar quantas vezes quiser até o tempo esgotar.</p>
           </div>
         </div>
         <div class="help-step">
           <div class="help-step-num">3</div>
           <div class="help-step-body">
-            <h4>Acompanhe o ranking</h4>
-            <p>Durante a Copa, acesse a aba <strong>🏆 Ranking</strong> para ver sua posição. Após cada jogo encerrado, os pontos são calculados e o ranking é atualizado automaticamente.</p>
+            <h4>Seque os amigos (Apostas Extras)</h4>
+            <p>Terminou seus palpites? Agora começa a guerra. Clique nos chips com os nomes dos seus amigos no topo da tela de Jogos. Inspecione os palpites deles e distribua votos <strong>💩 Bosta</strong> ou <strong>✅ Mestre</strong> para farmar Piratecas!</p>
           </div>
         </div>
         <div class="help-step">
           <div class="help-step-num">4</div>
           <div class="help-step-body">
-            <h4>Sincronize sempre</h4>
-            <p>O site sincroniza com o Google Sheets a cada 5 minutos automaticamente. Se quiser ver dados atualizados agora, clique em <strong>🔄 Sync</strong> no topo da página de Jogos.</p>
+            <h4>Acompanhe o drama em tempo real</h4>
+            <p>Conforme os jogos vão acabando, vá na aba <strong>🏆 Ranking</strong>. Clique no seu próprio nome (ou no do seu rival) para abrir os <strong>Modais de Histórico detalhado</strong> e entender na ponta do lápis quem mitou e quem se lascou.</p>
           </div>
         </div>
         <div class="help-step">
           <div class="help-step-num">5</div>
           <div class="help-step-body">
-            <h4>Compartilhe com amigos</h4>
-            <p>Envie o link do site para seus amigos. Cada um cria sua própria conta e os palpites de todos ficam centralizados no Google Sheets, visíveis para o grupo inteiro.</p>
+            <h4>Compartilhe a zoeira</h4>
+            <p>Acabou uma rodada agitada? Corra na aba <strong>🏆 Highlights</strong>. Achou o card comemorativo de "Pé Frio" ou "Nem Fede Nem Cheira" daquele seu amigo? Compartilhe direto para o WhatsApp e garanta a resenha.</p>
           </div>
         </div>
       </div>
     </div>
 
     <div class="help-tip" style="margin-top:24px">
-      <h4>💡 DICAS RÁPIDAS</h4>
+      <h4>💡 DICAS AVANÇADAS</h4>
       <ul style="padding-left:18px;margin-top:8px">
-        <li style="margin-bottom:6px;font-size:13px;color:var(--muted)"><span style="color:var(--text)">Sua conta funciona em qualquer dispositivo</span> — os dados ficam no Google Sheets, não no seu celular.</li>
-        <li style="margin-bottom:6px;font-size:13px;color:var(--muted)"><span style="color:var(--text)">Perdeu a senha?</span> Fale com o administrador do bolão para resetar seu acesso.</li>
-        <li style="margin-bottom:6px;font-size:13px;color:var(--muted)"><span style="color:var(--text)">Palpite em todos os jogos!</span> Cada jogo sem palpite é uma chance desperdiçada de pontuar.</li>
-        <li style="font-size:13px;color:var(--muted)"><span style="color:var(--text)">Fases finais valem mais</span> — guarde energia para a Semifinal e a Final!</li>
+        <li style="margin-bottom:6px;font-size:13px;color:var(--muted)"><span style="color:var(--text)">Jogue na segurança ou no risco:</span> Apostar "Bosta" em placares bizarros é Pirateca fácil, mas lembre-se... e se o cara acertar uma zebra do nada?</li>
+        <li style="margin-bottom:6px;font-size:13px;color:var(--muted)"><span style="color:var(--text)">Não esqueça do bônus de combo:</span> Acertar 3 placares exatos seguidos dá +5 pontos bônus. A consistência compensa muito!</li>
+        <li style="font-size:13px;color:var(--muted)"><span style="color:var(--text)">Sempre de olho no painel "ℹ️":</span> Cheque quem votou "Bosta" no seu palpite. Você pode descobrir quem está torcendo contra você e revidar a aposta no jogo dele!</li>
       </ul>
     </div>
   </div>
-
+  
   <div id="page-settings" class="main-wrap hidden">
     <div class="phase-hdr">
       <span class="phase-hdr-text">Configurações</span>
