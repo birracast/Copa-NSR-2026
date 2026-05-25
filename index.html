@@ -601,11 +601,9 @@ header {
   <header>
     <div class="header-top">
       <div class="logo-wrap">
-        <div class="trophy-icon"><img src="taca.png" alt="Troféu" style="height: 1em; vertical-align: middle;"></div>
-        <div class="logo-badge">
-          <span class="logo-we">WE ARE</span>
-          <div><span class="logo-are">BOLÃO </span><span class="logo-26">26</span></div>
-          <span class="logo-bolao">FIFA World Cup™</span>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;">
+          <img src="header.png" alt="Bolão Nau Sem Rumo" style="height:46px;width:auto;object-fit:contain;border-radius:6px;">
+          <span class="logo-bolao" style="font-size:10px;letter-spacing:2px;">FIFA World Cup™</span>
         </div>
       </div>
       <nav class="nav-tabs">
@@ -985,10 +983,13 @@ header {
 
 <!-- Modal de Histórico do Ranking -->
 <div id="history-modal" class="modal-overlay hidden">
-  <div class="modal-box" style="max-width: 500px; max-height: 80vh; display: flex; flex-direction: column;">
-    <div class="modal-icon" id="hm-icon">🏆</div>
-    <div class="modal-title" id="hm-title">Histórico</div>
-    <div class="modal-msg" id="hm-subtitle" style="margin-bottom: 12px;"></div>
+  <div class="modal-box" style="max-width: 500px; max-height: 85vh; display: flex; flex-direction: column;">
+    <div id="hm-avatar-wrap" style="display:flex;flex-direction:column;align-items:center;margin-bottom:12px;">
+      <div id="hm-avatar" style="width:96px;height:96px;border-radius:50%;overflow:hidden;border:3px solid var(--gold);background:var(--dark3);display:flex;align-items:center;justify-content:center;font-size:44px;flex-shrink:0;margin-bottom:8px;box-shadow:0 4px 20px rgba(0,0,0,0.5);">🧑</div>
+      <div class="modal-icon" id="hm-icon" style="font-size:22px;margin:0 0 2px;">🏆</div>
+      <div class="modal-title" id="hm-title" style="margin-bottom:2px;">Histórico</div>
+      <div class="modal-msg" id="hm-subtitle" style="margin-bottom:8px;"></div>
+    </div>
     <div id="hm-content" style="flex:1; overflow-y:auto; text-align:left; background:var(--dark3); border-radius:12px; padding:12px; border:1px solid var(--border);"></div>
     <button class="modal-close" style="margin-top:16px;" onclick="document.getElementById('history-modal').classList.add('hidden')">FECHAR</button>
   </div>
@@ -1417,7 +1418,15 @@ function applyTournamentPayload(data) {
   STANDINGS = Array.isArray(data.standings) ? data.standings : [];
   DATA_META = { source:data.source||'API', updatedAt:data.updatedAt||new Date().toISOString(), error:null };
   S.testMode = data.testMode === true; // Avisa o site se o modo teste está ligado
-  applyOfficialResults(); updateDataSourceLabel();
+  applyOfficialResults();
+  // Se modo teste, sobrescreve com resultados de teste do Sheets
+  if (S.testMode && data.testResults && typeof data.testResults === 'object') {
+    Object.entries(data.testResults).forEach(([id, r]) => {
+      const gid = parseInt(id);
+      if (r && r.status) S.results[gid] = { h: r.h, a: r.a, status: r.status, source: 'test' };
+    });
+  }
+  updateDataSourceLabel();
 }
 
 function normalizeClientGame(g) {
@@ -1451,14 +1460,17 @@ async function refreshTournamentData() {
 function updateDataSourceLabel() {
   const source  = DATA_META.source==='fallback' ? 'Fallback sem confrontos inventados' : 'Football-Data.org API';
   const updated = DATA_META.updatedAt ? `Atualizado em ${formatDateTime(DATA_META.updatedAt)}` : 'Ainda não atualizado';
-  const text    = DATA_META.error ? `Tabela oficial: ${DATA_META.error}` : `Tabela oficial: ${source}`;
+  const testBadge = S.testMode ? ' 🧪 [MODO TESTE ATIVO]' : '';
+  const text    = DATA_META.error ? `Tabela oficial: ${DATA_META.error}${testBadge}` : `Tabela oficial: ${source}${testBadge}`;
   const label = document.getElementById('data-source-label'); if(label) label.textContent = text;
-  const gSource = document.getElementById('groups-source');   if(gSource) gSource.textContent = source;
+  if (label && S.testMode) label.style.color = '#F0C040';
+  else if (label) label.style.color = '';
+  const gSource = document.getElementById('groups-source');   if(gSource) gSource.textContent = source + testBadge;
   const gUpd    = document.getElementById('groups-updated');  if(gUpd) gUpd.textContent = DATA_META.error ? `${DATA_META.error} ${updated}.` : `${updated}. Jogos e classificação por grupo.`;
   const box     = document.getElementById('api-status-box');
   if(box) box.innerHTML = DATA_META.error
     ? `<strong style="color:var(--gold)">Aguardando configuração</strong><br>${esc(DATA_META.error)}`
-    : `<strong style="color:var(--green)">Conectado</strong><br>${esc(source)} • ${esc(updated)}`;
+    : `<strong style="color:var(--green)">Conectado</strong><br>${esc(source)} • ${esc(updated)}${S.testMode?'<br><strong style="color:#F0C040">🧪 Modo de Teste Ativo</strong>':''}`;
 }
 
 // ================================================================
@@ -1930,7 +1942,16 @@ function showHistoryModal(email, type) {
   const isPiratecas = type === 'piratecas';
   document.getElementById('hm-icon').textContent = isPiratecas ? '🏴‍☠️' : '🏆';
   document.getElementById('hm-title').innerHTML = isPiratecas ? 'Histórico de Piratecas' : 'Histórico de Pontos';
-  document.getElementById('hm-subtitle').innerHTML = `<strong>${esc(u.name)}</strong>`;
+  document.getElementById('hm-subtitle').innerHTML = `<strong>${esc(u.name)}</strong>${u.team?`<br><span style="font-size:12px;color:var(--muted)">⚽ ${esc(u.team)}</span>`:''}`;
+  // Big avatar
+  const hmAv = document.getElementById('hm-avatar');
+  if (u.avatar) {
+    hmAv.innerHTML = `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
+    hmAv.style.border = `3px solid ${isPiratecas ? 'var(--red)' : 'var(--gold)'}`;
+  } else {
+    hmAv.innerHTML = '🧑';
+    hmAv.style.border = `3px solid ${isPiratecas ? 'var(--red)' : 'var(--gold)'}`;
+  }
   
   let html = '';
   
@@ -2058,8 +2079,11 @@ function renderGroupCard(group) {
   return `<section class="group-card"><div class="group-card-head"><div class="group-title">${esc(group)}</div><div class="group-meta">${games.length} jogos</div></div>${table}<div class="group-games">${gamesHtml}</div></section>`;
 }
 function getGroupRows(group) {
-  const standing = STANDINGS.find(s=>s.group===group);
-  if (standing&&standing.table&&standing.table.length) return standing.table;
+  // In test mode, always recalculate from S.results so test scores affect group standings
+  if (!S.testMode) {
+    const standing = STANDINGS.find(s=>s.group===group);
+    if (standing&&standing.table&&standing.table.length) return standing.table;
+  }
   const teams = new Map();
   GAMES.filter(g=>g.group===group).forEach(g => {
     ['h','a'].forEach(side => {
@@ -2068,7 +2092,26 @@ function getGroupRows(group) {
       teams.set(code, { position:teams.size+1, team:{code, name:g[side+'Name']||code, logo:g[side+'Logo']||'', flag:g[side+'Flag']||'🏳️'}, played:0,won:0,draw:0,lost:0,gf:0,ga:0,gd:0,points:0 });
     });
   });
-  return [...teams.values()].sort((a,b)=>String(a.team.code).localeCompare(String(b.team.code),'pt-BR',{numeric:true}));
+  // Apply results from S.results
+  GAMES.filter(g=>g.group===group).forEach(g => {
+    const r = S.results[g.id];
+    if (!r || r.status !== 'finished' || r.h === null) return;
+    const home = teams.get(g.hCode); const away = teams.get(g.aCode);
+    if (!home || !away) return;
+    home.played++; away.played++;
+    home.gf += r.h; home.ga += r.a; home.gd = home.gf - home.ga;
+    away.gf += r.a; away.ga += r.h; away.gd = away.gf - away.ga;
+    if (r.h > r.a) { home.won++; home.points+=3; away.lost++; }
+    else if (r.a > r.h) { away.won++; away.points+=3; home.lost++; }
+    else { home.draw++; away.draw++; home.points++; away.points++; }
+  });
+  const sorted = [...teams.values()].sort((a,b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.gd !== a.gd) return b.gd - a.gd;
+    return b.gf - a.gf;
+  });
+  sorted.forEach((row, i) => row.position = i+1);
+  return sorted;
 }
 function renderStandingRow(row) {
   const team = row.team||{};
@@ -2504,6 +2547,7 @@ function saveSettings() {
 
 function adminSetResult() {
   if (!isAdmin()) { toast('Acesso negado','err'); return; }
+  if (S.testMode) { adminSetTestResult(); return; }
   const id = parseInt(document.getElementById('adm-game').value);
   const h  = parseInt(document.getElementById('adm-a').value);
   const a  = parseInt(document.getElementById('adm-b').value);
@@ -2619,6 +2663,7 @@ function renderAdminTable() {
       <td>${u.mustChangePass?'<span class="admin-badge reset-needed">🔑 Reset pendente</span>':'<span style="color:var(--green);font-size:12px">✅ OK</span>'}</td>
       <td class="admin-actions">
         <button class="btn-sm" onclick="openAdminEdit('${esc(u.email)}')">✏️ Editar</button>
+        ${!u.isAdmin ? `<button class="btn-sm" style="border-color:var(--red);color:#ff7b7b;" onclick="adminDeleteUser('${esc(u.email)}')">🗑 Deletar</button>` : ''}
       </td>
     </tr>
   `).join('');
@@ -2664,6 +2709,21 @@ async function submitAdminResetPass() {
     const res = await gsCall({ action:'adminResetPass', callerEmail:S.me, targetEmail:adminEditTarget });
     if (!res.ok) { toast(res.error||'Erro ao resetar senha','err'); return; }
     toast(`🔑 Senha de ${adminEditTarget} resetada! Ele usará "adminpirata" e criará uma nova senha.`,'ok');
+    closeAdminEdit();
+    loadAdminUsers();
+  } catch(e) { toast('Erro de conexão','err'); }
+}
+
+async function adminDeleteUser(email) {
+  if (!isAdmin()) { toast('Acesso negado','err'); return; }
+  const u = adminUsers.find(x=>x.email===email);
+  if (!u) return;
+  if (u.isAdmin) { toast('Não é possível deletar um administrador.','warn'); return; }
+  if (!confirm(`Deletar permanentemente o usuário "${u.name}" (${email})? Esta ação não pode ser desfeita.`)) return;
+  try {
+    const res = await gsCall({ action:'adminDeleteUser', callerEmail:S.me, targetEmail:email });
+    if (!res.ok) { toast(res.error||'Erro ao deletar usuário','err'); return; }
+    toast(`🗑 Usuário ${email} deletado com sucesso.`,'ok');
     closeAdminEdit();
     loadAdminUsers();
   } catch(e) { toast('Erro de conexão','err'); }
@@ -2752,14 +2812,50 @@ async function voteExtra(gameId, target, type) {
 
 async function setTestMode(mode) {
   if (!isAdmin()) { toast('Acesso negado','err'); return; }
-  toast('Alterando modo de teste...', 'info');
-  try {
-    await gsCall({ action:'adminSetTestMode', callerEmail:S.me, testMode:mode });
-    toast(`Modo de teste ${mode==='true'?'LIGADO':'DESLIGADO'}! Sincronizando...`, 'ok');
-    forceSyncAll(); // Força a atualização da tela com a tabela esmagada/oficial
-  } catch(e) { 
-    toast('Erro de conexão', 'err'); 
+  const turningOn = mode === 'true';
+  
+  if (turningOn) {
+    toast('Ligando modo de teste...', 'info');
+    try {
+      const res = await gsCall({ action:'adminSetTestMode', callerEmail:S.me, testMode:'true' });
+      if (!res.ok) { toast(res.error||'Erro ao ligar modo teste','err'); return; }
+      S.testMode = true;
+      toast('🧪 Modo de TESTE LIGADO! Sincronização pausada. Insira placares e clique em ✅ DEFINIR para todos verem.', 'warn');
+      renderSettingsPage();
+      rerenderCurrentPage();
+    } catch(e) { toast('Erro de conexão', 'err'); }
+  } else {
+    toast('Desligando modo de teste...', 'info');
+    try {
+      const res = await gsCall({ action:'adminSetTestMode', callerEmail:S.me, testMode:'false' });
+      if (!res.ok) { toast(res.error||'Erro ao desligar modo teste','err'); return; }
+      S.testMode = false;
+      toast('✅ Modo de teste DESLIGADO! Restaurando placares reais...', 'ok');
+      await forceSyncAll(); // Restaura placar real da API
+    } catch(e) { toast('Erro de conexão', 'err'); }
   }
+}
+
+// Aplica resultado de teste: salva no Sheets E atualiza local imediatamente para todos
+async function adminSetTestResult() {
+  if (!isAdmin()) { toast('Acesso negado','err'); return; }
+  if (!S.testMode) { toast('Ligue o modo de teste antes de inserir resultados.','warn'); return; }
+  const id = parseInt(document.getElementById('adm-game').value);
+  const h  = parseInt(document.getElementById('adm-a').value);
+  const a  = parseInt(document.getElementById('adm-b').value);
+  const st = document.getElementById('adm-status').value;
+  
+  // Salva no Sheets como resultado de teste (persistido para todos verem)
+  try {
+    const res = await gsCall({ action:'adminSetTestResult', callerEmail:S.me, gameId:id, h:h, a:a, status:st });
+    if (!res.ok) { toast(res.error||'Erro ao salvar resultado de teste','err'); return; }
+  } catch(e) { toast('Erro de conexão ao salvar no Sheets','err'); return; }
+  
+  // Aplica localmente também
+  S.results[id] = { h, a, status:st, source:'test' };
+  persistSettings();
+  toast(`🧪 Resultado de teste do jogo #${id} salvo no Sheets e aplicado! ⚽`,'ok');
+  rerenderCurrentPage();
 }
   
 // ================================================================
