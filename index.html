@@ -193,6 +193,29 @@ header {
 }
 .user-chip:hover { border-color: var(--blue); }
 .user-chip.active { border-color: var(--gold); background: rgba(201,168,76,0.1); color: var(--gold); }
+.user-chip.filter-active { border-color: var(--green) !important; background: rgba(60,172,59,0.28) !important; color: #7de87c !important; box-shadow: 0 0 14px rgba(60,172,59,0.25); }
+
+/* ===== PALPITE LIST ===== */
+.palpite-list { border-top: 1px solid var(--border); margin-top: 10px; padding-top: 8px; }
+.palpite-list-header { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; padding: 0 2px 6px; }
+.palpite-row { display: flex; align-items: center; gap: 8px; padding: 5px 2px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.palpite-row:last-child { border-bottom: none; }
+.pr-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--dark4); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; border: 1px solid var(--border); }
+.pr-avatar img { width:100%;height:100%;object-fit:cover; }
+.pr-name { flex: 1; font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.pr-score { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--muted); min-width: 46px; text-align: center; }
+.pr-score.exact-sc { color: var(--green); }
+.pr-score.result-sc { color: #7b8fe8; }
+.pr-score.wrong-sc { color: #ff7b7b; }
+.pr-vote-btn { width: 32px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: var(--dark4); cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; transition: .15s; padding: 0; }
+.pr-vote-btn:hover:not([disabled]) { border-color: var(--muted); background: var(--dark3); }
+.pr-vote-btn[disabled] { opacity: .35; cursor: not-allowed; }
+.pr-vote-btn.bosta-on { background: rgba(230,29,37,0.2); border-color: #ff7b7b; }
+.pr-vote-btn.mestre-on { background: rgba(60,172,59,0.2); border-color: var(--green); }
+.pr-result-badge { font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 6px; white-space: nowrap; }
+.pr-result-badge.win { background: rgba(60,172,59,0.15); color: var(--green); border: 1px solid rgba(60,172,59,0.2); }
+.pr-result-badge.lose { background: rgba(230,29,37,0.1); color: #ff7b7b; border: 1px solid rgba(230,29,37,0.2); }
+.vote-limit-info { font-size: 10px; color: var(--muted); text-align: right; padding: 4px 2px 0; }
 .user-chip-avatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; background: var(--dark3); display: flex; align-items: center; justify-content: center; font-size: 12px; overflow: hidden; flex-shrink: 0; }
 .user-chip-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -207,7 +230,7 @@ header {
 .phase-pill.admin-pill { background: rgba(230,29,37,0.2); color: #ff7b7b; border: 1px solid rgba(230,29,37,0.3); }
 
 /* ===== GAME CARDS ===== */
-.games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 14px; }
+.games-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
 .game-card {
   background: var(--dark2); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 18px;
@@ -1575,6 +1598,21 @@ function isLocked(game) {
   if (!Number.isFinite(kickoff)) return false;
   return (kickoff - Date.now()) < 10*60*1000;
 }
+
+// Count how many votes of a given type the voter has cast in a rodada (excluding one game if specified)
+function countVotesInRodada(voterEmail, rodada, type, excludeGameId) {
+  let count = 0;
+  Object.keys(S.apostas || {}).forEach(key => {
+    const parts = key.split('_');
+    if (parts[0] !== 'aposta') return;
+    const gId = parseInt(parts[1]);
+    if (excludeGameId != null && gId === excludeGameId) return;
+    if (getRodada(gId) !== rodada) return;
+    const votersObj = S.apostas[key];
+    if (votersObj && votersObj[voterEmail] === type) count++;
+  });
+  return count;
+}
 function minsUntil(game) {
   const kickoff = new Date(game.date).getTime();
   if (!Number.isFinite(kickoff)) return Infinity;
@@ -1762,21 +1800,26 @@ function renderStats() {
 // ================================================================
 function renderUserChips() {
   const chips = Object.values(S.users).map(u => {
-    const active = (S.viewingUser||S.me)===u.email;
-    
-    // VERIFICAÇÃO: Se tiver foto, aplica a classe de animação que criamos no CSS
+    const isMe = u.email === S.me;
+    const isFiltered = !isMe && S.viewingUser === u.email;
+    const chipClass = isMe ? 'active' : (isFiltered ? 'filter-active' : '');
     const classeAnimacao = u.avatar ? 'chip-com-foto' : '';
-    
     const av = u.avatar ? `<div class="user-chip-avatar"><img src="${u.avatar}"></div>` : `<div class="user-chip-avatar">🧑</div>`;
-    const you = u.email===S.me ? ' (você)' : '';
-    
-    // Adicionada a variável classeAnimacao na linha abaixo
-    return `<div class="user-chip ${active?'active':''} ${classeAnimacao}" onclick="setViewUser('${u.email}')">${av}${esc(u.name)}${you}</div>`;
+    const you = isMe ? ' (você)' : '';
+    return `<div class="user-chip ${chipClass} ${classeAnimacao}" onclick="setViewUser('${u.email}')">${av}${esc(u.name)}${you}</div>`;
   }).join('');
   document.getElementById('user-chips').innerHTML = chips;
 }
   
-function setViewUser(email) { S.viewingUser = email; renderGames(); renderUserChips(); }
+function setViewUser(email) {
+  // Click the already-filtered non-me user → remove filter; click self → show all
+  if (S.viewingUser === email && email !== S.me) {
+    S.viewingUser = null;
+  } else {
+    S.viewingUser = email;
+  }
+  renderGames(); renderUserChips();
+}
 
 // ================================================================
 //  RENDER GAMES
@@ -1797,99 +1840,121 @@ function renderGames() {
 
 function renderGameCard(game) {
   const r = S.results[game.id]||game.result||{h:null,a:null,status:'upcoming'};
-  const viewUser    = S.viewingUser||S.me;
-  const viewUserObj = S.users[viewUser];
-  const isMe  = viewUser===S.me;
-  const bet   = (viewUserObj&&viewUserObj.bets||{})[game.id];
-  const locked = isLocked(game);
+  const meUser   = S.users[S.me];
+  const myBet    = (meUser&&meUser.bets||{})[game.id];
+  const locked   = isLocked(game);
   const lockedByFallback = DATA_META.source==='fallback' && game.source==='fallback';
-  const status = getGameStatus(game);
+  const status   = getGameStatus(game);
 
-  let outcome='', cardClass='', pts=0;
-  if (r.status==='finished'&&bet&&r.h!==null) {
-    if (bet.h===r.h&&bet.a===r.a) { outcome='exact'; cardClass='exact'; pts=S.settings.exact; }
-    else if (getWDL(bet.h,bet.a)===getWDL(r.h,r.a)) { outcome='result-ok'; cardClass='result-ok'; pts=S.settings.result; }
-    else { outcome='wrong'; cardClass='wrong'; }
+  // Card colour based on MY result
+  let outcome='', cardClass='';
+  if (r.status==='finished' && myBet && r.h!==null) {
+    if (myBet.h===r.h && myBet.a===r.a)                          { outcome='exact';     cardClass='exact'; }
+    else if (getWDL(myBet.h,myBet.a)===getWDL(r.h,r.a))         { outcome='result-ok'; cardClass='result-ok'; }
+    else                                                           { outcome='wrong';    cardClass='wrong'; }
   }
 
-  const statusPill = status==='live' ? `<span class="status-pill live">🔴 AO VIVO</span>` :
-    status==='finished' ? `<span class="status-pill finished">✅ Encerrado</span>` :
-    locked&&status==='upcoming' ? `<span class="status-pill soon">⏰ Em breve</span>` :
-    `<span class="status-pill upcoming">📅 Agendado</span>`;
+  const statusPill = status==='live'
+    ? `<span class="status-pill live">🔴 AO VIVO</span>`
+    : status==='finished'
+      ? `<span class="status-pill finished">✅ Encerrado</span>`
+      : locked&&status==='upcoming'
+        ? `<span class="status-pill soon">⏰ Em breve</span>`
+        : `<span class="status-pill upcoming">📅 Agendado</span>`;
 
   const realScore = r.h!==null ? `<div class="real-score">${r.h}–${r.a}</div>` : `<div class="vs-label">VS</div>`;
-  const ownerLabel = isMe
-    ? `<div class="bet-owner-label">Seu palpite <span class="you-tag">você</span></div>`
-    : `<div class="bet-owner-label">Palpite de <strong>${viewUserObj?esc(viewUserObj.name):viewUser}</strong></div>`;
 
+  // ---- MY bet section ----
   let betSection = '';
-  if (isMe && !locked) {
-    betSection = `${ownerLabel}<div class="score-inputs">
-      <input type="number" class="score-inp" id="bi-h-${game.id}" value="${bet?bet.h:''}" placeholder="?" min="0" max="20" oninput="onBetInput(${game.id})" onfocus="checkLock(${game.id},this)">
+  if (!locked) {
+    betSection = `<div class="bet-owner-label">Seu palpite <span class="you-tag">você</span></div>
+    <div class="score-inputs">
+      <input type="number" class="score-inp" id="bi-h-${game.id}" value="${myBet?myBet.h:''}" placeholder="?" min="0" max="20" oninput="onBetInput(${game.id})" onfocus="checkLock(${game.id},this)">
       <span class="score-dash">–</span>
-      <input type="number" class="score-inp" id="bi-a-${game.id}" value="${bet?bet.a:''}" placeholder="?" min="0" max="20" oninput="onBetInput(${game.id})" onfocus="checkLock(${game.id},this)">
-    </div><div class="saving-indicator hidden" id="si-${game.id}"><span class="save-spin"></span> Salvando no Sheets...</div>`;
-  } else if (isMe && locked) {
-    betSection = `${ownerLabel}<div class="score-inputs">
-      <input type="number" class="score-inp readonly" value="${bet?bet.h:''}" placeholder="–" disabled>
-      <span class="score-dash">–</span>
-      <input type="number" class="score-inp readonly" value="${bet?bet.a:''}" placeholder="–" disabled>
-    </div><div class="locked-msg">🔒 ${lockedByFallback?'Configure a tabela oficial antes dos palpites':r.status==='finished'?'Jogo encerrado':r.status==='live'?'Jogo em andamento':'Prazo encerrado (10min)'}</div>`;
+      <input type="number" class="score-inp" id="bi-a-${game.id}" value="${myBet?myBet.a:''}" placeholder="?" min="0" max="20" oninput="onBetInput(${game.id})" onfocus="checkLock(${game.id},this)">
+    </div>
+    <div class="saving-indicator hidden" id="si-${game.id}"><span class="save-spin"></span> Salvando no Sheets...</div>`;
   } else {
-    betSection = `${ownerLabel}<div class="score-inputs">
-      <input type="number" class="score-inp readonly" value="${bet?bet.h:''}" placeholder="–" disabled>
+    betSection = `<div class="bet-owner-label">Seu palpite <span class="you-tag">você</span></div>
+    <div class="score-inputs">
+      <input type="number" class="score-inp readonly" value="${myBet?myBet.h:''}" placeholder="–" disabled>
       <span class="score-dash">–</span>
-      <input type="number" class="score-inp readonly" value="${bet?bet.a:''}" placeholder="–" disabled>
-    </div>`;
+      <input type="number" class="score-inp readonly" value="${myBet?myBet.a:''}" placeholder="–" disabled>
+    </div>
+    <div class="locked-msg">🔒 ${lockedByFallback?'Configure a tabela oficial antes dos palpites':r.status==='finished'?'Jogo encerrado':r.status==='live'?'Jogo em andamento':'Prazo encerrado (10min)'}</div>`;
   }
 
   let badge = '';
-  if (outcome==='exact')     badge = `<div class="bet-result-badge exact">⭐ PLACAR EXATO +${S.settings.exact}pts</div>`;
+  if      (outcome==='exact')     badge = `<div class="bet-result-badge exact">⭐ PLACAR EXATO +${S.settings.exact}pts</div>`;
   else if (outcome==='result-ok') badge = `<div class="bet-result-badge result-ok">✅ RESULTADO CERTO +${S.settings.result}pts</div>`;
-  else if (outcome==='wrong')badge = `<div class="bet-result-badge wrong">❌ ERROU 0 pts</div>`;
-  else if (bet)              badge = `<div class="bet-result-badge pending">⏳ AGUARDANDO RESULTADO</div>`;
+  else if (outcome==='wrong')     badge = `<div class="bet-result-badge wrong">❌ ERROU 0 pts</div>`;
+  else if (myBet)                 badge = `<div class="bet-result-badge pending">⏳ AGUARDANDO RESULTADO</div>`;
 
-  const miniBets = Object.values(S.users).filter(u=>u.email!==viewUser&&(u.bets||{})[game.id]).map(u => {
-    const ub = (u.bets||{})[game.id];
-    let miniClass = '';
-    if (r.status==='finished'&&ub&&r.h!==null) {
-      if (ub.h===r.h&&ub.a===r.a) miniClass='exact-bet';
-      else if (getWDL(ub.h,ub.a)===getWDL(r.h,r.a)) miniClass='result-bet';
-    }
-    return `<div class="mini-bet ${miniClass}" title="${esc(u.name)}: ${ub.h}–${ub.a}"><div class="mini-bet-avatar">${u.avatar?`<img src="${u.avatar}">`:'🧑'}</div><span class="mini-bet-score">${ub.h}–${ub.a}</span></div>`;
-  }).join('');
+  // ---- Palpite list (other users, filtered by chip) ----
+  const filterEmail = (S.viewingUser && S.viewingUser !== S.me) ? S.viewingUser : null;
+  const othersWithBet = Object.values(S.users).filter(u => {
+    if (u.email === S.me) return false;
+    if (filterEmail && u.email !== filterEmail) return false;
+    return (u.bets||{})[game.id] != null;
+  });
 
-  // Lógica de Apostas Bosta/Mestre
-  let extraHtml = '';
-  if (bet && viewUser !== S.me) {
-    const apostaKey = `aposta_${game.id}_${viewUser}`;
-    const votersObj = (S.apostas || {})[apostaKey] || {};
-    const myVote = votersObj[S.me];
-    const bostaCount = Object.values(votersObj).filter(v => v === 'bosta').length;
-    const mestreCount = Object.values(votersObj).filter(v => v === 'mestre').length;
-    const hasVotes = bostaCount > 0 || mestreCount > 0;
-    const infoBtn = hasVotes ? `<span style="cursor:pointer; margin-left:6px; font-size:14px;" onclick="showBetsInfoModal(${game.id}, '${viewUser}')">ℹ️</span>` : '';
+  let palpiteListHtml = '';
+  if (othersWithBet.length > 0) {
+    const rodada = getRodada(game.id);
+    const myBostaCount  = countVotesInRodada(S.me, rodada, 'bosta',  game.id);
+    const myMestreCount = countVotesInRodada(S.me, rodada, 'mestre', game.id);
 
-    if (!locked) {
-      const btnBostaStyle = myVote === 'bosta' ? 'background:rgba(230,29,37,0.2); border-color:#ff7b7b; color:#ff7b7b;' : 'border-color:var(--border); background:var(--dark3); color:var(--text)';
-      const btnMestreStyle = myVote === 'mestre' ? 'background:rgba(60,172,59,0.2); border-color:var(--green); color:var(--green);' : 'border-color:var(--border); background:var(--dark3); color:var(--text)';
-      
-      extraHtml = `<div style="display:flex; gap:6px; margin-top:8px;">
-        <button class="btn-sm" onclick="voteExtra(${game.id}, '${viewUser}', 'bosta')" style="flex:1; transition:0.2s; ${btnBostaStyle}">💩 Bosta</button>
-        <button class="btn-sm" onclick="voteExtra(${game.id}, '${viewUser}', 'mestre')" style="flex:1; transition:0.2s; ${btnMestreStyle}">✅ Mestre</button>
+    const rows = othersWithBet.map(u => {
+      const ub        = (u.bets||{})[game.id];
+      const apostaKey = `aposta_${game.id}_${u.email}`;
+      const votersObj = (S.apostas||{})[apostaKey]||{};
+      const myVote    = votersObj[S.me];
+
+      let scoreClass = '';
+      if (r.status==='finished' && ub && r.h!==null) {
+        if (ub.h===r.h && ub.a===r.a)                       scoreClass='exact-sc';
+        else if (getWDL(ub.h,ub.a)===getWDL(r.h,r.a))       scoreClass='result-sc';
+        else                                                  scoreClass='wrong-sc';
+      }
+
+      let voteHtml = '';
+      if (r.status==='finished' && r.h!==null) {
+        if (myVote) {
+          const tPts = calcGamePoints(u, game.id);
+          const win  = myVote==='bosta' ? (tPts===0) : (tPts>0);
+          const label = myVote==='bosta' ? '💩' : `<span style="color:var(--green)">✅ Mestre</span>`;
+          voteHtml = `<span class="pr-result-badge ${win?'win':'lose'}">${label} ${win?'+2 🏴‍☠️':'−2 🏴‍☠️'}</span>`;
+        }
+      } else if (!locked) {
+        const canB = myVote==='bosta' || myBostaCount<2;
+        const canM = myVote==='mestre' || myMestreCount<2;
+        const bTitle = !canB ? 'Limite: 2 votos Bosta/rodada' : '';
+        const mTitle = !canM ? 'Limite: 2 votos Mestre/rodada' : '';
+        voteHtml = `<button class="pr-vote-btn ${myVote==='bosta'?'bosta-on':''}" onclick="voteExtra(${game.id},'${u.email}','bosta')" ${canB?'':'disabled'} title="${bTitle}">💩</button>`
+                 + `<button class="pr-vote-btn ${myVote==='mestre'?'mestre-on':''}" onclick="voteExtra(${game.id},'${u.email}','mestre')" ${canM?'':'disabled'} title="${mTitle}">✅</button>`;
+      } else if (myVote) {
+        voteHtml = `<span style="font-size:11px;color:var(--muted)">${myVote==='bosta'?'💩':'✅'} bloq.</span>`;
+      }
+
+      const av = u.avatar ? `<img src="${u.avatar}">` : '🧑';
+      return `<div class="palpite-row">
+        <div class="pr-avatar">${av}</div>
+        <div class="pr-name">${esc(u.name)}</div>
+        <div class="pr-score ${scoreClass}">${ub?`${ub.h}–${ub.a}`:'?–?'}</div>
+        <div style="display:flex;gap:4px;align-items:center;flex-shrink:0;">${voteHtml}</div>
       </div>`;
-      
-      if (hasVotes) extraHtml += `<div style="font-size:10px; color:var(--muted); text-align:center; margin-top:4px;">Apostas do Grupo: 💩 ${bostaCount} | ✅ ${mestreCount} ${infoBtn}</div>`;
-    } else if (r.status === 'finished' && r.h !== null) {
-      if (myVote) {
-         const targetPts = calcGamePoints(viewUserObj, game.id);
-         const win = (myVote === 'bosta') ? (targetPts === 0) : (targetPts > 0);
-         extraHtml = `<div style="margin-top:8px; padding:6px; text-align:center; border-radius:8px; font-size:12px; font-weight:bold; background: ${win ? 'rgba(60,172,59,0.15)' : 'rgba(230,29,37,0.1)'}; color: ${win ? 'var(--green)' : '#ff7b7b'}; border: 1px solid ${win ? 'rgba(60,172,59,0.25)' : 'rgba(230,29,37,0.2)'};">${myVote === 'bosta' ? '💩 Bosta' : '✅ Mestre'}: Você ${win ? 'GANHOU +2' : 'PERDEU -2'} 🏴‍☠️</div>`;
-         if (hasVotes) extraHtml += `<div style="font-size:10px; color:var(--muted); text-align:center; margin-top:4px;">Apostas do Grupo: 💩 ${bostaCount} | ✅ ${mestreCount} ${infoBtn}</div>`;
-      } else if (hasVotes) extraHtml += `<div style="font-size:10px; color:var(--muted); text-align:center; margin-top:4px;">Apostas do Grupo: 💩 ${bostaCount} | ✅ ${mestreCount} ${infoBtn}</div>`;
-    } else {
-      if (hasVotes) extraHtml += `<div style="font-size:10px; color:var(--muted); text-align:center; margin-top:8px;">Apostas do Grupo: 💩 ${bostaCount} | ✅ ${mestreCount} ${infoBtn}</div>`;
-    }
+    }).join('');
+
+    const bLeft = Math.max(0,2-myBostaCount);
+    const mLeft = Math.max(0,2-myMestreCount);
+    const limitBar = (!locked && r.status!=='finished')
+      ? `<div class="vote-limit-info">Votos restantes nesta rodada: 💩 ${bLeft} | ✅ ${mLeft}</div>`
+      : '';
+
+    palpiteListHtml = `<div class="palpite-list">
+      <div class="palpite-list-header">🎯 Palpites dos jogadores${filterEmail?' · filtrado':''}</div>
+      ${rows}${limitBar}
+    </div>`;
   }
 
   return `<div class="game-card ${cardClass}${locked?' locked':''}" id="gc-${game.id}">
@@ -1900,8 +1965,8 @@ function renderGameCard(game) {
       <div class="center-col">${realScore}<div class="venue-text">${r.h!==null?'Resultado oficial':''}</div></div>
       <div class="team-col">${renderTeamMark(game,'a','team-flag')}<div class="team-code" title="${esc(game.aName||game.aCode)}">${esc(game.aCode)}</div></div>
     </div>
-    <div class="bet-row">${betSection}${badge}${extraHtml}</div>
-    ${miniBets?`<div class="all-bets-row">${miniBets}</div>`:''}
+    <div class="bet-row">${betSection}${badge}</div>
+    ${palpiteListHtml}
   </div>`;
 }
 
@@ -1943,7 +2008,6 @@ function showHistoryModal(email, type) {
   document.getElementById('hm-icon').textContent = isPiratecas ? '🏴‍☠️' : '🏆';
   document.getElementById('hm-title').innerHTML = isPiratecas ? 'Histórico de Piratecas' : 'Histórico de Pontos';
   document.getElementById('hm-subtitle').innerHTML = `<strong>${esc(u.name)}</strong>${u.team?`<br><span style="font-size:12px;color:var(--muted)">⚽ ${esc(u.team)}</span>`:''}`;
-  // Big avatar
   const hmAv = document.getElementById('hm-avatar');
   if (u.avatar) {
     hmAv.innerHTML = `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
@@ -1954,109 +2018,143 @@ function showHistoryModal(email, type) {
   }
   
   let html = '';
-  
+
   if (!isPiratecas) {
-    let streak = 0;
+    // ---- PONTOS: show flags next to team codes ----
     const sortedGames = GAMES.filter(g=>(S.results[g.id]||{}).status==='finished'&&(u.bets||{})[g.id]).sort((a,b)=>a.id-b.id);
     sortedGames.forEach(g => {
-       const r = S.results[g.id];
-       const b = u.bets[g.id];
-       const s = S.settings;
-       let pts = 0;
-       let msg = '';
-       if (b.h===r.h && b.a===r.a) {
-          pts += s.exact;
-          msg = `⭐ Exato (${b.h}-${b.a})`;
-          if(g.phase==='Semifinal') { pts+=s.semi; msg+=' + Semi'; }
-          if(g.phase==='Final') { pts+=s.final; msg+=' + Final'; }
-       } else if (getWDL(b.h,b.a) === getWDL(r.h,r.a)) {
-          pts += s.result;
-          msg = `✅ Resultado (${b.h}-${b.a})`;
-       } else {
-          msg = `❌ Errou (${b.h}-${b.a})`;
-       }
-       if(pts > 0) {
-          html += `<div style="padding:8px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;">
-            <span><span style="font-size:11px;color:var(--muted)">${g.hCode}x${g.aCode}</span><br>${msg}</span>
-            <span style="color:var(--gold); font-weight:bold;">+${pts}</span>
-          </div>`;
-       }
+      const r = S.results[g.id];
+      const b = u.bets[g.id];
+      const s = S.settings;
+      let pts = 0, msg = '';
+      if (b.h===r.h && b.a===r.a) {
+        pts += s.exact;
+        msg = `⭐ Exato (${b.h}-${b.a})`;
+        if(g.phase==='Semifinal') { pts+=s.semi; msg+=' + Semi'; }
+        if(g.phase==='Final')     { pts+=s.final; msg+=' + Final'; }
+      } else if (getWDL(b.h,b.a)===getWDL(r.h,r.a)) {
+        pts += s.result;
+        msg = `✅ Resultado (${b.h}-${b.a})`;
+      } else {
+        msg = `❌ Errou (${b.h}-${b.a})`;
+      }
+      if (pts > 0) {
+        const hFlag = g.hFlag || '🏳️';
+        const aFlag = g.aFlag || '🏳️';
+        html += `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <span>
+            <span style="font-size:14px;">${hFlag} ${esc(g.hCode)} <span style="color:var(--muted);font-size:11px">vs</span> ${esc(g.aCode)} ${aFlag}</span>
+            <br><span style="font-size:12px;color:var(--muted)">${msg}</span>
+          </span>
+          <span style="color:var(--gold);font-weight:bold;white-space:nowrap;">+${pts}</span>
+        </div>`;
+      }
     });
-    
     const ptsObj = calcPoints(u);
-    html += `<div style="padding:8px; text-align:right; font-weight:bold; color:var(--gold);">Total: ${ptsObj.total} pts</div>`;
+    html += `<div style="padding:8px;text-align:right;font-weight:bold;color:var(--gold);">Total: ${ptsObj.total} pts</div>`;
+
   } else {
+    // ---- PIRATECAS: same logic as before but grouped by game with flags + new text ----
     let balance = 100;
-    html += `<div style="padding:8px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;">
-            <span>Saldo Inicial</span>
-            <span style="color:var(--gold); font-weight:bold;">100</span>
-          </div>`;
-    
+    html += `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
+      <span>Saldo Inicial</span><span style="color:var(--gold);font-weight:bold;">100</span>
+    </div>`;
+
     const rodadas = {};
     GAMES.forEach(g => {
       const r = S.results[g.id];
-      if(r && r.status === 'finished' && r.h !== null) {
-         const rodada = getRodada(g.id);
-         if(!rodadas[rodada]) rodadas[rodada] = { users: {} };
-         Object.values(S.users).forEach(user => {
-           if(!rodadas[rodada].users[user.email]) rodadas[rodada].users[user.email] = 0;
-           rodadas[rodada].users[user.email] += calcGamePoints(user, g.id);
-         });
+      if(r && r.status==='finished' && r.h!==null) {
+        const rodada = getRodada(g.id);
+        if(!rodadas[rodada]) rodadas[rodada] = { users:{} };
+        Object.values(S.users).forEach(user => {
+          if(!rodadas[rodada].users[user.email]) rodadas[rodada].users[user.email] = 0;
+          rodadas[rodada].users[user.email] += calcGamePoints(user, g.id);
+        });
       }
     });
 
     Object.keys(rodadas).forEach(rodada => {
-       const rData = rodadas[rodada];
-       const ptsArray = Object.values(rData.users).sort((a,b)=>a-b);
-       const maxPts = ptsArray[ptsArray.length-1];
-       const minPts = ptsArray[0];
-       let medPts = (ptsArray.length % 2 === 0) ? (ptsArray[ptsArray.length/2 - 1] + ptsArray[ptsArray.length/2]) / 2 : ptsArray[Math.floor(ptsArray.length/2)];
-
-       if (maxPts !== minPts) { 
-         const myPts = rData.users[email];
-         let diff = 0;
-         let desc = '';
-         if (myPts === maxPts) { diff = 5; desc = 'Pé Quente'; }
-         else if (myPts === minPts) { diff = -5; desc = 'Pé Frio'; }
-         else if (myPts === medPts || (myPts < medPts && myPts > minPts)) { diff = -1; desc = 'Nem fede nem cheira'; }
-         
-         if(diff !== 0) {
-            balance += diff;
-            const color = diff > 0 ? 'var(--green)' : '#ff7b7b';
-            html += `<div style="padding:8px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;">
-              <span><span style="font-size:11px;color:var(--muted)">Rodada ${rodada}</span><br>${desc} (${myPts}pts)</span>
-              <span style="color:${color}; font-weight:bold;">${diff>0?'+':''}${diff}</span>
-            </div>`;
-         }
-       }
+      const rData = rodadas[rodada];
+      const ptsArray = Object.values(rData.users).sort((a,b)=>a-b);
+      const maxPts = ptsArray[ptsArray.length-1];
+      const minPts = ptsArray[0];
+      let medPts = (ptsArray.length % 2===0)
+        ? (ptsArray[ptsArray.length/2-1]+ptsArray[ptsArray.length/2])/2
+        : ptsArray[Math.floor(ptsArray.length/2)];
+      if (maxPts !== minPts) {
+        const myPts = rData.users[email];
+        let diff=0, desc='';
+        if (myPts===maxPts)                              { diff=5;  desc='🔥 Pé Quente'; }
+        else if (myPts===minPts)                          { diff=-5; desc='🥶 Pé Frio'; }
+        else if (myPts===medPts||(myPts<medPts&&myPts>minPts)) { diff=-1; desc='😐 Nem fede nem cheira'; }
+        if (diff!==0) {
+          balance += diff;
+          const color = diff>0?'var(--green)':'#ff7b7b';
+          html += `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
+            <span><span style="font-size:11px;color:var(--muted)">Rodada ${rodada}</span><br>${desc} (${myPts}pts)</span>
+            <span style="color:${color};font-weight:bold;">${diff>0?'+':''}${diff}</span>
+          </div>`;
+        }
+      }
     });
 
+    // Group apostas by game
+    const apostasForUser = [];
     Object.keys(S.apostas || {}).forEach(key => {
-       const parts = key.split('_'); const gId = parseInt(parts[1]); const target = parts[2];
-       const votersObj = S.apostas[key];
-       if (votersObj[email]) {
-          const tipo = votersObj[email]; 
-          const r = S.results[gId];
-          if (r && r.status === 'finished' && r.h !== null) {
-             const targetPts = calcGamePoints(S.users[target], gId);
-             const targetHit = targetPts > 0;
-             let diff = 0;
-             if (tipo === 'bosta') diff = (!targetHit) ? 2 : -2;
-             else if (tipo === 'mestre') diff = (targetHit) ? 2 : -2;
-             
-             balance += diff;
-             const color = diff > 0 ? 'var(--green)' : '#ff7b7b';
-             const tName = S.users[target]?.name || target;
-             html += `<div style="padding:8px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;">
-              <span><span style="font-size:11px;color:var(--muted)">Jogo #${gId}</span><br>Apostou ${tipo==='bosta'?'💩':'✅'} em ${esc(tName)}</span>
-              <span style="color:${color}; font-weight:bold;">${diff>0?'+':''}${diff}</span>
-            </div>`;
-          }
-       }
+      const parts = key.split('_');
+      const gId = parseInt(parts[1]);
+      const target = parts[2];
+      const votersObj = S.apostas[key];
+      if (!votersObj[email]) return;
+      const r = S.results[gId];
+      if (!r || r.status!=='finished' || r.h===null) return;
+      apostasForUser.push({ gId, target, tipo: votersObj[email] });
     });
-    html += `<div style="padding:8px; text-align:right; font-weight:bold; color:#ff7b7b;">Total: ${balance} 🏴‍☠️</div>`;
+
+    if (apostasForUser.length > 0) {
+      const byGame = {};
+      apostasForUser.forEach(a => { if(!byGame[a.gId]) byGame[a.gId]=[]; byGame[a.gId].push(a); });
+      const sortedGIds = Object.keys(byGame).map(Number).sort((a,b)=>a-b);
+
+      html += `<div style="padding:6px 0 2px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Apostas Bosta/Mestre</div>`;
+
+      sortedGIds.forEach(gId => {
+        const gObj = GAMES.find(g=>g.id===gId);
+        const r    = S.results[gId];
+        const gameLabel = gObj
+          ? `${gObj.hFlag||'🏳️'} ${esc(gObj.hCode)} ${r.h}–${r.a} ${esc(gObj.aCode)} ${gObj.aFlag||'🏳️'}`
+          : `Jogo #${gId}`;
+
+        html += `<div style="padding:6px 8px 4px;background:rgba(255,255,255,0.03);border-radius:6px;margin:4px 0;font-size:12px;font-weight:700;color:var(--muted);">${gameLabel}</div>`;
+
+        byGame[gId].forEach(({ target, tipo }) => {
+          const tUser   = S.users[target];
+          const targetPts = calcGamePoints(tUser, gId);
+          const targetHit = targetPts > 0;
+          let diff = tipo==='bosta' ? (!targetHit?2:-2) : (targetHit?2:-2);
+          balance += diff;
+          const color    = diff>0?'var(--green)':'#ff7b7b';
+          const tName    = tUser?.name || target;
+          const tipoLabel = tipo==='mestre'
+            ? `<span style="color:var(--green);font-weight:bold;">Mestre ✅</span>`
+            : `💩`;
+
+          html += `<div style="padding:7px 8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <span style="font-size:13px;flex:1;min-width:0;">
+              <strong style="color:var(--text)">${esc(u.name)}</strong>
+              <span style="color:var(--muted)"> disse que </span>
+              <strong style="color:var(--text)">${esc(tName)}</strong>
+              <span style="color:var(--muted)"> é um palpiteiro </span>${tipoLabel}
+            </span>
+            <span style="color:${color};font-weight:bold;white-space:nowrap;">${diff>0?'+':''}${diff} 🏴‍☠️</span>
+          </div>`;
+        });
+      });
+    }
+
+    html += `<div style="padding:8px;text-align:right;font-weight:bold;color:#ff7b7b;">Total: ${balance} 🏴‍☠️</div>`;
   }
-  
+
   if(!html) html = '<div style="color:var(--muted);text-align:center;padding:20px;">Nenhum histórico disponível.</div>';
   document.getElementById('hm-content').innerHTML = html;
   document.getElementById('history-modal').classList.remove('hidden');
@@ -2795,18 +2893,28 @@ async function voteExtra(gameId, target, type) {
   if (!S.apostas) S.apostas = {};
   const key = `aposta_${gameId}_${target}`;
   if (!S.apostas[key]) S.apostas[key] = {};
-  
-  const isChanging = S.apostas[key][S.me] !== undefined;
 
-  // Atualiza imediatamente na tela do usuário
+  const existingVote = S.apostas[key][S.me];
+
+  // Enforce 2-per-rodada limit only when casting a NEW type (not flipping existing vote)
+  if (existingVote !== type) {
+    const rodada = getRodada(gameId);
+    const count  = countVotesInRodada(S.me, rodada, type, gameId);
+    if (count >= 2) {
+      toast(`Limite atingido! Máximo de 2 votos "${type==='bosta'?'Bosta 💩':'Mestre ✅'}" por rodada.`, 'warn');
+      return;
+    }
+  }
+
+  const isChanging = existingVote !== undefined;
   S.apostas[key][S.me] = type;
-  renderGames(); 
-  
+  renderGames();
+
   try {
     await gsCall({ action:'voteExtra', gameId: gameId, targetEmail: target, voterEmail: S.me, type: type });
     toast(`Aposta ${isChanging?'atualizada':'registrada'}! ${type === 'bosta' ? '💩' : '✅'}`, 'ok');
-  } catch(e) { 
-    toast('Erro ao registrar aposta.', 'err'); 
+  } catch(e) {
+    toast('Erro ao registrar aposta.', 'err');
   }
 }
 
