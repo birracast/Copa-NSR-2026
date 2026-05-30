@@ -211,7 +211,7 @@ header {
 .gbet-inp:disabled { opacity: 0.6; cursor: not-allowed; }
 .gbet-badge-result { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; }
 
-/* ===== RANKING & GROUPS & OTHER (Original preserved) ===== */
+/* ===== RANKING & GROUPS ===== */
 .rank-table { display: flex; flex-direction: column; gap: 8px; }
 .rank-row { background: var(--dark2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 20px; display: flex; align-items: center; gap: 16px; transition: .2s; }
 .rank-row:hover { border-color: var(--dark4); }
@@ -757,21 +757,32 @@ let saveTimers = {}; let adminUsers = []; let adminEditTarget = null;
 function persistSettings() {
   localStorage.setItem('bolao26_settings', JSON.stringify({ version:1, results:S.results, settings:S.settings }));
 }
+
 function hydrateSettings() {
-  const raw = localStorage.getItem('bolao26_settings');
-  if (raw) {
-    const d = JSON.parse(raw);
-    S.results  = d.results  || {};
-    S.settings = { ...S.settings, ...(d.settings||{}) };
+  try {
+    const raw = localStorage.getItem('bolao26_settings');
+    if (raw) {
+      const d = JSON.parse(raw);
+      S.results  = d.results  || {};
+      S.settings = { ...S.settings, ...(d.settings||{}) };
+    }
+  } catch(e) {
+    console.warn('Configurações locais corrompidas. Limpando cache.');
+    localStorage.removeItem('bolao26_settings');
   }
-  const session = localStorage.getItem('bolao26_session');
-  if (session) {
-    try {
+
+  try {
+    const session = localStorage.getItem('bolao26_session');
+    if (session) {
       const sess = JSON.parse(session);
       if (sess.email && sess.userData) { S.me = sess.email; S.users[sess.email] = sess.userData; }
-    } catch(e) {}
+    }
+  } catch(e) {
+    console.warn('Sessão corrompida. Limpando cache de login.');
+    localStorage.removeItem('bolao26_session');
   }
 }
+
 function saveSession(userData) { localStorage.setItem('bolao26_session', JSON.stringify({ email: userData.email, userData })); }
 function clearSession() { localStorage.removeItem('bolao26_session'); }
 
@@ -779,19 +790,26 @@ function clearSession() { localStorage.removeItem('bolao26_session'); }
 //  BOOT
 // ================================================================
 async function boot() {
-  hydrateSettings();
-  if (!GS_URL || GS_URL.includes('COLE_AQUI')) {
-    hideLoading(); showAuth(); authMsg('Aviso: O administrador ainda não configurou a URL.', false); return;
-  }
-  if (S.me) {
-    try {
-      await loadTournamentData(false);
-      const data = await gsLoadAll();
-      if (data && data.users) mergeRemoteData(data);
-    } catch(e) {}
-    hideLoading(); enterApp();
-  } else {
-    hideLoading(); showAuth();
+  try {
+    hydrateSettings();
+    if (!GS_URL || GS_URL.includes('COLE_AQUI')) {
+      hideLoading(); showAuth(); authMsg('Aviso: O administrador ainda não configurou a URL do sistema.', false); return;
+    }
+    if (S.me) {
+      try {
+        await loadTournamentData(false);
+        const data = await gsLoadAll();
+        if (data && data.users) mergeRemoteData(data);
+      } catch(e) { console.error("Erro no sincronismo inicial:", e); }
+      hideLoading(); enterApp();
+    } else {
+      hideLoading(); showAuth();
+    }
+  } catch(fatalError) {
+    console.error("Erro fatal ao dar boot no app:", fatalError);
+    hideLoading();
+    showAuth();
+    authMsg('Erro fatal ao iniciar. O cache do navegador estava muito corrompido. Tente limpar os dados de navegação.', false);
   }
 }
 
@@ -1007,7 +1025,7 @@ async function forceSyncAll() {
   rerenderCurrentPage(); showSaving(false); resetSyncTimer();
 }
 
-function showSaving(v) { document.getElementById('saving-indicator')?.classList.toggle('hidden', !v); }
+function showSaving(v) { const ind = document.getElementById('saving-indicator'); if(ind) ind.classList.toggle('hidden', !v); }
 
 // ================================================================
 //  TIMERS & LOCKS
@@ -1101,4 +1119,479 @@ function calcUserPiratecas(email) {
      if (votersObj[email]) {
         const type = votersObj[email]; const r = S.results[gId];
         if (r && r.status === 'finished' && r.h !== null) {
-           const targetPts = calcGamePoints(S
+           const targetPts = calcGamePoints(S.users[target], gId);
+           const targetHit = targetPts > 0;
+           if (type === 'bosta') { if (!targetHit) balance += 2; else balance -= 2; } 
+           else if (type === 'mestre') { if (targetHit) balance += 2; else balance -= 2; }
+        }
+     }
+  });
+  return balance;
+}
+
+function calcPoints(user) {
+  const s = S.settings; let total=0, exact=0, res=0, streak=0, maxStreak=0;
+  GAMES.forEach(g => {
+    const r = S.results[g.id]; const b = (user.bets||{})[g.id];
+    if (!r||r.status!=='finished'||!b||r.h===null) return;
+    if (b.h===r.h&&b.a===r.a) { total+=s.exact; exact++; streak++; if(streak>maxStreak)maxStreak=streak; if(g.phase==='Semifinal')total+=s.semi; if(g.phase==='Final')total+=s.final; }
+    else if (getWDL(b.h,b.a)===getWDL(r.h,r.a)) { total+=s.result; res++; streak=0; }
+    else { streak=0; }
+  });
+  if (maxStreak>=3) total+=s.streak;
+  return { total, exact, res, piratecas: calcUserPiratecas(user.email) }; 
+}
+
+// ================================================================
+//  RENDER STATS & CHIPS
+// ================================================================
+function renderStats() {
+  const me = S.users[S.me]; if(!me) return;
+  const pts = calcPoints(me); const all = calcRankAll(); const pos = all.findIndex(u=>u.email===S.me)+1;
+  const finished = Object.values(S.results).filter(r=>r.status==='finished').length;
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-box"><div class="sv gold">${pts.total}</div><div class="sl">Meus Pontos</div></div>
+    <div class="stat-box"><div class="sv" style="color:#C9A84C;">${pts.piratecas}</div><div class="sl">Piratecas 🏴‍☠️</div></div>
+    <div class="stat-box"><div class="sv">${pos||'-'}º</div><div class="sl">Posição</div></div>
+    <div class="stat-box"><div class="sv green">${pts.exact}</div><div class="sl">Placares Exatos</div></div>
+    <div class="stat-box"><div class="sv blue">${pts.res}</div><div class="sl">Resultados</div></div>
+    <div class="stat-box"><div class="sv red">${finished}</div><div class="sl">Jogos Encerrados</div></div>
+  `;
+}
+
+function toggleFilterUser(email) {
+  if (S.viewingUser === email) S.viewingUser = null; else S.viewingUser = email;
+  renderGames();
+}
+
+function renderUserChips() {
+  const chips = Object.values(S.users).map(u => {
+    const active = S.viewingUser === u.email;
+    const classeAnimacao = u.avatar ? 'chip-com-foto' : '';
+    const av = u.avatar ? `<div class="user-chip-avatar"><img src="${u.avatar}"></div>` : `<div class="user-chip-avatar">🧑</div>`;
+    const you = u.email===S.me ? ' (você)' : '';
+    return `<div class="user-chip ${active?'active':''} ${classeAnimacao}" onclick="toggleFilterUser('${u.email}')">${av}${esc(u.name)}${you}</div>`;
+  }).join('');
+  document.getElementById('user-chips').innerHTML = chips;
+}
+
+// ================================================================
+//  RENDER GAMES (List Layout)
+// ================================================================
+function renderGames() {
+  renderUserChips();
+  const phases = [...new Set(GAMES.map(g=>g.phase))];
+  let html = '';
+  phases.forEach(ph => {
+    const gs = GAMES.filter(g=>g.phase===ph);
+    const pillClass = ph==='Fase de Grupos'?'groups':ph==='Final'||ph==='Terceiro Lugar'?'final':'knockout';
+    html += `<div class="phase-hdr"><span class="phase-hdr-text">${ph}</span><span class="phase-pill ${pillClass}">${gs.length} jogos</span></div><div class="games-grid">`;
+    gs.forEach(g => { html += renderGameCard(g); });
+    html += '</div>';
+  });
+  document.getElementById('games-content').innerHTML = html;
+}
+
+function renderGameCard(game) {
+  const r = S.results[game.id]||game.result||{h:null,a:null,status:'upcoming'};
+  const isGameLocked = isLocked(game);
+  const isVotesLocked = isLockedForVotes(game);
+  const status = getGameStatus(game);
+
+  const statusPill = status==='live' ? `<span class="status-pill live">🔴 AO VIVO</span>` :
+    status==='finished' ? `<span class="status-pill finished">✅ Encerrado</span>` :
+    isGameLocked&&status==='upcoming' ? `<span class="status-pill soon">⏰ Em breve</span>` : `<span class="status-pill upcoming">📅 Agendado</span>`;
+
+  const realScore = r.h!==null ? `<div class="real-score">${r.h}–${r.a}</div>` : `<div class="vs-label">VS</div>`;
+
+  // Render Bets List
+  let betsListHtml = '<div class="game-bets-list">';
+  let usersToRender = Object.values(S.users);
+  
+  if (S.viewingUser) {
+      usersToRender = usersToRender.filter(u => u.email === S.viewingUser);
+  } else {
+      usersToRender = usersToRender.filter(u => u.email === S.me || (u.bets && u.bets[game.id]));
+      usersToRender.sort((a,b) => {
+          if (a.email===S.me) return -1;
+          if (b.email===S.me) return 1;
+          return String(a.name).localeCompare(String(b.name));
+      });
+  }
+
+  usersToRender.forEach(u => {
+      const isMe = u.email === S.me;
+      const bet = (u.bets||{})[game.id];
+      const highlighted = (S.viewingUser === u.email) ? 'highlighted' : '';
+      const av = u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover">` : '🧑';
+      const nameHtml = `<div class="gbet-name">${esc(u.name)}${isMe?' <span style="font-size:10px;color:var(--gold);margin-left:4px">(você)</span>':''}</div>`;
+
+      let betSection = ''; let badgeHtml = ''; let actionsHtml = '';
+
+      if (r.status === 'finished' && bet && r.h !== null) {
+          if (bet.h === r.h && bet.a === r.a) badgeHtml = `<span class="gbet-badge-result" style="background:rgba(60,172,59,0.2); color:var(--green)">⭐ Exato +${S.settings.exact}pts</span>`;
+          else if (getWDL(bet.h,bet.a) === getWDL(r.h,r.a)) badgeHtml = `<span class="gbet-badge-result" style="background:rgba(42,57,141,0.2); color:#7b8fe8">✅ Acertou +${S.settings.result}pts</span>`;
+          else badgeHtml = `<span class="gbet-badge-result" style="background:rgba(230,29,37,0.2); color:#ff7b7b">❌ Errou</span>`;
+      }
+
+      if (isMe) {
+          if (!isGameLocked) {
+              betSection = `<div class="gbet-score-inputs">
+                <input type="number" class="gbet-inp" id="bi-h-${game.id}" value="${bet?bet.h:''}" placeholder="?" min="0" max="20" oninput="onBetInput(${game.id})" onfocus="checkLock(${game.id},this)">
+                <span class="score-dash" style="font-size:14px">–</span>
+                <input type="number" class="gbet-inp" id="bi-a-${game.id}" value="${bet?bet.a:''}" placeholder="?" min="0" max="20" oninput="onBetInput(${game.id})" onfocus="checkLock(${game.id},this)">
+              </div>`;
+              actionsHtml = `<div class="saving-indicator hidden" id="si-${game.id}" style="font-size:11px"><span class="save-spin"></span></div>`;
+          } else {
+              betSection = `<div class="gbet-score">${bet?bet.h:'–'} <span style="color:var(--muted);font-size:14px">x</span> ${bet?bet.a:'–'}</div>`;
+              actionsHtml = `<span style="font-size:11px;color:var(--muted)">🔒 Trancado</span>`;
+          }
+      } else {
+          betSection = `<div class="gbet-score">${bet?bet.h:'–'} <span style="color:var(--muted);font-size:14px">x</span> ${bet?bet.a:'–'}</div>`;
+          if (bet) {
+              const apostaKey = `aposta_${game.id}_${u.email}`;
+              const votersObj = (S.apostas || {})[apostaKey] || {};
+              const myVote = votersObj[S.me];
+
+              if (!isVotesLocked) {
+                  const btnBostaStyle = myVote === 'bosta' ? 'background:rgba(230,29,37,0.2); border-color:#ff7b7b; color:#ff7b7b;' : 'border-color:var(--border); background:var(--dark3); color:var(--text)';
+                  const btnMestreStyle = myVote === 'mestre' ? 'background:rgba(60,172,59,0.2); border-color:var(--green); color:var(--green);' : 'border-color:var(--border); background:var(--dark3); color:var(--text)';
+                  actionsHtml = `<div class="gbet-actions">
+                    <button class="btn-sm" onclick="voteExtra(${game.id}, '${u.email}', 'bosta')" style="${btnBostaStyle} padding:6px 10px; font-size:12px;">💩</button>
+                    <button class="btn-sm" onclick="voteExtra(${game.id}, '${u.email}', 'mestre')" style="${btnMestreStyle} padding:6px 10px; font-size:12px;">Mestre ✅</button>
+                  </div>`;
+              } else if (r.status === 'finished' && r.h !== null && myVote) {
+                  const targetPts = calcGamePoints(u, game.id);
+                  const win = (myVote === 'bosta') ? (targetPts === 0) : (targetPts > 0);
+                  const color = win ? 'var(--green)' : '#ff7b7b';
+                  const sym = win ? '+' : '';
+                  actionsHtml = `<span style="font-size:12px; font-weight:bold; color:${color}; padding:4px 8px; border:1px solid ${color}; border-radius:6px; background:rgba(0,0,0,0.3); white-space:nowrap;">${myVote === 'bosta' ? '💩' : '✅'} ${sym}${win?2:-2} 🏴‍☠️</span>`;
+              }
+              
+              const bCount = Object.values(votersObj).filter(v=>v==='bosta').length;
+              const mCount = Object.values(votersObj).filter(v=>v==='mestre').length;
+              if (bCount > 0 || mCount > 0) {
+                  actionsHtml += `<span style="cursor:pointer; margin-left:8px; font-size:13px; background:rgba(255,255,255,0.08); border:1px solid var(--border); border-radius:6px; padding:4px 8px;" onclick="showBetsInfoModal(${game.id}, '${u.email}')" title="Ver quem apostou">👁️ ${bCount} | ${mCount}</span>`;
+              }
+          }
+      }
+
+      betsListHtml += `<div class="gbet-row ${highlighted}">
+          <div class="gbet-av">${av}</div>
+          <div class="gbet-info">${nameHtml}${badgeHtml}</div>
+          <div style="margin-right:14px; text-align:center">${betSection}</div>
+          ${actionsHtml}
+      </div>`;
+  });
+  betsListHtml += '</div>';
+
+  return `<div class="game-card ${isGameLocked?' locked':''}" id="gc-${game.id}">
+    <div class="gcard-top"><span class="gcard-round">${game.group||game.phase}</span>${statusPill}</div>
+    <div class="gcard-top" style="margin-top:-8px;margin-bottom:10px"><span class="gcard-date">📅 ${formatDate(game.date)}</span><span class="gcard-date" style="font-size:10px">🏟 ${esc(game.venue)}</span></div>
+    <div class="teams-section">
+      <div class="team-col">${renderTeamMark(game,'h','team-flag')}<div class="team-code" title="${esc(game.hName||game.hCode)}">${esc(game.hCode)}</div></div>
+      <div class="center-col">${realScore}<div class="venue-text">${r.h!==null?'Resultado oficial':''}</div></div>
+      <div class="team-col">${renderTeamMark(game,'a','team-flag')}<div class="team-code" title="${esc(game.aName||game.aCode)}">${esc(game.aCode)}</div></div>
+    </div>
+    ${betsListHtml}
+  </div>`;
+}
+
+function showBetsInfoModal(gameId, targetEmail) {
+  const apostaKey = `aposta_${gameId}_${targetEmail}`;
+  const votersObj = (S.apostas || {})[apostaKey] || {};
+  const targetUser = S.users[targetEmail];
+  
+  document.getElementById('bim-subtitle').innerHTML = `Apostas no palpite de <strong>${targetUser ? esc(targetUser.name) : targetEmail}</strong>`;
+  
+  let html = '';
+  for (const [voterEmail, type] of Object.entries(votersObj)) {
+    const voter = S.users[voterEmail];
+    if (!voter) continue; // Skip ghost accounts
+    const voterName = esc(voter.name);
+    const ic = type === 'bosta' ? '💩 Bosta' : 'Mestre ✅';
+    const color = type === 'bosta' ? '#ff7b7b' : 'var(--green)';
+    
+    html += `<div style="padding:8px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div style="width:24px; height:24px; border-radius:50%; background:var(--dark4); overflow:hidden; display:flex; justify-content:center; align-items:center; font-size:12px;">
+          ${voter.avatar ? `<img src="${voter.avatar}" style="width:100%;height:100%;object-fit:cover;">` : '🧑'}
+        </div>
+        <span style="font-size:14px;">${voterName}</span>
+      </div>
+      <span style="color:${color}; font-weight:bold; font-size:12px;">${ic}</span>
+    </div>`;
+  }
+  
+  if(!html) html = '<div style="color:var(--muted);text-align:center;padding:20px;">Nenhuma aposta registrada.</div>';
+  document.getElementById('bim-content').innerHTML = html;
+  document.getElementById('bets-info-modal').classList.remove('hidden');
+}
+
+// ================================================================
+//  MODALS
+// ================================================================
+function showHistoryModal(email, type) {
+  const u = S.users[email]; if (!u) return;
+  const isPiratecas = type === 'piratecas';
+  document.getElementById('hm-icon').textContent = isPiratecas ? '🏴‍☠️' : '🏆';
+  document.getElementById('hm-title').innerHTML = isPiratecas ? 'Histórico de Piratecas' : 'Histórico de Pontos';
+  document.getElementById('hm-subtitle').innerHTML = `<strong>${esc(u.name)}</strong>${u.team?`<br><span style="font-size:13px;color:var(--muted)">⚽ ${esc(u.team)}</span>`:''}`;
+  
+  const hmAv = document.getElementById('hm-avatar');
+  if (u.avatar) { hmAv.innerHTML = `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;">`; hmAv.style.border = `3px solid ${isPiratecas ? 'var(--red)' : 'var(--gold)'}`; } 
+  else { hmAv.innerHTML = '🧑'; hmAv.style.border = `3px solid ${isPiratecas ? 'var(--red)' : 'var(--gold)'}`; }
+  
+  let html = '';
+  
+  if (!isPiratecas) { // PONTOS - AGORA COM BANDEIRINHAS
+    const ptsObj = calcPoints(u);
+    const sortedGames = GAMES.filter(g=>(S.results[g.id]||{}).status==='finished'&&(u.bets||{})[g.id]).sort((a,b)=>a.id-b.id);
+    sortedGames.forEach(g => {
+       const r = S.results[g.id]; const b = u.bets[g.id]; const s = S.settings;
+       let pts = 0; let msg = ''; let clr = 'var(--muted)';
+       if (b.h===r.h && b.a===r.a) { pts += s.exact; msg = `⭐ Exato (${b.h}-${b.a})`; clr = 'var(--green)'; if(g.phase==='Semifinal') { pts+=s.semi; msg+=' + Semi'; } if(g.phase==='Final') { pts+=s.final; msg+=' + Final'; } } 
+       else if (getWDL(b.h,b.a) === getWDL(r.h,r.a)) { pts += s.result; msg = `✅ Resultado (${b.h}-${b.a})`; clr = '#7b8fe8'; } 
+       else { msg = `❌ Errou (${b.h}-${b.a})`; clr = '#ff7b7b'; }
+       
+       if(pts > 0) {
+          html += `<div style="padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
+            <div>
+              <div style="font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px; margin-bottom:4px;">${getFlag(g.hCode)} ${g.hCode} x ${g.aCode} ${getFlag(g.aCode)}</div>
+              <div style="font-size:12px; color:${clr}">${msg}</div>
+            </div>
+            <span style="color:var(--gold); font-weight:bold; font-size:16px;">+${pts}</span>
+          </div>`;
+       }
+    });
+    html += `<div style="padding:16px 12px; text-align:right; font-weight:bold; color:var(--gold); font-size:18px;">Total: ${ptsObj.total} pts</div>`;
+  } else { 
+    // PIRATECAS - AGRUPADO POR JOGO E COM TEXTO CUSTOMIZADO
+    let balance = 100;
+    html += `<div style="padding:12px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; background:rgba(0,0,0,0.2);"><span>Saldo Inicial</span><span style="color:var(--gold); font-weight:bold;">100</span></div>`;
+    
+    const rodadas = {};
+    GAMES.forEach(g => {
+      const r = S.results[g.id];
+      if(r && r.status === 'finished' && r.h !== null) {
+         const rodada = getRodada(g.id); if(!rodadas[rodada]) rodadas[rodada] = { users: {} };
+         Object.values(S.users).forEach(user => { if(!rodadas[rodada].users[user.email]) rodadas[rodada].users[user.email] = 0; rodadas[rodada].users[user.email] += calcGamePoints(user, g.id); });
+      }
+    });
+
+    Object.keys(rodadas).sort((a,b)=>a-b).forEach(rodada => {
+       const rData = rodadas[rodada];
+       const ptsArray = Object.values(rData.users).sort((a,b)=>a-b);
+       const maxPts = ptsArray[ptsArray.length-1]; const minPts = ptsArray[0];
+       let medPts = (ptsArray.length % 2 === 0) ? (ptsArray[ptsArray.length/2 - 1] + ptsArray[ptsArray.length/2]) / 2 : ptsArray[Math.floor(ptsArray.length/2)];
+
+       let rodadaHeaderPrinted = false;
+       const printRodada = () => { if(!rodadaHeaderPrinted) { html += `<div style="padding:6px 12px; background:var(--dark4); font-weight:bold; font-size:12px; margin-top:12px; border-radius:6px; color:var(--gold);">📌 Rodada ${rodada}</div>`; rodadaHeaderPrinted=true; }};
+
+       if (maxPts !== minPts) { 
+         const myPts = rData.users[email]; let diff = 0; let desc = '';
+         if (myPts === maxPts) { diff = 5; desc = 'Pé Quente'; } else if (myPts === minPts) { diff = -5; desc = 'Pé Frio'; } else if (myPts === medPts || (myPts < medPts && myPts > minPts)) { diff = -1; desc = 'Nem fede nem cheira'; }
+         if(diff !== 0) {
+            printRodada(); balance += diff; const color = diff > 0 ? 'var(--green)' : '#ff7b7b';
+            html += `<div style="padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; background:rgba(0,0,0,0.15);">
+              <span><span style="font-size:11px;color:var(--muted)">Performance Geral</span><br>${desc} (${myPts}pts)</span>
+              <span style="color:${color}; font-weight:bold; font-size:15px">${diff>0?'+':''}${diff}</span>
+            </div>`;
+         }
+       }
+
+       const gamesInRodada = GAMES.filter(g => getRodada(g.id) == rodada && (S.results[g.id]||{}).status === 'finished');
+       gamesInRodada.forEach(g => {
+           let gameVotesHtml = '';
+           Object.keys(S.apostas || {}).forEach(key => {
+               if (key.startsWith(`aposta_${g.id}_`)) {
+                   const targetEmail = key.split('_')[2]; const targetUser = S.users[targetEmail];
+                   if (!targetUser || !S.users[email]) return; // Filtra contas excluidas
+                   const voteObj = S.apostas[key];
+                   if (voteObj[email]) {
+                       const tipo = voteObj[email]; const targetPts = calcGamePoints(targetUser, g.id); const targetHit = targetPts > 0;
+                       let vDiff = 0;
+                       if (tipo === 'bosta') vDiff = (!targetHit) ? 2 : -2; else if (tipo === 'mestre') vDiff = (targetHit) ? 2 : -2;
+                       balance += vDiff;
+                       const color = vDiff > 0 ? 'var(--green)' : '#ff7b7b';
+                       const vIcon = tipo === 'bosta' ? '💩' : 'Mestre ✅';
+                       const msg = `<strong style="color:var(--text)">${esc(S.users[email].name)}</strong> disse que <strong style="color:var(--text)">${esc(targetUser.name)}</strong> é um palpiteiro ${vIcon}`;
+                       
+                       gameVotesHtml += `<div style="padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.02); display:flex; justify-content:space-between; align-items:center;">
+                          <span style="font-size:13px; color:var(--muted); line-height:1.4;">${msg}</span>
+                          <span style="color:${color}; font-weight:bold; font-size:15px; margin-left:12px;">${vDiff>0?'+':''}${vDiff}</span>
+                       </div>`;
+                   }
+               }
+           });
+           if (gameVotesHtml) {
+               printRodada();
+               html += `<div style="padding:8px 12px; background:rgba(0,0,0,0.4); font-size:12px; font-weight:bold; display:flex; align-items:center; gap:8px; margin-top:8px; border-radius:6px 6px 0 0; border:1px solid rgba(255,255,255,0.05); border-bottom:none;">${getFlag(g.hCode)} ${g.hCode} <span style="color:var(--muted)">x</span> ${g.aCode} ${getFlag(g.aCode)}</div>`;
+               html += `<div style="background:rgba(0,0,0,0.15); border:1px solid rgba(255,255,255,0.05); border-top:none; border-radius:0 0 6px 6px;">${gameVotesHtml}</div>`;
+           }
+       });
+    });
+    html += `<div style="padding:16px 12px; text-align:right; font-weight:bold; color:#ff7b7b; font-size:18px;">Total: ${balance} 🏴‍☠️</div>`;
+  }
+  
+  if(!html) html = '<div style="color:var(--muted);text-align:center;padding:20px;">Nenhum histórico disponível.</div>';
+  document.getElementById('hm-content').innerHTML = html;
+  document.getElementById('history-modal').classList.remove('hidden');
+}
+
+// ================================================================
+//  BET INPUT & VOTES
+// ================================================================
+function checkLock(gameId, el) {
+  const game = GAMES.find(g=>g.id===gameId);
+  if (game && isLocked(game)) {
+    el.blur(); const mins = minsUntil(game);
+    document.getElementById('modal-top-icon').textContent = '🔒';
+    document.getElementById('modal-title').textContent = 'PALPITE BLOQUEADO';
+    document.getElementById('modal-msg').textContent = mins<=0 ? 'Este jogo já começou. Palpites encerrados.' : `Este jogo começa em ${mins} minuto(s). Prazo encerrado.`;
+    document.getElementById('modal').classList.remove('hidden');
+  }
+}
+function onBetInput(gameId) {
+  const game = GAMES.find(g=>g.id===gameId); if(game&&isLocked(game)) return;
+  const hEl = document.getElementById(`bi-h-${gameId}`); const aEl = document.getElementById(`bi-a-${gameId}`); if (!hEl||!aEl) return;
+  const h = hEl.value; const a = aEl.value; if (h===''||a==='') return;
+  const user = S.users[S.me]; if(!user.bets) user.bets={};
+  user.bets[gameId] = { h:parseInt(h), a:parseInt(a) };
+  persistSettings();
+  if (saveTimers[gameId]) clearTimeout(saveTimers[gameId]);
+  const si = document.getElementById(`si-${gameId}`); if(si) si.classList.remove('hidden');
+  saveTimers[gameId] = setTimeout(async () => {
+    await gsSave(S.me, gameId, parseInt(h), parseInt(a));
+    if(si) si.classList.add('hidden'); updateNavPts(); renderStats();
+  }, 800);
+}
+
+function checkVoteLimits(gameId, type) {
+  const rodada = getRodada(gameId); let count = 0;
+  Object.keys(S.apostas || {}).forEach(key => {
+      const parts = key.split('_'); const gId = parseInt(parts[1]); const tgt = parts[2];
+      if (S.users[tgt] && getRodada(gId) === rodada) {
+          const votersObj = S.apostas[key];
+          if (votersObj[S.me] === type) count++;
+      }
+  });
+  return count;
+}
+
+async function voteExtra(gameId, target, type) {
+  if (!S.users[target]) return;
+  const game = GAMES.find(g=>g.id===gameId);
+  
+  // Trava de 1 Minuto para Apostas Extras
+  if (isLockedForVotes(game)) {
+      document.getElementById('modal-top-icon').textContent = '⏰';
+      document.getElementById('modal-title').textContent = 'RODOU MACIO';
+      document.getElementById('modal-msg').textContent = 'Pô johnny, seu tempo acabou, rodou macio';
+      document.getElementById('modal').classList.remove('hidden');
+      return;
+  }
+
+  if (!S.apostas) S.apostas = {};
+  const key = `aposta_${gameId}_${target}`;
+  if (!S.apostas[key]) S.apostas[key] = {};
+  
+  const currentVote = S.apostas[key][S.me];
+  
+  if (currentVote !== type) {
+      if (checkVoteLimits(gameId, type) >= 2) {
+          toast(`Você já usou seus 2 votos ${type==='bosta'?'💩':'Mestre ✅'} nesta rodada!`, 'warn');
+          return;
+      }
+  }
+
+  const isChanging = currentVote !== undefined;
+  S.apostas[key][S.me] = type;
+  renderGames(); 
+  
+  try {
+    await gsCall({ action:'voteExtra', gameId: gameId, targetEmail: target, voterEmail: S.me, type: type });
+    toast(`Aposta ${isChanging?'atualizada':'registrada'}! ${type === 'bosta' ? '💩' : '✅'}`, 'ok');
+  } catch(e) { toast('Erro ao registrar aposta.', 'err'); }
+}
+
+// ================================================================
+//  RESTANTE (Render Groups, Admin, Highlights, Utils...) 
+// ================================================================
+function renderGroupsPage() {
+  updateDataSourceLabel();
+  const groups = [...new Set(GAMES.filter(g=>g.group).map(g=>g.group))].sort((a,b)=>String(a).localeCompare(String(b),'pt-BR',{numeric:true}));
+  const pill = document.getElementById('groups-count-pill'); if(pill) pill.textContent = `${groups.length} grupos`;
+  document.getElementById('groups-content').innerHTML = groups.map(renderGroupCard).join('') || '<div class="group-empty">Nenhum grupo carregado.</div>';
+}
+function renderGroupCard(group) {
+  const rows  = getGroupRows(group); const games = GAMES.filter(g=>g.group===group).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const table = rows.length ? `<table class="standings-table"><thead><tr><th>#</th><th class="team-td">Seleção</th><th>J</th><th>V</th><th>E</th><th>D</th><th>SG</th><th>Pts</th></tr></thead><tbody>${rows.map(renderStandingRow).join('')}</tbody></table>` : '<div class="group-empty">Classificação indisponível.</div>';
+  const gamesHtml = games.length ? games.map(renderGroupGameRow).join('') : '<div class="group-empty">Jogos indisponíveis.</div>';
+  return `<section class="group-card"><div class="group-card-head"><div class="group-title">${esc(group)}</div><div class="group-meta">${games.length} jogos</div></div>${table}<div class="group-games">${gamesHtml}</div></section>`;
+}
+function getGroupRows(group) {
+  if (!S.testMode) { const standing = STANDINGS.find(s=>s.group===group); if (standing&&standing.table&&standing.table.length) return standing.table; }
+  const teams = new Map();
+  GAMES.filter(g=>g.group===group).forEach(g => {
+    ['h','a'].forEach(side => { const code = g[side+'Code']; if (!code||teams.has(code)) return; teams.set(code, { position:teams.size+1, team:{code, name:g[side+'Name']||code, logo:g[side+'Logo']||'', flag:g[side+'Flag']||'🏳️'}, played:0,won:0,draw:0,lost:0,gf:0,ga:0,gd:0,points:0 }); });
+  });
+  GAMES.filter(g=>g.group===group).forEach(g => {
+    const r = S.results[g.id]; if (!r || r.status !== 'finished' || r.h === null) return;
+    const home = teams.get(g.hCode); const away = teams.get(g.aCode); if (!home || !away) return;
+    home.played++; away.played++; home.gf += r.h; home.ga += r.a; home.gd = home.gf - home.ga; away.gf += r.a; away.ga += r.h; away.gd = away.gf - away.ga;
+    if (r.h > r.a) { home.won++; home.points+=3; away.lost++; } else if (r.a > r.h) { away.won++; away.points+=3; home.lost++; } else { home.draw++; away.draw++; home.points++; away.points++; }
+  });
+  const sorted = [...teams.values()].sort((a,b) => { if (b.points !== a.points) return b.points - a.points; if (b.gd !== a.gd) return b.gd - a.gd; return b.gf - a.gf; });
+  sorted.forEach((row, i) => row.position = i+1); return sorted;
+}
+function renderStandingRow(row) { const team = row.team||{}; return `<tr><td>${row.position||''}</td><td class="team-td"><div class="team-line">${renderTeamLogo(team.logo,team.flag)}<span class="team-name" title="${esc(team.name||team.code)}">${esc(team.code||team.name||'A definir')}</span></div></td><td>${row.played||0}</td><td>${row.won||0}</td><td>${row.draw||0}</td><td>${row.lost||0}</td><td>${row.gd||0}</td><td class="points-cell">${row.points||0}</td></tr>`; }
+function renderGroupGameRow(game) { const r = S.results[game.id]||game.result||{h:null,a:null,status:'upcoming'}; return `<div class="group-game-row" title="${esc(game.venue||'A confirmar')}"><div class="group-game-date">${game.date?formatShortDate(game.date):'A definir'}</div><div class="group-game-team">${renderTeamMark(game,'h','team-mini-logo')}<span class="team-code-small">${esc(game.hCode)}</span></div><div class="group-game-score">${r.h!==null?`${r.h}–${r.a}`:'vs'}</div><div class="group-game-team away"><span class="team-code-small">${esc(game.aCode)}</span>${renderTeamMark(game,'a','team-mini-logo')}</div></div>`; }
+function renderTeamLogo(logo, flag) { return logo ? `<img class="team-logo" src="${esc(logo)}" alt="">` : `<span class="team-logo placeholder" style="font-size:18px">${flag||'🏳️'}</span>`; }
+function renderTeamMark(game, side, className) { const logo = game[side+'Logo']; const flag = game[side+'Flag']||'🏳️'; if (logo) return `<img class="${className==='team-flag'?'team-crest':className}" src="${esc(logo)}" alt="">`; return `<span class="${className}">${flag}</span>`; }
+
+function calcRankAll() { return Object.values(S.users).map(u=>({...u,pts:calcPoints(u)})).sort((a,b) => { if(b.pts.total!==a.pts.total)return b.pts.total-a.pts.total; if(b.pts.exact!==a.pts.exact)return b.pts.exact-a.pts.exact; return b.pts.res-a.pts.res; }); }
+function calcRankPiratecas() { return Object.values(S.users).map(u=>({...u,pts:calcPoints(u)})).sort((a,b) => b.pts.piratecas - a.pts.piratecas); }
+function renderRankRow(u, pos) {
+  const nc = pos===1?'n1':pos===2?'n2':pos===3?'n3':''; const rc = u.email===S.me?'me':pos===1?'p1':pos===2?'p2':pos===3?'p3':''; const medal = pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
+  return `<div class="rank-row-mini ${rc}" style="cursor:pointer;" onclick="showHistoryModal('${u.email}', 'pontos')"><div class="rank-mini-num ${nc}">${medal}</div><div class="rank-mini-av">${u.avatar?`<img src="${u.avatar}">`:'🧑'}</div><div class="rank-mini-info"><div class="rank-mini-name">${esc(u.name)}${u.email===S.me?' <span style="font-size:9px;background:rgba(201,168,76,0.2);color:var(--gold);padding:1px 5px;border-radius:8px">você</span>':''}</div><div class="rank-mini-sub">⚽ ${esc(u.team||'—')}</div></div><div class="rank-mini-pts"><div class="rank-mini-pts-val gold">${u.pts.total}</div><div class="rank-mini-pts-lbl">pontos</div></div></div>`;
+}
+function renderRankRowPiratecas(u, pos) {
+  const nc = pos===1?'n1':pos===2?'n2':pos===3?'n3':''; const rc = u.email===S.me?'me':pos===1?'p1':pos===2?'p2':pos===3?'p3':''; const medal = pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
+  return `<div class="rank-row-mini ${rc}" style="cursor:pointer;" onclick="showHistoryModal('${u.email}', 'piratecas')"><div class="rank-mini-num ${nc}">${medal}</div><div class="rank-mini-av">${u.avatar?`<img src="${u.avatar}">`:'🧑'}</div><div class="rank-mini-info"><div class="rank-mini-name">${esc(u.name)}${u.email===S.me?' <span style="font-size:9px;background:rgba(201,168,76,0.2);color:var(--gold);padding:1px 5px;border-radius:8px">você</span>':''}</div><div class="rank-mini-sub">⚽ ${esc(u.team||'—')}</div></div><div class="rank-mini-pts"><div class="rank-mini-pts-val red">${u.pts.piratecas}</div><div class="rank-mini-pts-lbl">piratecas 🏴‍☠️</div></div></div>`;
+}
+function renderRanking() {
+  const ranked = calcRankAll(); const rankedP = calcRankPiratecas();
+  document.getElementById('rank-count-pill').textContent = `${ranked.length} participantes`;
+  document.getElementById('rank-table-pontos').innerHTML = ranked.map((u,i) => renderRankRow(u, i+1)).join('') || '<div class="hl-empty">Nenhum participante.</div>';
+  document.getElementById('rank-table-piratecas').innerHTML = rankedP.map((u,i) => renderRankRowPiratecas(u, i+1)).join('') || '<div class="hl-empty">Nenhum participante.</div>';
+}
+
+function isAdmin() { const u = S.users[S.me]; return !!(u&&u.isAdmin); }
+function renderSettingsPage() {
+  updateDataSourceLabel(); const admin = isAdmin();
+  ['s-exact','s-result','s-streak','s-semi','s-final'].forEach(id => { const el = document.getElementById(id); if(el) { el.value = S.settings[id.replace('s-','')]; el.disabled = !admin; }});
+  ['adm-game','adm-a','adm-b','adm-status'].forEach(id => { const el = document.getElementById(id); if(el) el.disabled = !admin; });
+  document.querySelectorAll('#page-settings button').forEach(btn => { btn.disabled=!admin; btn.style.opacity=admin?'1':'0.5'; });
+  if (!admin && !document.getElementById('readonly-warning')) { const div = document.createElement('div'); div.id='readonly-warning'; div.innerHTML = `<div style="background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);padding:14px;margin-bottom:15px;border-radius:10px;color:var(--gold)">🔒 Modo leitura. Apenas admins configuram.</div>`; document.querySelector('#page-settings').prepend(div); }
+  const sel = document.getElementById('adm-game'); if (sel) { sel.innerHTML = GAMES.map(g=>`<option value="${g.id}">#${g.id} ${g.hCode} vs ${g.aCode}</option>`).join(''); }
+  const tmStatus = document.getElementById('test-mode-status'); if (tmStatus) { if (S.testMode) { tmStatus.textContent = '🔴 LIGADO'; tmStatus.style.color = '#ff7b7b'; } else { tmStatus.textContent = '⚫ DESLIGADO'; tmStatus.style.color = 'var(--muted)'; } }
+}
+function saveSettings() { if (!isAdmin()) return; S.settings.exact = parseInt(document.getElementById('s-exact').value)||10; S.settings.result = parseInt(document.getElementById('s-result').value)||5; S.settings.streak = parseInt(document.getElementById('s-streak').value)||5; S.settings.semi = parseInt(document.getElementById('s-semi').value)||15; S.settings.final = parseInt(document.getElementById('s-final').value)||25; persistSettings(); toast('Salvo!','ok'); }
+function adminSetResult() { if (!isAdmin()) return; if (S.testMode) { adminSetTestResult(); return; } const id = parseInt(document.getElementById('adm-game').value); const h = parseInt(document.getElementById('adm-a').value); const a = parseInt(document.getElementById('adm-b').value); const st = document.getElementById('adm-status').value; S.results[id] = { h, a, status:st }; persistSettings(); toast(`Salvo jogo ${id}!`,'ok'); }
+async function adminSetTestResult() { if (!isAdmin() || !S.testMode) return; const id = parseInt(document.getElementById('adm-game').value); const h = parseInt(document.getElementById('adm-a').value); const a = parseInt(document.getElementById('adm-b').value); const st = document.getElementById('adm-status').value; try { const res = await gsCall({ action:'adminSetTestResult', callerEmail:S.me, gameId:id, h:h, a:a, status:st }); if (!res.ok) { toast(res.error,'err'); return; } } catch(e) { toast('Erro','err'); return; } S.results[id] = { h, a, status:st, source:'test' }; persistSettings(); toast(`Teste jogo #${id} aplicado!`,'ok'); rerenderCurrentPage(); }
+async function setTestMode(mode) { if (!isAdmin()) return; const turningOn = mode === 'true'; try { await gsCall({ action:'adminSetTestMode', callerEmail:S.me, testMode:mode }); S.testMode = turningOn; toast(turningOn?'TESTE LIGADO':'TESTE DESLIGADO', turningOn?'warn':'ok'); if(!turningOn) await forceSyncAll(); else { renderSettingsPage(); rerenderCurrentPage(); } } catch(e) {} }
+
+function renderProfile() {
+  const u = S.users[S.me]; if(!u) return; const pts = calcPoints(u); const ranked = calcRankAll(); const pos = ranked.findIndex(r=>r.email===S.me)+1;
+  document.getElementById('pav-display').innerHTML = u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '🧑';
+  document.getElementById('p-name').textContent = u.name; document.getElementById('p-team').textContent = (u.team||'')+(u.motto?' • "'+u.motto+'"':'');
+  document.getElementById('p-stats').innerHTML = `<div class="profile-stat"><div class="profile-stat-v">${pts.total}</div><div class="profile-stat-l">Pontos</div></div><div class="profile-stat"><div class="profile-stat-v">${pos||'-'}º</div><div class="profile-stat-l">Posição</div></div><div class="profile-stat"><div class="profile-stat-v">${pts.exact}</div><div class="profile-stat-l">Exatos</div></div><div class="profile-stat"><div class="profile-stat-v">${pts.res}</div><div class="profile-stat-l">Resultados</div></div>`;
+  document.getElementById('pe-name').value = u.name; document.getElementById('pe-team').value = u.team||''; document.getElementById('pe-motto').value = u.motto||'';
+  document.getElementById('p-history').innerHTML = GAMES.filter(g=>(S.results[g.id]||{}).status==='finished'&&(u.bets||{})[g.id]).map(g => {
+    const r=S.results[g.id]; const b=u.bets[g.id]; let label='❌ Errou', cls='var(--red)', p=0;
+    if (b.h===r.h&&b.a===r.a) { label=`⭐ Exato`; cls='var(--green)'; p=S.settings.exact; } else if (getWDL(b.h,b.a)===getWDL(r.h,r.a)) { label='✅ Resultado'; cls='#7b8fe8'; p=S.settings.result; }
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--dark3);border-radius:8px;margin-bottom:6px;border-left:3px solid ${cls}"><span style="font-size:13px">${g.hCode} ${b.h}–${b.a} ${g.aCode}</span><span style="font-size:12px;color:var(--muted)">Real: ${r.h}–${r.a}</span><span style="font-size:13px;font-weight:600;color:${cls}">${label} +${p}pts</span></div>`;
+  }).join('') || '<div style="color:var(--muted);font-size:13px;padding:16px 0">Nenhum jogo encerrado ainda.</div>';
+}
+function saveProfileEdits() { const u = S.users[S.me]; u.name = document.getElementById('pe-name').value.trim()||u.name; u
