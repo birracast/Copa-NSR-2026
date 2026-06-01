@@ -26,6 +26,67 @@
   --font-display: 'Barlow Condensed', sans-serif;
   --font-body: 'Barlow', sans-serif;
 }
+
+/* ===== LIGHT MODE ===== */
+body.light-mode {
+  --black:  #F5F7FA;
+  --dark:   #FFFFFF;
+  --dark2:  #FFFFFF;
+  --dark3:  #F0F2F5;
+  --dark4:  #E4E8EF;
+  --border: #D0D7E3;
+  --text:   #1A1E2E;
+  --muted:  #6B7280;
+  --shadow: 0 8px 40px rgba(0,0,0,0.1);
+  background-image:
+    radial-gradient(ellipse 100% 60% at 50% 0%, rgba(42,57,141,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 10% 80%, rgba(60,172,59,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 30% at 90% 70%, rgba(230,29,37,0.04) 0%, transparent 50%);
+}
+body.light-mode header {
+  background: rgba(42,57,141,0.97) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.15) !important;
+  backdrop-filter: blur(24px);
+}
+body.light-mode .nav-tab { color: rgba(255,255,255,0.65); }
+body.light-mode .nav-tab:hover { color: #fff; background: rgba(255,255,255,0.15); }
+body.light-mode .nav-tab.active { background: rgba(255,255,255,0.2); color: #fff; border-bottom-color: var(--gold); }
+body.light-mode .nav-tab.admin-tab { color: #ffb3b3; }
+body.light-mode .logo-we, body.light-mode .logo-bolao { color: rgba(255,255,255,0.7); }
+body.light-mode .logo-are { color: #fff; }
+body.light-mode .nav-name { color: #fff; }
+body.light-mode .btn-logout { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.75); }
+body.light-mode .btn-logout:hover { border-color: #ffb3b3; color: #ffb3b3; }
+body.light-mode .nav-avatar { border-color: var(--gold); }
+body.light-mode .sync-bar { background: #fff; border-color: var(--border); }
+body.light-mode .game-card { background: #fff; border-color: var(--border); box-shadow: 0 2px 12px rgba(42,57,141,0.07); }
+body.light-mode .game-card::before { background: var(--border); }
+body.light-mode .game-card.exact::before { background: linear-gradient(90deg, var(--green), #7de87c); }
+body.light-mode .game-card.result-ok::before { background: linear-gradient(90deg, var(--blue), #7b8fe8); }
+body.light-mode .game-card.wrong::before { background: linear-gradient(90deg, var(--red), #ff7b7b); }
+body.light-mode .score-inp { background: var(--dark3); border-color: var(--border); color: var(--text); }
+body.light-mode .rank-row { background: #fff; border-color: var(--border); }
+body.light-mode .stat-box { background: #fff; border-color: var(--border); }
+body.light-mode .set-card { background: #fff; border-color: var(--border); }
+body.light-mode .group-card { background: #fff; border-color: var(--border); }
+body.light-mode .auth-card { background: #fff; border-color: var(--border); }
+body.light-mode .finput { background: var(--dark3); border-color: var(--border); color: var(--text); }
+body.light-mode .vs-label { color: #C0C7D8; }
+body.light-mode .real-score { color: var(--blue); }
+body.light-mode .palpite-row { border-bottom-color: rgba(0,0,0,0.06); }
+body.light-mode .pr-vote-btn { background: var(--dark3); border-color: var(--border); }
+body.light-mode .modal-box { background: #fff; border-color: var(--border); }
+
+/* Theme toggle button */
+.theme-toggle {
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 1.5px solid var(--border); background: var(--dark3);
+  color: var(--text); font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: .2s; flex-shrink: 0;
+}
+body.light-mode .theme-toggle { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.18); color: #fff; }
+.theme-toggle:hover { transform: rotate(20deg) scale(1.1); }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 body {
@@ -218,6 +279,14 @@ header {
 .vote-limit-info { font-size: 10px; color: var(--muted); text-align: right; padding: 4px 2px 0; }
 .user-chip-avatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; background: var(--dark3); display: flex; align-items: center; justify-content: center; font-size: 12px; overflow: hidden; flex-shrink: 0; }
 .user-chip-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Voter faces inline */
+.voter-group { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
+.voter-face { width: 22px; height: 22px; border-radius: 50%; background: var(--dark4); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; border: 1.5px solid var(--border); }
+.voter-face img { width: 100%; height: 100%; object-fit: cover; }
+.voter-face.bosta-face { border-color: #ff7b7b; }
+.voter-face.mestre-face { border-color: var(--green); }
+.voter-type-icon { font-size: 12px; line-height: 1; }
 
 /* ===== PHASE HEADER ===== */
 .phase-hdr { display: flex; align-items: center; gap: 14px; margin: 28px 0 14px; }
@@ -640,6 +709,7 @@ header {
         <button class="nav-tab admin-tab hidden" id="nt-admin" onclick="navTo('admin')">🛡 Admin</button>
       </nav>
       <div class="nav-user">
+        <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Alternar modo claro/escuro">🌙</button>
         <div class="nav-avatar" id="nav-av" onclick="navTo('profile')">🧑</div>
         <div>
           <div class="nav-name" id="nav-name">—</div>
@@ -754,7 +824,7 @@ header {
           <li><span>💩 <strong>Bosta:</strong> Você aposta que ele vai <strong>zerar</strong> (0 pts). Se ele zerar, você ganha <strong>+2 Piratecas</strong>. Se ele pontuar, você perde <strong>-2</strong>.</span></li>
           <li><span>✅ <strong>Mestre:</strong> Você aposta que ele vai <strong>pontuar</strong> (5 ou 10 pts). Se ele pontuar, você ganha <strong>+2 Piratecas</strong>. Se ele zerar, perde <strong>-2</strong>.</span></li>
           <li><span>✏️ <strong>Edição Livre:</strong> Arrependeu? Mude seu voto à vontade até 10 minutos antes do jogo!</span></li>
-          <li><span>ℹ️ <strong>Painel X9:</strong> Nos jogos com apostas, clique no ícone "ℹ️" para abrir um modal e ver quem votou no quê.</span></li>
+          <li><span>🔢 <strong>Limite por Jogo:</strong> Você pode votar em no máximo <strong>2 palpites Bosta</strong> e <strong>2 palpites Mestre</strong> por jogo. Escolha bem!</span></li>
         </ul>
       </div>
 
@@ -1599,6 +1669,20 @@ function isLocked(game) {
   return (kickoff - Date.now()) < 10*60*1000;
 }
 
+// Count how many votes of a given type the voter has cast FOR A SPECIFIC GAME
+function countVotesInGame(voterEmail, gameId, type) {
+  let count = 0;
+  Object.keys(S.apostas || {}).forEach(key => {
+    const parts = key.split('_');
+    if (parts[0] !== 'aposta') return;
+    const gId = parseInt(parts[1]);
+    if (gId !== gameId) return;
+    const votersObj = S.apostas[key];
+    if (votersObj && votersObj[voterEmail] === type) count++;
+  });
+  return count;
+}
+
 // Count how many votes of a given type the voter has cast in a rodada (excluding one game if specified)
 function countVotesInRodada(voterEmail, rodada, type, excludeGameId) {
   let count = 0;
@@ -1900,9 +1984,9 @@ function renderGameCard(game) {
 
   let palpiteListHtml = '';
   if (othersWithBet.length > 0) {
-    const rodada = getRodada(game.id);
-    const myBostaCount  = countVotesInRodada(S.me, rodada, 'bosta',  game.id);
-    const myMestreCount = countVotesInRodada(S.me, rodada, 'mestre', game.id);
+    // Count how many votes of each type I've already cast FOR THIS SPECIFIC GAME
+    const myBostaCount  = countVotesInGame(S.me, game.id, 'bosta');
+    const myMestreCount = countVotesInGame(S.me, game.id, 'mestre');
 
     const rows = othersWithBet.map(u => {
       const ub        = (u.bets||{})[game.id];
@@ -1928,8 +2012,8 @@ function renderGameCard(game) {
       } else if (!locked) {
         const canB = myVote==='bosta' || myBostaCount<2;
         const canM = myVote==='mestre' || myMestreCount<2;
-        const bTitle = !canB ? 'Limite: 2 votos Bosta/rodada' : '';
-        const mTitle = !canM ? 'Limite: 2 votos Mestre/rodada' : '';
+        const bTitle = !canB ? 'Limite: 2 votos Bosta/jogo' : '';
+        const mTitle = !canM ? 'Limite: 2 votos Mestre/jogo' : '';
         voteHtml = `<button class="pr-vote-btn ${myVote==='bosta'?'bosta-on':''}" onclick="voteExtra(${game.id},'${u.email}','bosta')" ${canB?'':'disabled'} title="${bTitle}">💩</button>`
                  + `<button class="pr-vote-btn ${myVote==='mestre'?'mestre-on':''}" onclick="voteExtra(${game.id},'${u.email}','mestre')" ${canM?'':'disabled'} title="${mTitle}">✅</button>`;
       } else if (myVote) {
@@ -1937,10 +2021,26 @@ function renderGameCard(game) {
       }
 
       const av = u.avatar ? `<img src="${u.avatar}">` : '🧑';
+
+      // Build voter faces for bosta and mestre — visible to everyone
+      const apostaKey2 = `aposta_${game.id}_${u.email}`;
+      const allVoters = (S.apostas||{})[apostaKey2] || {};
+      let bostaFaces = '', mestreFaces = '';
+      Object.entries(allVoters).forEach(([ve, vtype]) => {
+        const voter = S.users[ve];
+        const faceAv = voter && voter.avatar ? `<img src="${voter.avatar}">` : '🧑';
+        if (vtype === 'bosta') bostaFaces += `<div class="voter-face bosta-face" title="${voter?voter.name:ve}">${faceAv}</div>`;
+        else if (vtype === 'mestre') mestreFaces += `<div class="voter-face mestre-face" title="${voter?voter.name:ve}">${faceAv}</div>`;
+      });
+      const bostaGroup = bostaFaces ? `<div class="voter-group"><span class="voter-type-icon">💩</span>${bostaFaces}</div>` : '';
+      const mestreGroup = mestreFaces ? `<div class="voter-group"><span class="voter-type-icon" style="color:var(--green)">✅</span>${mestreFaces}</div>` : '';
+      const voterSection = (bostaGroup || mestreGroup) ? `<div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;align-items:center;">${bostaGroup}${mestreGroup}</div>` : '';
+
       return `<div class="palpite-row">
         <div class="pr-avatar">${av}</div>
         <div class="pr-name">${esc(u.name)}</div>
         <div class="pr-score ${scoreClass}">${ub?`${ub.h}–${ub.a}`:'?–?'}</div>
+        ${voterSection}
         <div style="display:flex;gap:4px;align-items:center;flex-shrink:0;">${voteHtml}</div>
       </div>`;
     }).join('');
@@ -1948,7 +2048,7 @@ function renderGameCard(game) {
     const bLeft = Math.max(0,2-myBostaCount);
     const mLeft = Math.max(0,2-myMestreCount);
     const limitBar = (!locked && r.status!=='finished')
-      ? `<div class="vote-limit-info">Votos restantes nesta rodada: 💩 ${bLeft} | ✅ ${mLeft}</div>`
+      ? `<div class="vote-limit-info">Votos restantes neste jogo: 💩 ${bLeft} | ✅ ${mLeft}</div>`
       : '';
 
     palpiteListHtml = `<div class="palpite-list">
@@ -2830,6 +2930,24 @@ async function adminDeleteUser(email) {
 // ================================================================
 //  UTILS
 // ================================================================
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light-mode');
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) btn.textContent = isLight ? '☀️' : '🌙';
+  try { localStorage.setItem('bolao_theme', isLight ? 'light' : 'dark'); } catch(e) {}
+}
+
+function applyStoredTheme() {
+  try {
+    const t = localStorage.getItem('bolao_theme');
+    if (t === 'light') {
+      document.body.classList.add('light-mode');
+      const btn = document.getElementById('theme-toggle-btn');
+      if (btn) btn.textContent = '☀️';
+    }
+  } catch(e) {}
+}
+
 function refreshNavUser() {
   const u = S.users[S.me]; if(!u) return;
   document.getElementById('nav-name').textContent = u.name;
@@ -2896,12 +3014,11 @@ async function voteExtra(gameId, target, type) {
 
   const existingVote = S.apostas[key][S.me];
 
-  // Enforce 2-per-rodada limit only when casting a NEW type (not flipping existing vote)
+  // Enforce 2-per-game limit only when casting a NEW type (not flipping existing vote)
   if (existingVote !== type) {
-    const rodada = getRodada(gameId);
-    const count  = countVotesInRodada(S.me, rodada, type, gameId);
+    const count = countVotesInGame(S.me, gameId, type);
     if (count >= 2) {
-      toast(`Limite atingido! Máximo de 2 votos "${type==='bosta'?'Bosta 💩':'Mestre ✅'}" por rodada.`, 'warn');
+      toast(`Limite atingido! Máximo de 2 votos "${type==='bosta'?'Bosta 💩':'Mestre ✅'}" por jogo.`, 'warn');
       return;
     }
   }
@@ -2969,6 +3086,7 @@ async function adminSetTestResult() {
 // ================================================================
 //  BOOT
 // ================================================================
+applyStoredTheme();
 boot();
 </script>
 </body>
