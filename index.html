@@ -259,12 +259,29 @@ header {
 /* ===== PALPITE LIST ===== */
 .palpite-list { border-top: 1px solid var(--border); margin-top: 10px; padding-top: 8px; }
 .palpite-list-header { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; padding: 0 2px 6px; }
-.palpite-row { display: flex; align-items: center; gap: 8px; padding: 5px 2px; border-bottom: 1px solid rgba(255,255,255,0.04); }
-.palpite-row:last-child { border-bottom: none; }
-.pr-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--dark4); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; border: 1px solid var(--border); }
+
+/* Grid table layout — invisible columns, left-aligned */
+.palpite-table { display: table; width: 100%; border-collapse: collapse; }
+.palpite-row {
+  display: table-row;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.palpite-row:last-of-type { border-bottom: none; }
+.palpite-row > div { display: table-cell; vertical-align: middle; padding: 5px 6px 5px 0; }
+.palpite-row > div:first-child { padding-left: 2px; }
+
+/* Column widths */
+.pr-col-av    { width: 32px; }
+.pr-col-name  { min-width: 80px; max-width: 140px; }
+.pr-col-score { width: 52px; }
+.pr-col-bosta { width: auto; min-width: 56px; }
+.pr-col-mestre{ width: auto; min-width: 56px; }
+.pr-col-vote  { width: auto; white-space: nowrap; }
+
+.pr-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--dark4); overflow: hidden; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; border: 1px solid var(--border); vertical-align: middle; }
 .pr-avatar img { width:100%;height:100%;object-fit:cover; }
-.pr-name { flex: 1; font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.pr-score { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--muted); min-width: 46px; text-align: center; }
+.pr-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pr-score { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--muted); }
 .pr-score.exact-sc { color: var(--green); }
 .pr-score.result-sc { color: #7b8fe8; }
 .pr-score.wrong-sc { color: #ff7b7b; }
@@ -281,12 +298,12 @@ header {
 .user-chip-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
 /* Voter faces inline */
-.voter-group { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
-.voter-face { width: 22px; height: 22px; border-radius: 50%; background: var(--dark4); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; border: 1.5px solid var(--border); }
+.voter-group { display: inline-flex; align-items: center; gap: 3px; flex-wrap: wrap; }
+.voter-face { width: 22px; height: 22px; border-radius: 50%; background: var(--dark4); overflow: hidden; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; border: 1.5px solid var(--border); vertical-align: middle; }
 .voter-face img { width: 100%; height: 100%; object-fit: cover; }
 .voter-face.bosta-face { border-color: #ff7b7b; }
 .voter-face.mestre-face { border-color: var(--green); }
-.voter-type-icon { font-size: 12px; line-height: 1; }
+.voter-type-icon { font-size: 12px; line-height: 1; vertical-align: middle; }
 
 /* ===== PHASE HEADER ===== */
 .phase-hdr { display: flex; align-items: center; gap: 14px; margin: 28px 0 14px; }
@@ -856,9 +873,9 @@ header {
 
       <div class="help-card">
         <div class="help-card-icon">⏰</div>
-        <h3>A Regra Sagrada dos 10 Minutos</h3>
-        <p>Para evitar trapaças e o famoso palpite com a bola rolando, os palpites são <strong>bloqueados e cadeados exatamente 10 minutos antes</strong> do horário oficial de início de cada partida.</p>
-        <p style="margin-top: 8px;">A mesma regra vale para votar em <strong>Palpite Bosta ou Mestre</strong>. Tudo tranca 10 minutos antes. Fique esperto e deixe tudo preenchido com antecedência!</p>
+        <h3>A Regra do Bloqueio</h3>
+        <p>Para evitar trapaças, os palpites e votos são <strong>bloqueados antes do início de cada partida</strong>. O tempo exato é configurável pelo administrador na aba ⚙️ Config.</p>
+        <p style="margin-top: 8px;">O mesmo vale para votar em <strong>Palpite Bosta ou Mestre</strong> — há um bloqueio separado também ajustável. Fique esperto e deixe tudo preenchido com antecedência!</p>
       </div>
     </div>
 
@@ -926,6 +943,21 @@ header {
         <div class="pts-row"><div class="pts-label">🌟 Bônus 3 exatos seguidos</div><input type="number" class="pts-inp" id="s-streak" value="5" min="0" max="20" onchange="saveSettings()"></div>
         <div class="pts-row"><div class="pts-label"><img src="taca.png" alt="Troféu" style="height: 1.2em; vertical-align: text-bottom; margin-right: 4px;"> Bônus semifinal exato</div><input type="number" class="pts-inp" id="s-semi" value="15" min="0" max="50" onchange="saveSettings()"></div>
         <div class="pts-row"><div class="pts-label">🥇 Bônus final exato</div><input type="number" class="pts-inp" id="s-final" value="25" min="0" max="100" onchange="saveSettings()"></div>
+      </div>
+      <div class="set-card">
+        <h3>⏰ Bloqueio de Palpites</h3>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">Define quantos minutos antes do início do jogo os palpites e votos Bosta/Mestre ficam bloqueados.</div>
+        <div class="pts-row">
+          <div class="pts-label">⚽ Bloqueio de palpites <span style="font-size:11px;">(min)</span></div>
+          <input type="number" class="pts-inp" id="s-lock-bet" value="10" min="0" max="120" onchange="saveSettings()">
+        </div>
+        <div class="pts-row">
+          <div class="pts-label">💩✅ Bloqueio de votos B/M <span style="font-size:11px;">(min)</span></div>
+          <input type="number" class="pts-inp" id="s-lock-vote" value="10" min="0" max="120" onchange="saveSettings()">
+        </div>
+        <div style="background:var(--dark3);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--muted);line-height:1.5;margin-top:4px;">
+          Ex: valor <strong style="color:var(--text)">10</strong> = bloqueia 10 minutos antes do início. <strong style="color:var(--text)">0</strong> = bloqueia só quando o jogo começa.
+        </div>
       </div>
       <div class="set-card">
         <h3>⚙️ Google Sheets</h3>
@@ -1190,7 +1222,7 @@ function makeFallbackGame(data) {
 // ================================================================
 let S = {
   users: {}, me: null, results: {},
-  settings: { exact:10, result:5, streak:5, semi:15, final:25 },
+  settings: { exact:10, result:5, streak:5, semi:15, final:25, lockMinsBet:10, lockMinsVote:10 },
   viewingUser: null, apostas: {}, testMode: false
 };
 let saveTimers = {}; let adminUsers = []; let adminEditTarget = null;
@@ -1666,7 +1698,18 @@ function isLocked(game) {
   if (r && (r.status==='finished'||r.status==='live')) return true;
   const kickoff = new Date(game.date).getTime();
   if (!Number.isFinite(kickoff)) return false;
-  return (kickoff - Date.now()) < 10*60*1000;
+  const mins = (S.settings.lockMinsBet ?? 10);
+  return (kickoff - Date.now()) < mins*60*1000;
+}
+
+function isVoteLocked(game) {
+  if (DATA_META.source==='fallback' && game.source==='fallback') return true;
+  const r = S.results[game.id];
+  if (r && (r.status==='finished'||r.status==='live')) return true;
+  const kickoff = new Date(game.date).getTime();
+  if (!Number.isFinite(kickoff)) return false;
+  const mins = (S.settings.lockMinsVote ?? 10);
+  return (kickoff - Date.now()) < mins*60*1000;
 }
 
 // Count how many votes of a given type the voter has cast FOR A SPECIFIC GAME
@@ -1965,7 +2008,7 @@ function renderGameCard(game) {
       <span class="score-dash">–</span>
       <input type="number" class="score-inp readonly" value="${myBet?myBet.a:''}" placeholder="–" disabled>
     </div>
-    <div class="locked-msg">🔒 ${lockedByFallback?'Configure a tabela oficial antes dos palpites':r.status==='finished'?'Jogo encerrado':r.status==='live'?'Jogo em andamento':'Prazo encerrado (10min)'}</div>`;
+    <div class="locked-msg">🔒 ${lockedByFallback?'Configure a tabela oficial antes dos palpites':r.status==='finished'?'Jogo encerrado':r.status==='live'?'Jogo em andamento':`Prazo encerrado (${S.settings.lockMinsBet??10}min)`}</div>`;
   }
 
   let badge = '';
@@ -1987,6 +2030,7 @@ function renderGameCard(game) {
     // Count how many votes of each type I've already cast FOR THIS SPECIFIC GAME
     const myBostaCount  = countVotesInGame(S.me, game.id, 'bosta');
     const myMestreCount = countVotesInGame(S.me, game.id, 'mestre');
+    const voteLocked = isVoteLocked(game);
 
     const rows = othersWithBet.map(u => {
       const ub        = (u.bets||{})[game.id];
@@ -2009,11 +2053,11 @@ function renderGameCard(game) {
           const label = myVote==='bosta' ? '💩' : `<span style="color:var(--green)">✅ Mestre</span>`;
           voteHtml = `<span class="pr-result-badge ${win?'win':'lose'}">${label} ${win?'+2 🏴‍☠️':'−2 🏴‍☠️'}</span>`;
         }
-      } else if (!locked) {
+      } else if (!voteLocked) {
         const canB = myVote==='bosta' || myBostaCount<2;
         const canM = myVote==='mestre' || myMestreCount<2;
-        const bTitle = !canB ? 'Limite: 2 votos Bosta/jogo' : '';
-        const mTitle = !canM ? 'Limite: 2 votos Mestre/jogo' : '';
+        const bTitle = !canB ? 'Limite: 2 votos Bosta/jogo' : (myVote==='bosta'?'Clique para remover seu voto Bosta':'');
+        const mTitle = !canM ? 'Limite: 2 votos Mestre/jogo' : (myVote==='mestre'?'Clique para remover seu voto Mestre':'');
         voteHtml = `<button class="pr-vote-btn ${myVote==='bosta'?'bosta-on':''}" onclick="voteExtra(${game.id},'${u.email}','bosta')" ${canB?'':'disabled'} title="${bTitle}">💩</button>`
                  + `<button class="pr-vote-btn ${myVote==='mestre'?'mestre-on':''}" onclick="voteExtra(${game.id},'${u.email}','mestre')" ${canM?'':'disabled'} title="${mTitle}">✅</button>`;
       } else if (myVote) {
@@ -2032,28 +2076,32 @@ function renderGameCard(game) {
         if (vtype === 'bosta') bostaFaces += `<div class="voter-face bosta-face" title="${voter?voter.name:ve}">${faceAv}</div>`;
         else if (vtype === 'mestre') mestreFaces += `<div class="voter-face mestre-face" title="${voter?voter.name:ve}">${faceAv}</div>`;
       });
-      const bostaGroup = bostaFaces ? `<div class="voter-group"><span class="voter-type-icon">💩</span>${bostaFaces}</div>` : '';
-      const mestreGroup = mestreFaces ? `<div class="voter-group"><span class="voter-type-icon" style="color:var(--green)">✅</span>${mestreFaces}</div>` : '';
-      const voterSection = (bostaGroup || mestreGroup) ? `<div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;align-items:center;">${bostaGroup}${mestreGroup}</div>` : '';
+      const bostaGroup = bostaFaces
+        ? `<div class="voter-group"><span class="voter-type-icon">💩</span>${bostaFaces}</div>`
+        : `<span style="color:var(--dark4);font-size:11px;">—</span>`;
+      const mestreGroup = mestreFaces
+        ? `<div class="voter-group"><span class="voter-type-icon" style="color:var(--green)">✅</span>${mestreFaces}</div>`
+        : `<span style="color:var(--dark4);font-size:11px;">—</span>`;
 
       return `<div class="palpite-row">
-        <div class="pr-avatar">${av}</div>
-        <div class="pr-name">${esc(u.name)}</div>
-        <div class="pr-score ${scoreClass}">${ub?`${ub.h}–${ub.a}`:'?–?'}</div>
-        ${voterSection}
-        <div style="display:flex;gap:4px;align-items:center;flex-shrink:0;">${voteHtml}</div>
+        <div class="pr-col-av"><div class="pr-avatar">${av}</div></div>
+        <div class="pr-col-name pr-name">${esc(u.name)}</div>
+        <div class="pr-col-score pr-score ${scoreClass}">${ub?`${ub.h}–${ub.a}`:'?–?'}</div>
+        <div class="pr-col-bosta">${bostaGroup}</div>
+        <div class="pr-col-mestre">${mestreGroup}</div>
+        <div class="pr-col-vote" style="white-space:nowrap;">${voteHtml}</div>
       </div>`;
     }).join('');
 
     const bLeft = Math.max(0,2-myBostaCount);
     const mLeft = Math.max(0,2-myMestreCount);
-    const limitBar = (!locked && r.status!=='finished')
-      ? `<div class="vote-limit-info">Votos restantes neste jogo: 💩 ${bLeft} | ✅ ${mLeft}</div>`
+    const limitBar = (!voteLocked && r.status!=='finished')
+      ? `<div class="vote-limit-info">Votos restantes neste jogo: 💩 ${bLeft} | ✅ ${mLeft} · Bloqueia ${S.settings.lockMinsVote??10}min antes</div>`
       : '';
 
     palpiteListHtml = `<div class="palpite-list">
       <div class="palpite-list-header">🎯 Palpites dos jogadores${filterEmail?' · filtrado':''}</div>
-      ${rows}${limitBar}
+      <div class="palpite-table">${rows}</div>${limitBar}
     </div>`;
   }
 
@@ -2705,8 +2753,10 @@ function renderSettingsPage() {
   document.getElementById('s-streak').value = S.settings.streak;
   document.getElementById('s-semi').value   = S.settings.semi;
   document.getElementById('s-final').value  = S.settings.final;
+  document.getElementById('s-lock-bet').value  = S.settings.lockMinsBet ?? 10;
+  document.getElementById('s-lock-vote').value = S.settings.lockMinsVote ?? 10;
   
-  ['s-exact','s-result','s-streak','s-semi','s-final','adm-game','adm-a','adm-b','adm-status'].forEach(id => {
+  ['s-exact','s-result','s-streak','s-semi','s-final','s-lock-bet','s-lock-vote','adm-game','adm-a','adm-b','adm-status'].forEach(id => {
     const el = document.getElementById(id); if(el) el.disabled = !admin;
   });
   document.querySelectorAll('#page-settings button').forEach(btn => { btn.disabled=!admin; btn.style.opacity=admin?'1':'0.5'; });
@@ -2740,6 +2790,8 @@ function saveSettings() {
   S.settings.streak = parseInt(document.getElementById('s-streak').value)||5;
   S.settings.semi   = parseInt(document.getElementById('s-semi').value)||15;
   S.settings.final  = parseInt(document.getElementById('s-final').value)||25;
+  S.settings.lockMinsBet  = parseInt(document.getElementById('s-lock-bet').value) ?? 10;
+  S.settings.lockMinsVote = parseInt(document.getElementById('s-lock-vote').value) ?? 10;
   persistSettings(); toast('Configurações salvas!','ok');
 }
 
@@ -3013,6 +3065,19 @@ async function voteExtra(gameId, target, type) {
   if (!S.apostas[key]) S.apostas[key] = {};
 
   const existingVote = S.apostas[key][S.me];
+
+  // Toggle: clicar no mesmo voto novamente remove o voto
+  if (existingVote === type) {
+    delete S.apostas[key][S.me];
+    renderGames();
+    try {
+      await gsCall({ action:'voteExtra', gameId: gameId, targetEmail: target, voterEmail: S.me, type: 'remove' });
+      toast(`Voto ${type==='bosta'?'💩 Bosta':'✅ Mestre'} removido!`, 'info');
+    } catch(e) {
+      toast('Erro ao remover voto.', 'err');
+    }
+    return;
+  }
 
   // Enforce 2-per-game limit only when casting a NEW type (not flipping existing vote)
   if (existingVote !== type) {
