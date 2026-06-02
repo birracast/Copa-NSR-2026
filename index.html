@@ -573,43 +573,131 @@ header {
 .rank-mini-pts-val.red  { color: #ff7b7b; }
 
 /* ===== HIGHLIGHTS ===== */
-.highlights-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
-.highlight-card {
-  background: var(--dark2); border: 1px solid var(--border);
-  border-radius: var(--radius); overflow: hidden;
-  transition: .25s; position: relative;
+.highlights-grid { display: flex; flex-direction: column; gap: 18px; }
+
+/* ===== NEW HIGHLIGHT CARD DESIGN ===== */
+.hl-card-new {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  min-height: 140px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--dark2);
+  position: relative;
+  transition: .25s;
 }
-.highlight-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
-.hl-label-row { display: flex; gap: 8px; align-items: center; padding: 12px 14px 8px; }
+.hl-card-new:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
+.hl-card-new.tipo-quente { border-color: rgba(60,172,59,0.4); }
+.hl-card-new.tipo-frio   { border-color: rgba(230,29,37,0.4); }
+.hl-card-new.tipo-meio   { border-color: rgba(201,168,76,0.4); }
+
+/* Left GIF panel */
+.hl-gif-panel {
+  position: relative;
+  background: #000;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  min-height: 140px;
+}
+.hl-gif-panel img.hl-gif {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.hl-gif-fallback {
+  font-size: 64px;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%;
+  min-height: 140px;
+}
+
+/* Right info panel */
+.hl-info-panel {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  position: relative;
+}
+.hl-badge-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .hl-badge { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: 1px; text-transform: uppercase; }
-.hl-badge.quente   { background: rgba(60,172,59,0.2);  color: var(--green); border: 1px solid rgba(60,172,59,0.3); }
-.hl-badge.frio     { background: rgba(230,29,37,0.15); color: #ff7b7b; border: 1px solid rgba(230,29,37,0.25); }
-.hl-badge.meio     { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.25); }
-.hl-badge.rodada   { background: rgba(42,57,141,0.2);  color: #7b8fe8; border: 1px solid rgba(42,57,141,0.3); }
-.hl-badge.jogo     { background: rgba(201,168,76,0.1); color: var(--gold); border: 1px solid rgba(201,168,76,0.2); }
-.hl-title { font-family: var(--font-display); font-size: 15px; font-weight: 800; letter-spacing: 1px; flex: 1; }
-.hl-canvas-wrap { position: relative; width: 100%; aspect-ratio: 1; background: var(--dark3); cursor: pointer; }
-.hl-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
-.hl-share-btn {
-  position: absolute; bottom: 10px; right: 10px;
-  background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 20px; padding: 6px 14px;
-  color: #fff; font-size: 12px; font-weight: 700;
-  cursor: pointer; display: flex; align-items: center; gap: 6px;
-  transition: .2s; backdrop-filter: blur(4px);
+.hl-badge.quente  { background: rgba(60,172,59,0.2);  color: var(--green); border: 1px solid rgba(60,172,59,0.3); }
+.hl-badge.frio    { background: rgba(230,29,37,0.15); color: #ff7b7b; border: 1px solid rgba(230,29,37,0.25); }
+.hl-badge.meio    { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.25); }
+.hl-badge.rodada  { background: rgba(42,57,141,0.2);  color: #7b8fe8; border: 1px solid rgba(42,57,141,0.3); }
+.hl-badge.jogo    { background: rgba(201,168,76,0.1); color: var(--gold); border: 1px solid rgba(201,168,76,0.2); }
+.hl-badge.parcial { background: rgba(201,168,76,0.12); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); font-size: 9px; }
+.hl-badge.fechada { background: rgba(60,172,59,0.15); color: var(--green); border: 1px solid rgba(60,172,59,0.3); font-size: 9px; }
+
+.hl-tipo-title {
+  font-family: var(--font-display);
+  font-size: 22px; font-weight: 900; letter-spacing: 2px;
+  text-transform: uppercase; line-height: 1;
 }
-.hl-share-btn:hover { background: rgba(37,211,102,0.8); border-color: transparent; }
-.hl-info { padding: 10px 14px 14px; }
-.hl-user-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-.hl-user-av { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: var(--dark3); display: flex; align-items: center; justify-content: center; font-size: 14px; border: 1px solid var(--border); flex-shrink: 0; }
+.tipo-quente .hl-tipo-title { color: var(--green); text-shadow: 0 0 18px rgba(60,172,59,0.5); }
+.tipo-frio   .hl-tipo-title { color: #ff7b7b;      text-shadow: 0 0 18px rgba(230,29,37,0.5); }
+.tipo-meio   .hl-tipo-title { color: var(--gold);  text-shadow: 0 0 18px rgba(201,168,76,0.4); }
+
+.hl-user-section { display: flex; align-items: center; gap: 10px; }
+.hl-user-av { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: var(--dark3); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
 .hl-user-av img { width: 100%; height: 100%; object-fit: cover; }
-.hl-user-name { font-size: 13px; font-weight: 600; }
-.hl-user-pts { font-family: var(--font-display); font-size: 20px; font-weight: 800; color: var(--gold); margin-left: auto; }
+.tipo-quente .hl-user-av { border: 2px solid var(--green); }
+.tipo-frio   .hl-user-av { border: 2px solid #ff7b7b; }
+.tipo-meio   .hl-user-av { border: 2px solid var(--gold); }
+.hl-user-name { font-size: 15px; font-weight: 700; }
+
+/* Scores row */
+.hl-scores-row {
+  display: flex; gap: 12px; flex-wrap: wrap;
+}
+.hl-score-box {
+  display: flex; flex-direction: column; align-items: center;
+  background: var(--dark3); border-radius: 8px;
+  padding: 6px 12px; min-width: 64px;
+}
+.hl-score-val { font-family: var(--font-display); font-size: 22px; font-weight: 800; line-height: 1; }
+.hl-score-lbl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+.hl-score-val.gold  { color: var(--gold); }
+.hl-score-val.red   { color: #ff7b7b; }
+.hl-score-val.blue  { color: #7b8fe8; }
+
+/* Total box */
+.hl-total-box {
+  background: var(--dark4); border-radius: 8px; padding: 6px 12px;
+  display: flex; flex-direction: column; align-items: center; min-width: 64px;
+  border: 1px solid var(--border);
+}
+.tipo-quente .hl-total-box { border-color: rgba(60,172,59,0.4); }
+.tipo-frio   .hl-total-box { border-color: rgba(230,29,37,0.3); }
+.tipo-meio   .hl-total-box { border-color: rgba(201,168,76,0.3); }
+
+/* Share button */
+.hl-share-btn {
+  position: absolute; bottom: 12px; right: 12px;
+  background: rgba(37,211,102,0.15); border: 1px solid rgba(37,211,102,0.35);
+  border-radius: 20px; padding: 5px 12px;
+  color: #25d366; font-size: 11px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; gap: 5px;
+  transition: .2s;
+}
+.hl-share-btn:hover { background: rgba(37,211,102,0.8); color: #fff; border-color: transparent; }
+
+/* Hidden canvas for share export */
+.hl-export-canvas { display: none; }
+
 .hl-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
 .hl-tab { font-family: var(--font-display); font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--dark2); color: var(--muted); cursor: pointer; transition: .2s; }
 .hl-tab:hover { color: var(--text); border-color: var(--dark4); }
 .hl-tab.active { background: var(--dark3); color: var(--text); border-color: var(--gold); }
 .hl-empty { color: var(--muted); font-size: 14px; text-align: center; padding: 40px; }
+
+@media (max-width: 600px) {
+  .hl-card-new { grid-template-columns: 120px 1fr; }
+  .hl-tipo-title { font-size: 16px; }
+  .hl-score-val { font-size: 18px; }
+}
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
@@ -2481,27 +2569,42 @@ const HL_IMG_BASE = 'https://raw.githubusercontent.com/birracast/Copa-NSR-2026/m
 // Posição do círculo do rosto nas imagens (px, para canvas 500x500)
 const FACE_CIRCLE = { x: 250, y: 215, r: 60 };
 
+function isRodadaClosed(rodada) {
+  // Rodada fechada = todos os jogos dela têm resultado 'finished'
+  const allGames = GAMES.filter(g => getRodada(g.id) === rodada);
+  if (!allGames.length) return false;
+  return allGames.every(g => (S.results[g.id]||{}).status === 'finished' && S.results[g.id].h !== null);
+}
+
 function calcRodadaHighlights(rodada) {
-  // Jogos da rodada com resultado
+  // Jogos da rodada com resultado (ao menos um precisa estar terminado)
   const jogos = GAMES.filter(g => getRodada(g.id) === rodada && (S.results[g.id]||{}).status === 'finished' && S.results[g.id].h !== null);
   if (!jogos.length) return null;
+  const allRodadaGames = GAMES.filter(g => getRodada(g.id) === rodada);
+  const closed = allRodadaGames.every(g => (S.results[g.id]||{}).status === 'finished' && S.results[g.id].h !== null);
+
   const users = Object.values(S.users);
   const scores = users.map(u => {
-    let pts = 0;
-    jogos.forEach(g => { pts += calcGamePoints(u, g.id); });
+    let rodadaPts = 0;
+    jogos.forEach(g => { rodadaPts += calcGamePoints(u, g.id); });
     const piratecas = calcUserPiratecas(u.email);
-    return { ...u, rodadaPts: pts, piratecas, total: pts + piratecas };
+    const total = rodadaPts + piratecas;
+    return { ...u, rodadaPts, piratecas, total };
   });
-  const maxPts = Math.max(...scores.map(s => s.rodadaPts));
-  const minPts = Math.min(...scores.map(s => s.rodadaPts));
-  if (maxPts === minPts) return null;
-  const hot   = scores.filter(s => s.rodadaPts === maxPts);
-  const cold  = scores.filter(s => s.rodadaPts === minPts);
-  const sorted = [...scores].sort((a,b)=>a.rodadaPts-b.rodadaPts);
-  const medIdx = Math.floor(sorted.length/2);
-  const medPts = sorted[medIdx].rodadaPts;
-  const mid    = scores.filter(s => s.rodadaPts === medPts && s.rodadaPts !== maxPts && s.rodadaPts !== minPts);
-  return { rodada, hot, cold, mid, maxPts, minPts, jogos: jogos.length, partial: true };
+
+  // Classificar pelo TOTAL (pontos + piratecas)
+  const maxTotal = Math.max(...scores.map(s => s.total));
+  const minTotal = Math.min(...scores.map(s => s.total));
+  if (maxTotal === minTotal) return null;
+
+  const hot  = scores.filter(s => s.total === maxTotal);
+  const cold = scores.filter(s => s.total === minTotal);
+  const sorted = [...scores].sort((a,b) => a.total - b.total);
+  const medIdx = Math.floor(sorted.length / 2);
+  const medTotal = sorted[medIdx].total;
+  const mid = scores.filter(s => s.total === medTotal && s.total !== maxTotal && s.total !== minTotal);
+
+  return { rodada, hot, cold, mid, maxTotal, minTotal, jogos: jogos.length, closed };
 }
 
 function calcGameHighlights(gameId) {
@@ -2541,22 +2644,17 @@ function renderHighlightsRodadas(container) {
     const data = calcRodadaHighlights(r);
     if (!data) return;
     const label = `Rodada ${r}`;
-    // Pé Quente
     data.hot.forEach(u => {
-      html += buildHighlightCard(u, 'quente', label, `${data.maxPts} pts`, `🔥 PÉ QUENTE`, 'sortudo.png', 'rodada', r);
+      html += buildHighlightCardNew(u, 'quente', label, '🔥 PÉ QUENTE', 'pequente.gif', 'rodada', r, data.closed);
     });
-    // Pé Frio
     data.cold.forEach(u => {
-      html += buildHighlightCard(u, 'frio', label, `${data.minPts} pts`, `🥶 PÉ FRIO`, 'pefrio.png', 'rodada', r);
+      html += buildHighlightCardNew(u, 'frio', label, '🥶 PÉ FRIO', 'pefrio.gif', 'rodada', r, data.closed);
     });
-    // Nem fede nem cheira
     data.mid.forEach(u => {
-      html += buildHighlightCard(u, 'meio', label, `${u.rodadaPts} pts`, `😐 NEM FEDE NEM CHEIRA`, 'meio.png', 'rodada', r);
+      html += buildHighlightCardNew(u, 'meio', label, '😐 NEM FEDE NEM CHEIRA', 'nada.gif', 'rodada', r, data.closed);
     });
   });
   container.innerHTML = html ? `<div class="highlights-grid">${html}</div>` : '<div class="hl-empty">Aguardando jogos encerrados para gerar highlights! ⏳</div>';
-  // Render all canvases
-  container.querySelectorAll('canvas[data-hl]').forEach(cv => drawHighlightCanvas(cv));
 }
 
 function renderHighlightsJogos(container) {
@@ -2567,55 +2665,81 @@ function renderHighlightsJogos(container) {
     if (!data) return;
     const label = `${game.hCode} ${S.results[game.id].h}–${S.results[game.id].a} ${game.aCode}`;
     data.hot.forEach(u => {
-      html += buildHighlightCard(u, 'quente', label, `${data.maxPts} pts`, `🔥 PÉ QUENTE`, 'sortudo.png', 'jogo', game.id);
+      html += buildHighlightCardNew(u, 'quente', label, '🔥 PÉ QUENTE', 'pequente.gif', 'jogo', game.id, true);
     });
     data.cold.forEach(u => {
-      html += buildHighlightCard(u, 'frio', label, `${data.minPts} pts`, `🥶 PÉ FRIO`, 'pefrio.png', 'jogo', game.id);
+      html += buildHighlightCardNew(u, 'frio', label, '🥶 PÉ FRIO', 'pefrio.gif', 'jogo', game.id, true);
     });
     data.mid.forEach(u => {
-      html += buildHighlightCard(u, 'meio', label, `${u.gamePts} pts`, `😐 NEM FEDE NEM CHEIRA`, 'meio.png', 'jogo', game.id);
+      html += buildHighlightCardNew(u, 'meio', label, '😐 NEM FEDE NEM CHEIRA', 'nada.gif', 'jogo', game.id, true);
     });
   });
   container.innerHTML = html ? `<div class="highlights-grid">${html}</div>` : '<div class="hl-empty">Nenhum jogo encerrado ainda! ⏳</div>';
-  container.querySelectorAll('canvas[data-hl]').forEach(cv => drawHighlightCanvas(cv));
 }
 
-function buildHighlightCard(user, tipo, label, pts, title, imgFile, scope, scopeId) {
+function buildHighlightCardNew(user, tipo, label, title, gifFile, scope, scopeId, closed) {
   const uid = `hl_${tipo}_${scope}_${scopeId}_${user.email.replace(/[@.]/g,'_')}`;
-  const badgeClass = tipo === 'quente' ? 'quente' : tipo === 'frio' ? 'frio' : 'meio';
   const scopeBadge = scope === 'rodada' ? `<span class="hl-badge rodada">Rodada ${scopeId}</span>` : `<span class="hl-badge jogo">Jogo</span>`;
+  const statusBadge = scope === 'rodada'
+    ? (closed ? `<span class="hl-badge fechada">✅ Rodada Fechada</span>` : `<span class="hl-badge parcial">⏳ Resultado Parcial</span>`)
+    : `<span class="hl-badge fechada">✅ Jogo Fechado</span>`;
   const av = user.avatar ? `<img src="${user.avatar}">` : '🧑';
-  return `<div class="highlight-card">
-    <div class="hl-label-row">
-      ${scopeBadge}
-      <span class="hl-badge ${badgeClass}">${title}</span>
+  const gifSrc = HL_IMG_BASE + gifFile;
+  const rodadaPts = user.rodadaPts !== undefined ? user.rodadaPts : (user.gamePts !== undefined ? user.gamePts : 0);
+  const piratecas = user.piratecas !== undefined ? user.piratecas : 0;
+  const total = rodadaPts + piratecas;
+
+  // Hidden canvas for sharing
+  return `<div class="hl-card-new tipo-${tipo}" id="card-${uid}">
+    <div class="hl-gif-panel">
+      <img class="hl-gif" src="${gifSrc}" alt="${title}"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="hl-gif-fallback" style="display:none">${tipo==='quente'?'🔥':tipo==='frio'?'🥶':'😐'}</div>
     </div>
-    <div class="hl-canvas-wrap" onclick="shareHighlight('${uid}')">
-      <canvas id="${uid}"
-        data-hl="1"
-        data-img="${imgFile}"
-        data-avatar="${user.avatar||''}"
-        data-name="${esc(user.name)}"
-        data-label="${esc(label)}"
-        data-pts="${esc(pts)}"
-        data-title="${esc(title)}"
-        data-tipo="${tipo}"
-        width="500" height="500"></canvas>
-      <button class="hl-share-btn" onclick="event.stopPropagation();shareHighlight('${uid}')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17 2a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-1.89-.68l-6.41 3.7A3 3 0 0 1 9 12a3 3 0 0 1-.3 1.3l6.41 3.38A3 3 0 0 1 17 16a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 .3-1.3L7.89 14.3A3 3 0 0 1 6 15a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 1.89.68l6.41-3.7A3 3 0 0 1 14 5a3 3 0 0 1 3-3z"/></svg>
-        WhatsApp
-      </button>
-    </div>
-    <div class="hl-info">
-      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">${esc(label)}</div>
-      <div class="hl-user-row">
+    <div class="hl-info-panel">
+      <div>
+        <div class="hl-badge-row" style="margin-bottom:6px">
+          ${scopeBadge}
+          <span class="hl-badge ${tipo}">${title}</span>
+          ${statusBadge}
+        </div>
+        <div class="hl-tipo-title">${title.replace(/^[^ ]+ /,'')}</div>
+      </div>
+      <div class="hl-user-section" style="margin:8px 0">
         <div class="hl-user-av">${av}</div>
         <span class="hl-user-name">${esc(user.name)}</span>
-        <span class="hl-user-pts">${pts}</span>
       </div>
+      <div class="hl-scores-row">
+        <div class="hl-score-box">
+          <div class="hl-score-val gold">${rodadaPts}</div>
+          <div class="hl-score-lbl">Pontos</div>
+        </div>
+        <div class="hl-score-box">
+          <div class="hl-score-val red">${piratecas}</div>
+          <div class="hl-score-lbl">Piratecas</div>
+        </div>
+        <div class="hl-total-box">
+          <div class="hl-score-val blue">${total}</div>
+          <div class="hl-score-lbl">Total</div>
+        </div>
+      </div>
+      <button class="hl-share-btn" onclick="shareHighlightNew('${uid}','${tipo}','${esc(user.name)}','${esc(label)}','${esc(title)}',${rodadaPts},${piratecas},'${user.avatar||''}','${gifSrc}')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17 2a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-1.89-.68l-6.41 3.7A3 3 0 0 1 9 12a3 3 0 0 1-.3 1.3l6.41 3.38A3 3 0 0 1 17 16a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 .3-1.3L7.89 14.3A3 3 0 0 1 6 15a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 1.89.68l6.41-3.7A3 3 0 0 1 14 5a3 3 0 0 1 3-3z"/></svg>
+        WhatsApp
+      </button>
+      <canvas id="${uid}" class="hl-export-canvas" width="500" height="280"
+        data-tipo="${tipo}" data-name="${esc(user.name)}" data-label="${esc(label)}"
+        data-title="${esc(title)}" data-pts="${rodadaPts}" data-piratecas="${piratecas}"
+        data-avatar="${user.avatar||''}" data-gif="${gifSrc}"></canvas>
     </div>
   </div>`;
 }
+
+// Kept for backward compat (Por Jogo tab)
+function buildHighlightCard(user, tipo, label, pts, title, imgFile, scope, scopeId) {
+  return buildHighlightCardNew(user, tipo, label, title, imgFile.replace('.png','.gif'), scope, scopeId, true);
+}
+
 
 const _hlImgCache = {};
 function loadImgCached(src) {
@@ -2738,6 +2862,144 @@ async function shareHighlight(canvasId) {
       const text = encodeURIComponent('🏴‍☠️ Olha o highlight do Bolão Copa 26! Baixe a imagem acima e envie no grupo!');
       window.open(`https://wa.me/?text=${text}`, '_blank');
     }, 600);
+  } catch(e) {
+    if (e.name !== 'AbortError') toast('Compartilhamento cancelado ou não suportado','warn');
+  }
+}
+
+async function shareHighlightNew(uid, tipo, name, label, title, pts, piratecas, avatarSrc, gifSrc) {
+  const cv = document.getElementById(uid);
+  if (!cv) { toast('Canvas não encontrado','err'); return; }
+  toast('Gerando imagem...','info');
+
+  // Draw the card onto the canvas (500x280)
+  const ctx = cv.getContext('2d');
+  const W = 500, H = 280;
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  const grad = ctx.createLinearGradient(0,0,W,H);
+  if (tipo==='quente') { grad.addColorStop(0,'#0a180a'); grad.addColorStop(1,'#0f2010'); }
+  else if (tipo==='frio') { grad.addColorStop(0,'#1a0808'); grad.addColorStop(1,'#200d0d'); }
+  else { grad.addColorStop(0,'#1a160a'); grad.addColorStop(1,'#1e1a08'); }
+  ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
+
+  // Left panel background (GIF zone)
+  const leftW = 170;
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(0, 0, leftW, H);
+
+  // Load and draw GIF frame (first frame only — canvas can't animate)
+  const gifImg = await loadImgCached(gifSrc);
+  if (gifImg) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, 0, leftW, H); ctx.clip();
+    // Fit cover
+    const scale = Math.max(leftW / gifImg.width, H / gifImg.height);
+    const dw = gifImg.width * scale, dh = gifImg.height * scale;
+    ctx.drawImage(gifImg, (leftW - dw)/2, (H - dh)/2, dw, dh);
+    ctx.restore();
+  } else {
+    ctx.font = '60px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(tipo==='quente'?'🔥':tipo==='frio'?'🥶':'😐', leftW/2, H/2);
+  }
+
+  // Divider
+  const accentColor = tipo==='quente'?'#3CAC3B':tipo==='frio'?'#E61D25':'#C9A84C';
+  ctx.fillStyle = accentColor; ctx.fillRect(leftW, 0, 3, H);
+
+  // Right info panel
+  const rx = leftW + 16;
+  let ry = 20;
+
+  // Title line
+  ctx.fillStyle = accentColor;
+  ctx.font = 'bold 13px "Barlow Condensed", sans-serif';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  ctx.fillText(label.toUpperCase(), rx, ry); ry += 18;
+
+  // Tipo title
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 22px "Barlow Condensed", sans-serif';
+  ctx.fillText(title, rx, ry); ry += 28;
+
+  // Avatar + name
+  if (avatarSrc) {
+    const avImg = await loadImgCached(avatarSrc);
+    if (avImg) {
+      const ar = 20;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(rx+ar, ry+ar, ar, 0, Math.PI*2); ctx.clip();
+      ctx.drawImage(avImg, rx, ry, ar*2, ar*2);
+      ctx.restore();
+      ctx.beginPath(); ctx.arc(rx+ar, ry+ar, ar+1, 0, Math.PI*2);
+      ctx.strokeStyle = accentColor; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#F0F0F0';
+      ctx.font = 'bold 16px "Barlow", sans-serif';
+      ctx.textAlign='left'; ctx.textBaseline='middle';
+      ctx.fillText(name, rx + ar*2 + 10, ry + ar);
+      ry += ar*2 + 14;
+    } else {
+      ctx.fillStyle = '#F0F0F0'; ctx.font = 'bold 16px "Barlow", sans-serif';
+      ctx.textAlign='left'; ctx.textBaseline='top';
+      ctx.fillText(name, rx, ry); ry += 26;
+    }
+  } else {
+    ctx.fillStyle = '#F0F0F0'; ctx.font = 'bold 16px "Barlow", sans-serif';
+    ctx.textAlign='left'; ctx.textBaseline='top';
+    ctx.fillText(name, rx, ry); ry += 26;
+  }
+
+  // Score boxes
+  const total = parseInt(pts) + parseInt(piratecas);
+  const boxes = [
+    { label:'Pontos', val: pts,       color:'#C9A84C' },
+    { label:'Piratecas', val: piratecas, color:'#ff7b7b' },
+    { label:'Total', val: total,      color:'#7b8fe8' }
+  ];
+  const bw = 84, bh = 52, bpad = 8;
+  boxes.forEach((b, i) => {
+    const bx = rx + i*(bw+bpad);
+    ctx.fillStyle = 'rgba(255,255,255,0.07)';
+    roundRect(ctx, bx, ry, bw, bh, 8); ctx.fill();
+    ctx.strokeStyle = i===2 ? accentColor : 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 1; roundRect(ctx, bx, ry, bw, bh, 8); ctx.stroke();
+
+    ctx.fillStyle = b.color;
+    ctx.font = 'bold 24px "Barlow Condensed", sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(b.val, bx + bw/2, ry + bh/2 - 6);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = '10px "Barlow", sans-serif';
+    ctx.fillText(b.label.toUpperCase(), bx + bw/2, ry + bh - 9);
+  });
+
+  // Watermark
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = 'bold 11px "Barlow Condensed", sans-serif';
+  ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+  ctx.fillText('BOLÃO COPA 26 🏴‍☠️', W - 10, H - 6);
+
+  // Share
+  try {
+    const blob = await new Promise(resolve => cv.toBlob(resolve, 'image/png'));
+    if (!blob) { toast('Não foi possível gerar a imagem','err'); return; }
+    if (navigator.canShare && navigator.canShare({ files: [new File([blob],'highlight.png',{type:'image/png'})] })) {
+      await navigator.share({
+        files: [new File([blob], 'highlight-bolao.png', { type: 'image/png' })],
+        title: 'Bolão Copa 26 — Highlight',
+        text: `🏴‍☠️ ${title} — ${name} (${label})`
+      });
+      return;
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `highlight-${uid}.png`; a.click();
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+      const text = encodeURIComponent(`🏴‍☠️ Olha o highlight do Bolão Copa 26!\n${title} — ${name}\n${label} · ${pts}pts + ${piratecas}🏴‍☠️ = ${total} total\nBaixe a imagem e envie no grupo!`);
+      window.open(`https://wa.me/?text=${text}`, '_blank');
+    }, 700);
   } catch(e) {
     if (e.name !== 'AbortError') toast('Compartilhamento cancelado ou não suportado','warn');
   }
@@ -2969,13 +3231,26 @@ async function adminDeleteUser(email) {
   const u = adminUsers.find(x=>x.email===email);
   if (!u) return;
   if (u.isAdmin) { toast('Não é possível deletar um administrador.','warn'); return; }
-  if (!confirm(`Deletar permanentemente o usuário "${u.name}" (${email})? Esta ação não pode ser desfeita.`)) return;
+  if (!confirm(`⚠️ Deletar permanentemente "${u.name}" (${email})?\n\nIsso irá:\n• Remover o usuário e todos os palpites\n• Apagar votos Bosta/Mestre dados e recebidos por ele\n• Mover dados para aba de auditoria no Sheets\n\nEsta ação não pode ser desfeita.`)) return;
   try {
     const res = await gsCall({ action:'adminDeleteUser', callerEmail:S.me, targetEmail:email });
     if (!res.ok) { toast(res.error||'Erro ao deletar usuário','err'); return; }
-    toast(`🗑 Usuário ${email} deletado com sucesso.`,'ok');
+    // Remove locally so site atualiza sem precisar recarregar
+    delete S.users[email];
+    // Remove apostas relacionadas ao usuário deletado do estado local
+    if (S.apostas) {
+      Object.keys(S.apostas).forEach(key => {
+        if (key.includes(email.replace(/[@.]/g,'_'))) {
+          delete S.apostas[key];
+        } else if (S.apostas[key] && typeof S.apostas[key] === 'object') {
+          delete S.apostas[key][email];
+        }
+      });
+    }
+    toast(`🗑 Usuário ${u.name} deletado. Histórico limpo.`,'ok');
     closeAdminEdit();
     loadAdminUsers();
+    rerenderCurrentPage();
   } catch(e) { toast('Erro de conexão','err'); }
 }
 
