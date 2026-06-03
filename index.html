@@ -2645,13 +2645,13 @@ function renderHighlightsRodadas(container) {
     if (!data) return;
     const label = `Rodada ${r}`;
     data.hot.forEach(u => {
-      html += buildHighlightCardNew(u, 'quente', label, '🔥 PÉ QUENTE', 'eusofoda.gif', 'rodada', r, data.closed);
+      html += buildHighlightCardNew(u, 'quente', label, '🔥 PÉ QUENTE', 'eusofodam.mp4', 'rodada', r, data.closed);
     });
     data.cold.forEach(u => {
-      html += buildHighlightCardNew(u, 'frio', label, '🥶 PÉ FRIO', 'fudeu.gif', 'rodada', r, data.closed);
+      html += buildHighlightCardNew(u, 'frio', label, '🥶 PÉ FRIO', 'fudeum.mp4', 'rodada', r, data.closed);
     });
     data.mid.forEach(u => {
-      html += buildHighlightCardNew(u, 'meio', label, '😐 NEM FEDE NEM CHEIRA', 'nunfede.gif', 'rodada', r, data.closed);
+      html += buildHighlightCardNew(u, 'meio', label, '😐 NEM FEDE NEM CHEIRA', 'nunfedem.mp4', 'rodada', r, data.closed);
     });
   });
   container.innerHTML = html ? `<div class="highlights-grid">${html}</div>` : '<div class="hl-empty">Aguardando jogos encerrados para gerar highlights! ⏳</div>';
@@ -2665,13 +2665,13 @@ function renderHighlightsJogos(container) {
     if (!data) return;
     const label = `${game.hCode} ${S.results[game.id].h}–${S.results[game.id].a} ${game.aCode}`;
     data.hot.forEach(u => {
-      html += buildHighlightCardNew(u, 'quente', label, '🔥 PÉ QUENTE', 'eusofoda.gif', 'jogo', game.id, true);
+      html += buildHighlightCardNew(u, 'quente', label, '🔥 PÉ QUENTE', 'eusofodam.mp4', 'jogo', game.id, true);
     });
     data.cold.forEach(u => {
-      html += buildHighlightCardNew(u, 'frio', label, '🥶 PÉ FRIO', 'fudeu.gif', 'jogo', game.id, true);
+      html += buildHighlightCardNew(u, 'frio', label, '🥶 PÉ FRIO', 'fudeum.mp4', 'jogo', game.id, true);
     });
     data.mid.forEach(u => {
-      html += buildHighlightCardNew(u, 'meio', label, '😐 NEM FEDE NEM CHEIRA', 'nunfede.gif', 'jogo', game.id, true);
+      html += buildHighlightCardNew(u, 'meio', label, '😐 NEM FEDE NEM CHEIRA', 'nunfedem.mp4', 'jogo', game.id, true);
     });
   });
   container.innerHTML = html ? `<div class="highlights-grid">${html}</div>` : '<div class="hl-empty">Nenhum jogo encerrado ainda! ⏳</div>';
@@ -2692,7 +2692,8 @@ function buildHighlightCardNew(user, tipo, label, title, gifFile, scope, scopeId
 
 // Hidden canvas for sharing
   return `<div class="hl-card-new tipo-${tipo}" id="card-${uid}">
-    <div class="hl-gif-panel" style="background: url('${gifSrc}') center center / cover no-repeat;">
+    <div class="hl-gif-panel" style="background-color: #000;">
+      <video src="${gifSrc}" autoplay loop muted playsinline style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;"></video>
       <div class="hl-gif-fallback" style="display:none">${tipo==='quente'?'🔥':tipo==='frio'?'🥶':'😐'}</div>
     </div>
     <div class="hl-info-panel">
@@ -2892,21 +2893,20 @@ async function shareHighlightNew(uid, tipo, name, label, title, pts, piratecas, 
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
   ctx.fillRect(0, 0, leftW, H);
 
-  // Load and draw GIF frame (first frame only — canvas can't animate)
-  const gifImg = await loadImgCached(gifSrc);
-  if (gifImg) {
+  // Pega o frame atual do vídeo que está tocando na tela
+  const videoEl = document.querySelector(`#card-${uid} video`);
+  if (videoEl && videoEl.readyState >= 2) {
     ctx.save();
     ctx.beginPath(); ctx.rect(0, 0, leftW, H); ctx.clip();
     // Fit cover
-    const scale = Math.max(leftW / gifImg.width, H / gifImg.height);
-    const dw = gifImg.width * scale, dh = gifImg.height * scale;
-    ctx.drawImage(gifImg, (leftW - dw)/2, (H - dh)/2, dw, dh);
+    const scale = Math.max(leftW / videoEl.videoWidth, H / videoEl.videoHeight);
+    const dw = videoEl.videoWidth * scale, dh = videoEl.videoHeight * scale;
+    ctx.drawImage(videoEl, (leftW - dw)/2, (H - dh)/2, dw, dh);
     ctx.restore();
   } else {
     ctx.font = '60px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(tipo==='quente'?'🔥':tipo==='frio'?'🥶':'😐', leftW/2, H/2);
   }
-
   // Divider
   const accentColor = tipo==='quente'?'#3CAC3B':tipo==='frio'?'#E61D25':'#C9A84C';
   ctx.fillStyle = accentColor; ctx.fillRect(leftW, 0, 3, H);
