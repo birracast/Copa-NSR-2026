@@ -493,6 +493,14 @@ header {
 .help-step-body p { font-size: 13px; color: var(--muted); line-height: 1.6; }
 .help-tip { background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.2); border-radius: 12px; padding: 20px; margin-top: 20px; }
 .help-tip h4 { font-family: var(--font-display); font-size: 16px; font-weight: 800; color: var(--gold); margin-bottom: 8px; letter-spacing: 1px; }
+.help-share-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 14px; padding: 6px 14px;
+  background: rgba(37,211,102,0.1); border: 1px solid rgba(37,211,102,0.3);
+  border-radius: 20px; color: #25d366; font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: .2s;
+}
+.help-share-btn:hover { background: rgba(37,211,102,0.8); color: #fff; border-color: transparent; }
 
 /* ===== CHANGE PASS MODAL ===== */
 .modal-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,.7); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -907,6 +915,10 @@ header {
           <tr><td>🥇 Bônus: exato na Final</td><td class="help-pts-val">+25 pts</td></tr>
           <tr><td>❌ Errou feio, errou rude</td><td class="help-pts-val">0 pts</td></tr>
         </table>
+        <button class="help-share-btn" onclick="shareHelpCard(this)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17 2a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-1.89-.68l-6.41 3.7A3 3 0 0 1 9 12a3 3 0 0 1-.3 1.3l6.41 3.38A3 3 0 0 1 17 16a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 .3-1.3L7.89 14.3A3 3 0 0 1 6 15a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 1.89.68l6.41-3.7A3 3 0 0 1 14 5a3 3 0 0 1 3-3z"/></svg>
+          Compartilhar
+        </button>
       </div>
 
       <div class="help-card" style="border-color: rgba(230,29,37,0.4); background: linear-gradient(180deg, rgba(230,29,37,0.05) 0%, transparent 100%);">
@@ -919,6 +931,10 @@ header {
           <li><span>😐 <strong>O Medíocre:</strong> Ficou na média da galera? Perde <strong>-1 Pirateca</strong> por não se destacar.</span></li>
           <li><span>🎯 <strong>Apostas Bosta/Mestre:</strong> Rende +2 ou tira -2 (explicado abaixo).</span></li>
         </ul>
+        <button class="help-share-btn" onclick="shareHelpCard(this)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17 2a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-1.89-.68l-6.41 3.7A3 3 0 0 1 9 12a3 3 0 0 1-.3 1.3l6.41 3.38A3 3 0 0 1 17 16a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 .3-1.3L7.89 14.3A3 3 0 0 1 6 15a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 1.89.68l6.41-3.7A3 3 0 0 1 14 5a3 3 0 0 1 3-3z"/></svg>
+          Compartilhar
+        </button>
       </div>
 
       <div class="help-card">
@@ -928,9 +944,13 @@ header {
         <ul>
           <li><span>💩 <strong>Bosta:</strong> Você aposta que ele vai <strong>zerar</strong> (0 pts). Se ele zerar, você ganha <strong>+2 Piratecas</strong>. Se ele pontuar, você perde <strong>-2</strong>.</span></li>
           <li><span>✅ <strong>Mestre:</strong> Você aposta que ele vai <strong>pontuar</strong> (5 ou 10 pts). Se ele pontuar, você ganha <strong>+2 Piratecas</strong>. Se ele zerar, perde <strong>-2</strong>.</span></li>
-          <li><span>✏️ <strong>Edição Livre:</strong> Arrependeu? Mude seu voto à vontade até 10 minutos antes do jogo!</span></li>
+          <li><span>✏️ <strong>Edição Livre:</strong> Arrependeu? Mude seu voto clicando nele novamente para desfazer, ou troque pelo oposto.</span></li>
           <li><span>🔢 <strong>Limite por Jogo:</strong> Você pode votar em no máximo <strong>2 palpites Bosta</strong> e <strong>2 palpites Mestre</strong> por jogo. Escolha bem!</span></li>
         </ul>
+        <button class="help-share-btn" onclick="shareHelpCard(this)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17 2a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-1.89-.68l-6.41 3.7A3 3 0 0 1 9 12a3 3 0 0 1-.3 1.3l6.41 3.38A3 3 0 0 1 17 16a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 .3-1.3L7.89 14.3A3 3 0 0 1 6 15a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 1.89.68l6.41-3.7A3 3 0 0 1 14 5a3 3 0 0 1 3-3z"/></svg>
+          Compartilhar
+        </button>
       </div>
 
       <div class="help-card">
@@ -943,6 +963,10 @@ header {
           <li><span><strong>No Ranking Normal:</strong> O modal mostra jogo a jogo de onde vieram os pontos, incluindo bônus e o placar apostado vs oficial.</span></li>
           <li><span><strong>No Ranking Piratecas:</strong> O modal vira um "extrato bancário", mostrando seu saldo atual e detalhando ganhos/perdas de rodadas e apostas Bosta/Mestre.</span></li>
         </ul>
+        <button class="help-share-btn" onclick="shareHelpCard(this)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17 2a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-1.89-.68l-6.41 3.7A3 3 0 0 1 9 12a3 3 0 0 1-.3 1.3l6.41 3.38A3 3 0 0 1 17 16a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 .3-1.3L7.89 14.3A3 3 0 0 1 6 15a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 1.89.68l6.41-3.7A3 3 0 0 1 14 5a3 3 0 0 1 3-3z"/></svg>
+          Compartilhar
+        </button>
       </div>
 
       <div class="help-card">
@@ -957,13 +981,21 @@ header {
         <div class="help-tip" style="margin-top:10px; padding:12px;">
           <p style="margin:0; font-size:12px;">📲 Clique no botão <strong>WhatsApp</strong> dentro de qualquer card de highlight para gerar uma imagem exclusiva (com o rosto e os dados da pessoa) e compartilhar na hora no grupo da galera!</p>
         </div>
+        <button class="help-share-btn" onclick="shareHelpCard(this)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17 2a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-1.89-.68l-6.41 3.7A3 3 0 0 1 9 12a3 3 0 0 1-.3 1.3l6.41 3.38A3 3 0 0 1 17 16a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 .3-1.3L7.89 14.3A3 3 0 0 1 6 15a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 1.89.68l6.41-3.7A3 3 0 0 1 14 5a3 3 0 0 1 3-3z"/></svg>
+          Compartilhar
+        </button>
       </div>
 
       <div class="help-card">
         <div class="help-card-icon">⏰</div>
         <h3>A Regra do Bloqueio</h3>
-        <p>Para evitar trapaças, os palpites e votos são <strong>bloqueados antes do início de cada partida</strong>. O tempo exato é configurável pelo administrador na aba ⚙️ Config.</p>
-        <p style="margin-top: 8px;">O mesmo vale para votar em <strong>Palpite Bosta ou Mestre</strong> — há um bloqueio separado também ajustável. Fique esperto e deixe tudo preenchido com antecedência!</p>
+        <p>Para evitar trapaças, os palpites e votos são <strong>bloqueados antes do início de cada partida</strong>. O tempo exato é definido pelo administrador e pode ser consultado na aba <strong>⚙️ Config</strong>.</p>
+        <p style="margin-top: 8px;">O mesmo vale para votar em <strong>Palpite Bosta ou Mestre</strong> — há um tempo de bloqueio separado, também configurável. Fique esperto e deixe tudo preenchido com antecedência!</p>
+        <button class="help-share-btn" onclick="shareHelpCard(this)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17 2a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-1.89-.68l-6.41 3.7A3 3 0 0 1 9 12a3 3 0 0 1-.3 1.3l6.41 3.38A3 3 0 0 1 17 16a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 .3-1.3L7.89 14.3A3 3 0 0 1 6 15a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 1.89.68l6.41-3.7A3 3 0 0 1 14 5a3 3 0 0 1 3-3z"/></svg>
+          Compartilhar
+        </button>
       </div>
     </div>
 
@@ -2564,8 +2596,8 @@ function hlTab(tab) {
   renderHighlights();
 }
 
-// Imagens no GitHub — ajuste o caminho base conforme seu repositório
-const HL_IMG_BASE = 'https://raw.githubusercontent.com/birracast/Copa-NSR-2026/main/';
+// Imagens no GitHub — media.githubusercontent.com serve GIFs com Content-Type correto
+const HL_IMG_BASE = 'https://media.githubusercontent.com/media/birracast/Copa-NSR-2026/main/';
 // Posição do círculo do rosto nas imagens (px, para canvas 500x500)
 const FACE_CIRCLE = { x: 250, y: 215, r: 60 };
 
@@ -3005,6 +3037,23 @@ async function shareHighlightNew(uid, tipo, name, label, title, pts, piratecas, 
   }
 }
 
+
+function shareHelpCard(btn) {
+  const card = btn.closest('.help-card');
+  if (!card) return;
+  const title = card.querySelector('h3')?.textContent?.trim() || 'Regras do Bolão';
+  // Collect text content from the card, excluding the button itself
+  const lines = [];
+  card.querySelectorAll('p, li span, td').forEach(el => {
+    const t = el.textContent.trim();
+    if (t) lines.push(t);
+  });
+  // Deduplicate and cap
+  const unique = [...new Set(lines)].slice(0, 12);
+  const body = unique.join('\n').substring(0, 600);
+  const text = encodeURIComponent(`🏴‍☠️ *BOLÃO COPA 26 — ${title.toUpperCase()}*\n\n${body}\n\n⚽ Confira as regras completas no app!`);
+  window.open(`https://wa.me/?text=${text}`, '_blank');
+}
 
 function isAdmin() { const u = S.users[S.me]; return !!(u&&u.isAdmin); }
 function renderSettingsPage() {
