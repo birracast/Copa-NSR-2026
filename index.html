@@ -2645,13 +2645,13 @@ function renderHighlightsRodadas(container) {
     if (!data) return;
     const label = `Rodada ${r}`;
     data.hot.forEach(u => {
-      html += buildHighlightCardNew(u, 'quente', label, '🔥 PÉ QUENTE', 'pequente.gif', 'rodada', r, data.closed);
+      html += buildHighlightCardNew(u, 'quente', label, '🔥 PÉ QUENTE', 'eusofoda.gif', 'rodada', r, data.closed);
     });
     data.cold.forEach(u => {
-      html += buildHighlightCardNew(u, 'frio', label, '🥶 PÉ FRIO', 'pefrio.gif', 'rodada', r, data.closed);
+      html += buildHighlightCardNew(u, 'frio', label, '🥶 PÉ FRIO', 'fudeu.gif', 'rodada', r, data.closed);
     });
     data.mid.forEach(u => {
-      html += buildHighlightCardNew(u, 'meio', label, '😐 NEM FEDE NEM CHEIRA', 'nada.gif', 'rodada', r, data.closed);
+      html += buildHighlightCardNew(u, 'meio', label, '😐 NEM FEDE NEM CHEIRA', 'nunfede.gif', 'rodada', r, data.closed);
     });
   });
   container.innerHTML = html ? `<div class="highlights-grid">${html}</div>` : '<div class="hl-empty">Aguardando jogos encerrados para gerar highlights! ⏳</div>';
@@ -2665,13 +2665,13 @@ function renderHighlightsJogos(container) {
     if (!data) return;
     const label = `${game.hCode} ${S.results[game.id].h}–${S.results[game.id].a} ${game.aCode}`;
     data.hot.forEach(u => {
-      html += buildHighlightCardNew(u, 'quente', label, '🔥 PÉ QUENTE', 'pequente.gif', 'jogo', game.id, true);
+      html += buildHighlightCardNew(u, 'quente', label, '🔥 PÉ QUENTE', 'eusofoda.gif', 'jogo', game.id, true);
     });
     data.cold.forEach(u => {
-      html += buildHighlightCardNew(u, 'frio', label, '🥶 PÉ FRIO', 'pefrio.gif', 'jogo', game.id, true);
+      html += buildHighlightCardNew(u, 'frio', label, '🥶 PÉ FRIO', 'fudeu.gif', 'jogo', game.id, true);
     });
     data.mid.forEach(u => {
-      html += buildHighlightCardNew(u, 'meio', label, '😐 NEM FEDE NEM CHEIRA', 'nada.gif', 'jogo', game.id, true);
+      html += buildHighlightCardNew(u, 'meio', label, '😐 NEM FEDE NEM CHEIRA', 'nunfede.gif', 'jogo', game.id, true);
     });
   });
   container.innerHTML = html ? `<div class="highlights-grid">${html}</div>` : '<div class="hl-empty">Nenhum jogo encerrado ainda! ⏳</div>';
