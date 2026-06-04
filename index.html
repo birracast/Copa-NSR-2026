@@ -475,17 +475,40 @@ header {
 .help-hero h1 { font-family: var(--font-display); font-size: 48px; font-weight: 900; letter-spacing: 2px; margin-bottom: 12px; }
 .help-hero p { font-size: 16px; color: var(--muted); max-width: 600px; margin: 0 auto; line-height: 1.7; }
 .help-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 32px; }
-.help-card { background: var(--dark2); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
+.help-card { background: var(--dark2); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; display: flex; flex-direction: column; min-height: 100%; }
 .help-card-icon { font-size: 40px; margin-bottom: 14px; }
 .help-card h3 { font-family: var(--font-display); font-size: 20px; font-weight: 800; letter-spacing: 1px; margin-bottom: 12px; color: var(--gold); }
 .help-card p, .help-card li { font-size: 14px; color: var(--muted); line-height: 1.7; }
 .help-card ul { padding-left: 18px; }
 .help-card li { margin-bottom: 6px; }
 .help-card li span { color: var(--text); }
+.help-card strong { color: var(--text); }
 .help-pts-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
 .help-pts-table td { padding: 8px 0; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.05); }
 .help-pts-table tr:last-child td { border-bottom: none; }
 .help-pts-val { font-family: var(--font-display); font-size: 18px; font-weight: 800; color: var(--gold); text-align: right; }
+.help-example { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); font-size: 12px; color: var(--muted); line-height: 1.6; }
+.help-example strong { color: var(--gold); }
+.help-mini-title { display: block; margin: 14px 0 6px; color: var(--gold); font-family: var(--font-display); font-size: 14px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; }
+.help-card-actions { margin-top: auto; padding-top: 16px; display: flex; justify-content: flex-end; }
+.help-share-btn {
+  border: 1px solid rgba(37,211,102,0.35);
+  background: rgba(37,211,102,0.12);
+  color: #25d366;
+  border-radius: 20px;
+  padding: 7px 12px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: .2s;
+}
+.help-share-btn:hover { background: rgba(37,211,102,0.85); color: #fff; border-color: transparent; }
 .help-step { display: flex; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--border); }
 .help-step:last-child { border-bottom: none; }
 .help-step-num { font-family: var(--font-display); font-size: 28px; font-weight: 900; color: var(--gold); min-width: 36px; line-height: 1; }
@@ -997,58 +1020,104 @@ header {
   <div id="page-help" class="main-wrap hidden">
     <div class="help-hero">
       <h1><img src="taca.png" alt="Troféu" style="height: 1em; vertical-align: middle; margin-right: 8px;"> Manual de Sobrevivência do Bolão</h1>
-      <p>Tudo o que você precisa saber para mitar nos palpites, acumular Piratecas, humilhar os amigos e dominar o Bolão da Copa 2026!</p>
+      <p>Regras, exemplos e atalhos para entender exatamente como ganhar pontos, juntar Piratecas e compartilhar a resenha no grupo.</p>
     </div>
 
     <div class="help-grid">
       <div class="help-card">
         <div class="help-card-icon">🏅</div>
         <h3>Pontuação Clássica</h3>
-        <p>Acerte os placares e suba no Ranking de Pontos. A regra é simples:</p>
+        <p>O <strong>Ranking de Pontos</strong> mede o desempenho dos seus palpites nos jogos encerrados. Os valores abaixo são os padrões do bolão e podem ser ajustados pelo administrador na aba Config.</p>
         <table class="help-pts-table">
-          <tr><td>⭐ Placar exato (ex: apostou 2-1, deu 2-1)</td><td class="help-pts-val">10 pts</td></tr>
-          <tr><td>✅ Resultado certo (ganhou/empatou/perdeu)</td><td class="help-pts-val">5 pts</td></tr>
-          <tr><td>🌟 Bônus: 3 exatos seguidos</td><td class="help-pts-val">+5 pts</td></tr>
-          <tr><td><img src="taca.png" alt="Troféu" style="height: 1.2em; vertical-align: text-bottom; margin-right: 4px;"> Bônus: exato na Semifinal</td><td class="help-pts-val">+15 pts</td></tr>
-          <tr><td>🥇 Bônus: exato na Final</td><td class="help-pts-val">+25 pts</td></tr>
-          <tr><td>❌ Errou feio, errou rude</td><td class="help-pts-val">0 pts</td></tr>
+          <tr><td>⭐ Placar exato: apostou 2-1 e o jogo terminou 2-1</td><td class="help-pts-val">10 pts</td></tr>
+          <tr><td>✅ Resultado certo: acertou vencedor ou empate, mas não o placar</td><td class="help-pts-val">5 pts</td></tr>
+          <tr><td>🌟 Sequência: fez 3 ou mais placares exatos seguidos</td><td class="help-pts-val">+5 pts</td></tr>
+          <tr><td><img src="taca.png" alt="Troféu" style="height: 1.2em; vertical-align: text-bottom; margin-right: 4px;"> Semifinal: acertou o placar exato de uma semi</td><td class="help-pts-val">+15 pts</td></tr>
+          <tr><td>🥇 Final: acertou o placar exato da final</td><td class="help-pts-val">+25 pts</td></tr>
+          <tr><td>❌ Errou vencedor/empate ou não fez palpite</td><td class="help-pts-val">0 pts</td></tr>
         </table>
+        <div class="help-example"><strong>Exemplo:</strong> você apostou Brasil 2-1 Argentina e o jogo terminou 2-1. Ganha 10 pts. Se fosse semifinal, ganha 10 + 15. Se fosse final, ganha 10 + 25.</div>
+        <div class="help-card-actions"><button class="help-share-btn" onclick="shareHelpCard(this)">📲 WhatsApp</button></div>
+      </div>
+
+      <div class="help-card">
+        <div class="help-card-icon">🎯</div>
+        <h3>Exatos, Resultado e Bônus</h3>
+        <p>O sistema sempre compara o seu palpite com o placar oficial do jogo encerrado.</p>
+        <ul>
+          <li><span><strong>Placar exato:</strong> casa e visitante precisam bater exatamente. 1-0 só é exato se o oficial também for 1-0.</span></li>
+          <li><span><strong>Resultado certo:</strong> vale quando você acertou se deu vitória da casa, empate ou vitória do visitante. Exemplo: apostou 2-0 e terminou 1-0.</span></li>
+          <li><span><strong>Bônus de sequência:</strong> se sua maior sequência de placares exatos chegar a 3 ou mais, recebe o bônus de sequência uma vez.</span></li>
+          <li><span><strong>Bônus de mata-mata:</strong> semifinal e final só dão bônus extra quando o placar é exato. Resultado certo sem exato segue valendo apenas como resultado certo.</span></li>
+        </ul>
+        <div class="help-example"><strong>Exemplo rápido:</strong> apostou 1-1 e terminou 2-2? Resultado certo, porque ambos são empate. Apostou 2-1 e terminou 1-2? Errou, porque o vencedor mudou.</div>
+        <div class="help-card-actions"><button class="help-share-btn" onclick="shareHelpCard(this)">📲 WhatsApp</button></div>
       </div>
 
       <div class="help-card" style="border-color: rgba(230,29,37,0.4); background: linear-gradient(180deg, rgba(230,29,37,0.05) 0%, transparent 100%);">
         <div class="help-card-icon">🏴‍☠️</div>
         <h3 style="color: #ff7b7b;">As Famosas Piratecas</h3>
-        <p>O <strong>Ranking de Piratecas</strong> é um jogo à parte! Todo mundo começa com <strong style="color:var(--gold)">100 Piratecas</strong>. Como você ganha ou perde?</p>
+        <p>O <strong>Ranking de Piratecas</strong> é um jogo à parte. Todo mundo começa com <strong style="color:var(--gold)">100 Piratecas</strong>, e o saldo muda por rodada e pelas apostas extras nos palpites dos amigos.</p>
         <ul>
-          <li><span>🔥 <strong>O Rei da Rodada:</strong> Quem faz mais pontos na rodada inteira ganha <strong>+5 Piratecas</strong>.</span></li>
-          <li><span>🥶 <strong>O Saco de Pancadas:</strong> Quem faz menos pontos perde <strong>-5 Piratecas</strong>.</span></li>
-          <li><span>😐 <strong>O Medíocre:</strong> Ficou na média da galera? Perde <strong>-1 Pirateca</strong> por não se destacar.</span></li>
-          <li><span>🎯 <strong>Apostas Bosta/Mestre:</strong> Rende +2 ou tira -2 (explicado abaixo).</span></li>
+          <li><span>🔥 <strong>Maior pontuação da rodada:</strong> ganha <strong>+5 Piratecas</strong>. Se houver empate na liderança, todos os líderes ganham.</span></li>
+          <li><span>🥶 <strong>Menor pontuação da rodada:</strong> perde <strong>-5 Piratecas</strong>. Se houver empate na lanterna, todos os lanternas perdem.</span></li>
+          <li><span>😐 <strong>Meio da tabela:</strong> quem fica exatamente na mediana, ou abaixo dela sem ser o pior, perde <strong>-1 Pirateca</strong>.</span></li>
+          <li><span>😎 <strong>Acima da mediana:</strong> se você ficou bem, mas não foi o melhor da rodada, não ganha nem perde por desempenho.</span></li>
+          <li><span>⚖️ <strong>Rodada empatada:</strong> se todo mundo fizer a mesma pontuação, ninguém ganha ou perde Piratecas por rodada.</span></li>
         </ul>
+        <div class="help-example"><strong>Exemplo:</strong> numa rodada, as pontuações foram 30, 25, 10 e 5. Quem fez 30 ganha +5, quem fez 5 perde -5, quem fez 10 perde -1, e quem fez 25 fica zerado nas Piratecas da rodada.</div>
+        <div class="help-card-actions"><button class="help-share-btn" onclick="shareHelpCard(this)">📲 WhatsApp</button></div>
       </div>
 
       <div class="help-card">
         <div class="help-card-icon">🕵️</div>
         <h3>Palpite 💩 Bosta e ✅ Mestre</h3>
-        <p>Olhou o palpite do seu amigo e achou um absurdo? Aposte contra ele! Vá na aba Jogos, clique no nome do amigo no topo e faça sua aposta no card do jogo:</p>
+        <p>Além dos seus próprios palpites, você pode julgar os palpites dos amigos. Vá na aba Jogos, clique no chip de outro usuário e escolha uma aposta extra no card do jogo.</p>
         <ul>
-          <li><span>💩 <strong>Bosta:</strong> Você aposta que ele vai <strong>zerar</strong> (0 pts). Se ele zerar, você ganha <strong>+2 Piratecas</strong>. Se ele pontuar, você perde <strong>-2</strong>.</span></li>
-          <li><span>✅ <strong>Mestre:</strong> Você aposta que ele vai <strong>pontuar</strong> (5 ou 10 pts). Se ele pontuar, você ganha <strong>+2 Piratecas</strong>. Se ele zerar, perde <strong>-2</strong>.</span></li>
-          <li><span>✏️ <strong>Edição Livre:</strong> Arrependeu? Mude seu voto à vontade até 10 minutos antes do jogo!</span></li>
-          <li><span>🔢 <strong>Limite por Jogo:</strong> Você pode votar em no máximo <strong>2 palpites Bosta</strong> e <strong>2 palpites Mestre</strong> por jogo. Escolha bem!</span></li>
+          <li><span>💩 <strong>Bosta:</strong> você aposta que a pessoa vai fazer <strong>0 pontos</strong> naquele jogo. Se ela zerar, você ganha <strong>+2 Piratecas</strong>. Se ela pontuar, você perde <strong>-2</strong>.</span></li>
+          <li><span>✅ <strong>Mestre:</strong> você aposta que a pessoa vai <strong>pontuar</strong> naquele jogo. Se ela fizer qualquer pontuação maior que zero, você ganha <strong>+2 Piratecas</strong>. Se ela zerar, perde <strong>-2</strong>.</span></li>
+          <li><span>🔁 <strong>Troca e remoção:</strong> clicar no mesmo voto remove; escolher o outro tipo troca sua aposta.</span></li>
+          <li><span>🔢 <strong>Limite por jogo:</strong> você pode registrar no máximo <strong>2 Bosta</strong> e <strong>2 Mestre</strong> em cada partida.</span></li>
+          <li><span>⏰ <strong>Prazo:</strong> votos extras bloqueiam antes do início do jogo, em tempo configurado pelo administrador.</span></li>
         </ul>
+        <div class="help-example"><strong>Exemplo:</strong> você marcou Bosta no palpite de um amigo. Se ele errar tudo e fizer 0 pts, você ganha +2. Se ele acertar resultado ou exato, você perde -2.</div>
+        <div class="help-card-actions"><button class="help-share-btn" onclick="shareHelpCard(this)">📲 WhatsApp</button></div>
+      </div>
+
+      <div class="help-card">
+        <div class="help-card-icon">📈</div>
+        <h3>Como Ganhar e Perder Piratecas</h3>
+        <p>Resumo completo das movimentações possíveis no saldo:</p>
+        <span class="help-mini-title">Ganhar Piratecas</span>
+        <ul>
+          <li><span><strong>+5</strong> por ser o maior pontuador da rodada.</span></li>
+          <li><span><strong>+2</strong> quando sua aposta Bosta acerta e o alvo zera.</span></li>
+          <li><span><strong>+2</strong> quando sua aposta Mestre acerta e o alvo pontua.</span></li>
+        </ul>
+        <span class="help-mini-title">Perder Piratecas</span>
+        <ul>
+          <li><span><strong>-5</strong> por ser o menor pontuador da rodada.</span></li>
+          <li><span><strong>-1</strong> por ficar na mediana ou abaixo dela sem ser o pior.</span></li>
+          <li><span><strong>-2</strong> quando você apostou Bosta e o alvo pontuou.</span></li>
+          <li><span><strong>-2</strong> quando você apostou Mestre e o alvo zerou.</span></li>
+        </ul>
+        <div class="help-example"><strong>Importante:</strong> errar o seu próprio palpite não tira Piratecas diretamente. Ele só pesa no desempenho da rodada, podendo te colocar na zona de perda.</div>
+        <div class="help-card-actions"><button class="help-share-btn" onclick="shareHelpCard(this)">📲 WhatsApp</button></div>
       </div>
 
       <div class="help-card">
         <div class="help-card-icon">📊</div>
         <h3>Rankings e Modais de Histórico</h3>
-        <p>Chega de dúvidas sobre de onde vieram seus pontos ou por que você perdeu Piratecas!</p>
+        <p>Use os rankings como extrato do bolão. Eles mostram não só quem está na frente, mas também de onde veio cada ganho ou perda.</p>
         <ul>
           <li><span>Temos dois rankings lado a lado: o <strong>Clássico (Pontos)</strong> e o de <strong>Piratecas</strong>.</span></li>
           <li><span><strong>Clique no card de qualquer usuário</strong> dentro do ranking para abrir o <strong>Modal de Histórico</strong> correspondente.</span></li>
-          <li><span><strong>No Ranking Normal:</strong> O modal mostra jogo a jogo de onde vieram os pontos, incluindo bônus e o placar apostado vs oficial.</span></li>
-          <li><span><strong>No Ranking Piratecas:</strong> O modal vira um "extrato bancário", mostrando seu saldo atual e detalhando ganhos/perdas de rodadas e apostas Bosta/Mestre.</span></li>
+          <li><span><strong>Histórico de Pontos:</strong> mostra jogo a jogo, placar apostado, placar oficial, exatos, resultados e bônus.</span></li>
+          <li><span><strong>Histórico de Piratecas:</strong> mostra saldo inicial, ganhos/perdas por rodada e apostas Bosta/Mestre.</span></li>
+          <li><span><strong>Critério do ranking de pontos:</strong> primeiro vem o total de pontos; em empate, contam mais placares exatos e depois mais resultados certos.</span></li>
         </ul>
+        <div class="help-example"><strong>Dica:</strong> clique no seu rival no ranking de Piratecas para ver se ele está ganhando por mérito na rodada ou só acertando apostas Bosta/Mestre.</div>
+        <div class="help-card-actions"><button class="help-share-btn" onclick="shareHelpCard(this)">📲 WhatsApp</button></div>
       </div>
 
       <div class="help-card">
@@ -1061,15 +1130,23 @@ header {
           <li><span>😐 <strong>Nem Fede Nem Cheira:</strong> Para quem fez o básico e ficou na média.</span></li>
         </ul>
         <div class="help-tip" style="margin-top:10px; padding:12px;">
-          <p style="margin:0; font-size:12px;">📲 Clique no botão <strong>WhatsApp</strong> dentro de qualquer card de highlight para gerar uma imagem exclusiva (com o rosto e os dados da pessoa) e compartilhar na hora no grupo da galera!</p>
+          <p style="margin:0; font-size:12px;">📲 Clique no botão <strong>WhatsApp</strong> dentro de qualquer card de highlight para gerar uma imagem exclusiva. Agora os cards da Ajuda também podem ser compartilhados pelo WhatsApp.</p>
         </div>
+        <div class="help-card-actions"><button class="help-share-btn" onclick="shareHelpCard(this)">📲 WhatsApp</button></div>
       </div>
 
       <div class="help-card">
         <div class="help-card-icon">⏰</div>
         <h3>A Regra do Bloqueio</h3>
-        <p>Para evitar trapaças, os palpites e votos são <strong>bloqueados antes do início de cada partida</strong>. O tempo exato é configurável pelo administrador na aba ⚙️ Config.</p>
-        <p style="margin-top: 8px;">O mesmo vale para votar em <strong>Palpite Bosta ou Mestre</strong> — há um bloqueio separado também ajustável. Fique esperto e deixe tudo preenchido com antecedência!</p>
+        <p>Para evitar edição oportunista, palpites e votos extras bloqueiam antes do início de cada partida. Os tempos são configuráveis pelo administrador.</p>
+        <ul>
+          <li><span><strong>Palpite do placar:</strong> pode ser editado até o prazo de bloqueio de palpites.</span></li>
+          <li><span><strong>Bosta/Mestre:</strong> tem bloqueio separado, também configurável.</span></li>
+          <li><span><strong>Jogo ao vivo ou encerrado:</strong> fica bloqueado automaticamente.</span></li>
+          <li><span><strong>Sem tabela oficial:</strong> jogos de fallback ficam protegidos até a configuração correta da tabela.</span></li>
+        </ul>
+        <div class="help-example"><strong>Exemplo:</strong> se o bloqueio estiver em 10 minutos, um jogo das 16:00 deixa de aceitar alterações às 15:50.</div>
+        <div class="help-card-actions"><button class="help-share-btn" onclick="shareHelpCard(this)">📲 WhatsApp</button></div>
       </div>
     </div>
 
@@ -1112,6 +1189,7 @@ header {
           </div>
         </div>
       </div>
+      <div class="help-card-actions"><button class="help-share-btn" onclick="shareHelpCard(this)">📲 WhatsApp</button></div>
     </div>
 
     <div class="help-tip" style="margin-top:24px">
@@ -1121,6 +1199,7 @@ header {
         <li style="margin-bottom:6px;font-size:13px;color:var(--muted)"><span style="color:var(--text)">Não esqueça do bônus de combo:</span> Acertar 3 placares exatos seguidos dá +5 pontos bônus. A consistência compensa muito!</li>
         <li style="font-size:13px;color:var(--muted)"><span style="color:var(--text)">Sempre de olho no painel "ℹ️":</span> Cheque quem votou "Bosta" no seu palpite. Você pode descobrir quem está torcendo contra você e revidar a aposta no jogo dele!</li>
       </ul>
+      <div class="help-card-actions"><button class="help-share-btn" onclick="shareHelpCard(this)">📲 WhatsApp</button></div>
     </div>
   </div>
   
@@ -3462,6 +3541,28 @@ function toast(msg, type='info') {
   el.innerHTML = `<span>${ic}</span><span>${msg}</span>`;
   w.appendChild(el);
   setTimeout(()=>{ el.style.animation='toastOut .3s ease forwards'; setTimeout(()=>el.remove(),300); }, 3000);
+}
+
+async function shareHelpCard(btn) {
+  const card = btn.closest('.help-card, .set-card, .help-tip');
+  if (!card) { toast('Card de ajuda não encontrado','err'); return; }
+  const title = (card.querySelector('h3,h4')?.innerText || 'Ajuda do Bolão').trim();
+  const lines = [...card.querySelectorAll('p,li,tr')]
+    .map(el => el.innerText.replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+  const message = `📌 ${title}\n\n${lines.join('\n')}\n\nBolão Copa 2026`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: `Bolão Copa 26 - ${title}`, text: message });
+      return;
+    } catch(e) {
+      if (e.name === 'AbortError') return;
+    }
+  }
+
+  window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+  toast('Abrindo WhatsApp...','ok');
 }
 
 async function voteBosta(gameId, target) {
