@@ -578,8 +578,8 @@ header {
 /* ===== NEW HIGHLIGHT CARD DESIGN ===== */
 .hl-card-new {
   display: grid;
-  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
-  min-height: 220px;
+  grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
+  min-height: 176px;
   border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--border);
@@ -598,8 +598,10 @@ header {
   background: #000;
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
-  min-height: 220px;
-  aspect-ratio: var(--hl-video-ratio, 9 / 16);
+  min-height: 176px;
+  padding: 10px;
+  box-sizing: border-box;
+  border-right: 1px solid var(--border);
 }
 .hl-gif-panel video,
 .hl-gif-panel img.hl-gif {
@@ -607,20 +609,21 @@ header {
   object-fit: contain;
   display: block;
   background: #000;
+  border-radius: 8px;
 }
 .hl-gif-fallback {
-  font-size: 56px;
+  font-size: 46px;
   display: flex; align-items: center; justify-content: center;
   width: 100%; height: 100%;
-  min-height: 220px;
+  min-height: 156px;
 }
 
 /* Right info panel */
 .hl-info-panel {
-  padding: 12px 14px;
+  padding: 12px 14px 10px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 6px;
   position: relative;
   min-width: 0;
@@ -652,10 +655,87 @@ header {
 .tipo-meio   .hl-user-av { border: 2px solid var(--gold); }
 .hl-user-name { font-size: 14px; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+.hl-match-info {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.hl-match-line {
+  min-width: 0;
+  background: rgba(255,255,255,0.045);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+.hl-match-label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.hl-match-score {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.hl-match-team {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 800;
+}
+.hl-match-team.away { justify-content: flex-end; }
+.hl-match-team-code {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hl-team-flag {
+  width: 16px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  object-fit: cover;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1;
+}
+.hl-match-score strong {
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1;
+}
+.hl-match-empty {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+.hl-card-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+}
+
 /* Scores row */
 .hl-scores-row {
   display: flex; gap: 7px; flex-wrap: wrap;
-  padding-right: 86px;
+  padding-right: 0;
 }
 .hl-score-box {
   display: flex; flex-direction: column; align-items: center;
@@ -680,7 +760,8 @@ header {
 
 /* Share button */
 .hl-share-btn {
-  position: absolute; bottom: 10px; right: 10px;
+  position: static;
+  flex-shrink: 0;
   background: rgba(37,211,102,0.15); border: 1px solid rgba(37,211,102,0.35);
   border-radius: 20px; padding: 4px 9px;
   color: #25d366; font-size: 11px; font-weight: 700;
@@ -699,20 +780,29 @@ header {
 .hl-empty { color: var(--muted); font-size: 14px; text-align: center; padding: 40px; }
 
 @media (max-width: 600px) {
-  .hl-card-new { grid-template-columns: minmax(145px, 46%) minmax(0, 1fr); min-height: 190px; }
-  .hl-gif-panel,
-  .hl-gif-fallback { min-height: 190px; }
+  .hl-card-new { grid-template-columns: 1fr; min-height: 0; }
+  .hl-gif-panel {
+    min-height: 148px;
+    height: 148px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .hl-gif-fallback { min-height: 128px; }
   .hl-info-panel { padding: 10px; gap: 5px; }
   .hl-badge { font-size: 8px; padding: 2px 6px; letter-spacing: .3px; }
   .hl-tipo-title { font-size: 15px; }
   .hl-user-av { width: 28px; height: 28px; font-size: 12px; }
   .hl-user-name { font-size: 13px; }
+  .hl-match-info { grid-template-columns: 1fr; gap: 5px; }
+  .hl-match-line { padding: 5px 7px; }
+  .hl-match-score strong { font-size: 15px; }
+  .hl-card-footer { align-items: flex-start; flex-direction: column; gap: 7px; }
   .hl-scores-row { gap: 4px; padding-right: 0; }
   .hl-score-box,
   .hl-total-box { min-width: 46px; padding: 4px 6px; }
   .hl-score-val { font-size: 16px; }
   .hl-score-lbl { font-size: 7px; }
-  .hl-share-btn { position: static; align-self: flex-start; margin-top: 2px; padding: 4px 8px; }
+  .hl-share-btn { align-self: flex-start; margin-top: 0; padding: 4px 8px; }
 }
 
 /* ===== RESPONSIVE ===== */
@@ -2700,6 +2790,39 @@ function fitHighlightVideoPanel(video) {
   panel.style.setProperty('--hl-video-ratio', `${video.videoWidth} / ${video.videoHeight}`);
 }
 
+function hasHighlightScore(score) {
+  return score && score.h !== null && score.h !== undefined && score.a !== null && score.a !== undefined;
+}
+
+function buildHighlightMatchLine(label, game, score, emptyText) {
+  if (!hasHighlightScore(score)) {
+    return `<div class="hl-match-line">
+      <span class="hl-match-label">${label}</span>
+      <div class="hl-match-empty">${emptyText}</div>
+    </div>`;
+  }
+  return `<div class="hl-match-line">
+    <span class="hl-match-label">${label}</span>
+    <div class="hl-match-score">
+      <span class="hl-match-team">${renderTeamMark(game,'h','hl-team-flag')}<span class="hl-match-team-code">${esc(game.hCode)}</span></span>
+      <strong>${score.h}–${score.a}</strong>
+      <span class="hl-match-team away"><span class="hl-match-team-code">${esc(game.aCode)}</span>${renderTeamMark(game,'a','hl-team-flag')}</span>
+    </div>
+  </div>`;
+}
+
+function buildHighlightMatchInfo(user, scope, scopeId) {
+  if (scope !== 'jogo') return '';
+  const game = GAMES.find(g => String(g.id) === String(scopeId));
+  if (!game) return '';
+  const result = S.results[game.id] || {};
+  const bet = (user.bets || {})[game.id];
+  return `<div class="hl-match-info">
+    ${buildHighlightMatchLine('Palpite', game, bet, 'Sem palpite')}
+    ${buildHighlightMatchLine('Resultado', game, result, 'Sem resultado')}
+  </div>`;
+}
+
 function buildHighlightCardNew(user, tipo, label, title, gifFile, scope, scopeId, closed) {
   const uid = `hl_${tipo}_${scope}_${scopeId}_${user.email.replace(/[@.]/g,'_')}`;
   const scopeBadge = scope === 'rodada' ? `<span class="hl-badge rodada">Rodada ${scopeId}</span>` : `<span class="hl-badge jogo">Jogo</span>`;
@@ -2711,6 +2834,7 @@ function buildHighlightCardNew(user, tipo, label, title, gifFile, scope, scopeId
   const rodadaPts = user.rodadaPts !== undefined ? user.rodadaPts : (user.gamePts !== undefined ? user.gamePts : 0);
   const piratecas = user.piratecas !== undefined ? user.piratecas : 0;
   const total = rodadaPts + piratecas;
+  const matchInfo = buildHighlightMatchInfo(user, scope, scopeId);
 
 
 // Hidden canvas for sharing
@@ -2732,24 +2856,27 @@ function buildHighlightCardNew(user, tipo, label, title, gifFile, scope, scopeId
         <div class="hl-user-av">${av}</div>
         <span class="hl-user-name">${esc(user.name)}</span>
       </div>
-      <div class="hl-scores-row">
-        <div class="hl-score-box">
-          <div class="hl-score-val gold">${rodadaPts}</div>
-          <div class="hl-score-lbl">Pontos</div>
+      ${matchInfo}
+      <div class="hl-card-footer">
+        <div class="hl-scores-row">
+          <div class="hl-score-box">
+            <div class="hl-score-val gold">${rodadaPts}</div>
+            <div class="hl-score-lbl">Pontos</div>
+          </div>
+          <div class="hl-score-box">
+            <div class="hl-score-val red">${piratecas}</div>
+            <div class="hl-score-lbl">Piratecas</div>
+          </div>
+          <div class="hl-total-box">
+            <div class="hl-score-val blue">${total}</div>
+            <div class="hl-score-lbl">Total</div>
+          </div>
         </div>
-        <div class="hl-score-box">
-          <div class="hl-score-val red">${piratecas}</div>
-          <div class="hl-score-lbl">Piratecas</div>
-        </div>
-        <div class="hl-total-box">
-          <div class="hl-score-val blue">${total}</div>
-          <div class="hl-score-lbl">Total</div>
-        </div>
+        <button class="hl-share-btn" onclick="shareHighlightNew('${uid}','${tipo}','${esc(user.name)}','${esc(label)}','${esc(title)}',${rodadaPts},${piratecas},'${user.avatar||''}','${gifSrc}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17 2a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-1.89-.68l-6.41 3.7A3 3 0 0 1 9 12a3 3 0 0 1-.3 1.3l6.41 3.38A3 3 0 0 1 17 16a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 .3-1.3L7.89 14.3A3 3 0 0 1 6 15a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 1.89.68l6.41-3.7A3 3 0 0 1 14 5a3 3 0 0 1 3-3z"/></svg>
+          WhatsApp
+        </button>
       </div>
-      <button class="hl-share-btn" onclick="shareHighlightNew('${uid}','${tipo}','${esc(user.name)}','${esc(label)}','${esc(title)}',${rodadaPts},${piratecas},'${user.avatar||''}','${gifSrc}')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17 2a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-1.89-.68l-6.41 3.7A3 3 0 0 1 9 12a3 3 0 0 1-.3 1.3l6.41 3.38A3 3 0 0 1 17 16a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 .3-1.3L7.89 14.3A3 3 0 0 1 6 15a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 1.89.68l6.41-3.7A3 3 0 0 1 14 5a3 3 0 0 1 3-3z"/></svg>
-        WhatsApp
-      </button>
       <canvas id="${uid}" class="hl-export-canvas" width="500" height="280"
         data-tipo="${tipo}" data-name="${esc(user.name)}" data-label="${esc(label)}"
         data-title="${esc(title)}" data-pts="${rodadaPts}" data-piratecas="${piratecas}"
@@ -2912,7 +3039,7 @@ async function shareHighlightNew(uid, tipo, name, label, title, pts, piratecas, 
   ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
 
   // Left panel background (video zone)
-  const leftW = 220;
+  const leftW = 150;
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
   ctx.fillRect(0, 0, leftW, H);
 
