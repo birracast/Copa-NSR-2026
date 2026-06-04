@@ -578,8 +578,8 @@ header {
 /* ===== NEW HIGHLIGHT CARD DESIGN ===== */
 .hl-card-new {
   display: grid;
-  grid-template-columns: 180px 1fr;
-  min-height: 140px;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  min-height: 220px;
   border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--border);
@@ -598,31 +598,35 @@ header {
   background: #000;
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
-  min-height: 140px;
+  min-height: 220px;
+  aspect-ratio: var(--hl-video-ratio, 9 / 16);
 }
+.hl-gif-panel video,
 .hl-gif-panel img.hl-gif {
   width: 100%; height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
+  background: #000;
 }
 .hl-gif-fallback {
-  font-size: 64px;
+  font-size: 56px;
   display: flex; align-items: center; justify-content: center;
   width: 100%; height: 100%;
-  min-height: 140px;
+  min-height: 220px;
 }
 
 /* Right info panel */
 .hl-info-panel {
-  padding: 16px 18px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
   position: relative;
+  min-width: 0;
 }
-.hl-badge-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-.hl-badge { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: 1px; text-transform: uppercase; }
+.hl-badge-row { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.hl-badge { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 20px; letter-spacing: .6px; text-transform: uppercase; }
 .hl-badge.quente  { background: rgba(60,172,59,0.2);  color: var(--green); border: 1px solid rgba(60,172,59,0.3); }
 .hl-badge.frio    { background: rgba(230,29,37,0.15); color: #ff7b7b; border: 1px solid rgba(230,29,37,0.25); }
 .hl-badge.meio    { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.25); }
@@ -633,40 +637,41 @@ header {
 
 .hl-tipo-title {
   font-family: var(--font-display);
-  font-size: 22px; font-weight: 900; letter-spacing: 2px;
+  font-size: 20px; font-weight: 900; letter-spacing: 1px;
   text-transform: uppercase; line-height: 1;
 }
 .tipo-quente .hl-tipo-title { color: var(--green); text-shadow: 0 0 18px rgba(60,172,59,0.5); }
 .tipo-frio   .hl-tipo-title { color: #ff7b7b;      text-shadow: 0 0 18px rgba(230,29,37,0.5); }
 .tipo-meio   .hl-tipo-title { color: var(--gold);  text-shadow: 0 0 18px rgba(201,168,76,0.4); }
 
-.hl-user-section { display: flex; align-items: center; gap: 10px; }
-.hl-user-av { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: var(--dark3); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.hl-user-section { display: flex; align-items: center; gap: 8px; }
+.hl-user-av { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: var(--dark3); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
 .hl-user-av img { width: 100%; height: 100%; object-fit: cover; }
 .tipo-quente .hl-user-av { border: 2px solid var(--green); }
 .tipo-frio   .hl-user-av { border: 2px solid #ff7b7b; }
 .tipo-meio   .hl-user-av { border: 2px solid var(--gold); }
-.hl-user-name { font-size: 15px; font-weight: 700; }
+.hl-user-name { font-size: 14px; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Scores row */
 .hl-scores-row {
-  display: flex; gap: 12px; flex-wrap: wrap;
+  display: flex; gap: 7px; flex-wrap: wrap;
+  padding-right: 86px;
 }
 .hl-score-box {
   display: flex; flex-direction: column; align-items: center;
   background: var(--dark3); border-radius: 8px;
-  padding: 6px 12px; min-width: 64px;
+  padding: 5px 8px; min-width: 52px;
 }
-.hl-score-val { font-family: var(--font-display); font-size: 22px; font-weight: 800; line-height: 1; }
-.hl-score-lbl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+.hl-score-val { font-family: var(--font-display); font-size: 20px; font-weight: 800; line-height: 1; }
+.hl-score-lbl { font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-top: 2px; }
 .hl-score-val.gold  { color: var(--gold); }
 .hl-score-val.red   { color: #ff7b7b; }
 .hl-score-val.blue  { color: #7b8fe8; }
 
 /* Total box */
 .hl-total-box {
-  background: var(--dark4); border-radius: 8px; padding: 6px 12px;
-  display: flex; flex-direction: column; align-items: center; min-width: 64px;
+  background: var(--dark4); border-radius: 8px; padding: 5px 8px;
+  display: flex; flex-direction: column; align-items: center; min-width: 52px;
   border: 1px solid var(--border);
 }
 .tipo-quente .hl-total-box { border-color: rgba(60,172,59,0.4); }
@@ -675,9 +680,9 @@ header {
 
 /* Share button */
 .hl-share-btn {
-  position: absolute; bottom: 12px; right: 12px;
+  position: absolute; bottom: 10px; right: 10px;
   background: rgba(37,211,102,0.15); border: 1px solid rgba(37,211,102,0.35);
-  border-radius: 20px; padding: 5px 12px;
+  border-radius: 20px; padding: 4px 9px;
   color: #25d366; font-size: 11px; font-weight: 700;
   cursor: pointer; display: flex; align-items: center; gap: 5px;
   transition: .2s;
@@ -694,9 +699,20 @@ header {
 .hl-empty { color: var(--muted); font-size: 14px; text-align: center; padding: 40px; }
 
 @media (max-width: 600px) {
-  .hl-card-new { grid-template-columns: 120px 1fr; }
-  .hl-tipo-title { font-size: 16px; }
-  .hl-score-val { font-size: 18px; }
+  .hl-card-new { grid-template-columns: minmax(145px, 46%) minmax(0, 1fr); min-height: 190px; }
+  .hl-gif-panel,
+  .hl-gif-fallback { min-height: 190px; }
+  .hl-info-panel { padding: 10px; gap: 5px; }
+  .hl-badge { font-size: 8px; padding: 2px 6px; letter-spacing: .3px; }
+  .hl-tipo-title { font-size: 15px; }
+  .hl-user-av { width: 28px; height: 28px; font-size: 12px; }
+  .hl-user-name { font-size: 13px; }
+  .hl-scores-row { gap: 4px; padding-right: 0; }
+  .hl-score-box,
+  .hl-total-box { min-width: 46px; padding: 4px 6px; }
+  .hl-score-val { font-size: 16px; }
+  .hl-score-lbl { font-size: 7px; }
+  .hl-share-btn { position: static; align-self: flex-start; margin-top: 2px; padding: 4px 8px; }
 }
 
 /* ===== RESPONSIVE ===== */
@@ -2677,6 +2693,13 @@ function renderHighlightsJogos(container) {
   container.innerHTML = html ? `<div class="highlights-grid">${html}</div>` : '<div class="hl-empty">Nenhum jogo encerrado ainda! ⏳</div>';
 }
 
+function fitHighlightVideoPanel(video) {
+  if (!video || !video.videoWidth || !video.videoHeight) return;
+  const panel = video.closest('.hl-gif-panel');
+  if (!panel) return;
+  panel.style.setProperty('--hl-video-ratio', `${video.videoWidth} / ${video.videoHeight}`);
+}
+
 function buildHighlightCardNew(user, tipo, label, title, gifFile, scope, scopeId, closed) {
   const uid = `hl_${tipo}_${scope}_${scopeId}_${user.email.replace(/[@.]/g,'_')}`;
   const scopeBadge = scope === 'rodada' ? `<span class="hl-badge rodada">Rodada ${scopeId}</span>` : `<span class="hl-badge jogo">Jogo</span>`;
@@ -2693,7 +2716,7 @@ function buildHighlightCardNew(user, tipo, label, title, gifFile, scope, scopeId
 // Hidden canvas for sharing
   return `<div class="hl-card-new tipo-${tipo}" id="card-${uid}">
     <div class="hl-gif-panel" style="background-color: #000;">
-      <video src="${gifSrc}" autoplay loop muted playsinline style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;"></video>
+      <video class="hl-video" src="${gifSrc}" autoplay loop muted playsinline preload="metadata" onloadedmetadata="fitHighlightVideoPanel(this)" style="pointer-events: none;"></video>
       <div class="hl-gif-fallback" style="display:none">${tipo==='quente'?'🔥':tipo==='frio'?'🥶':'😐'}</div>
     </div>
     <div class="hl-info-panel">
@@ -2705,7 +2728,7 @@ function buildHighlightCardNew(user, tipo, label, title, gifFile, scope, scopeId
         </div>
         <div class="hl-tipo-title">${title.replace(/^[^ ]+ /,'')}</div>
       </div>
-      <div class="hl-user-section" style="margin:8px 0">
+      <div class="hl-user-section" style="margin:4px 0">
         <div class="hl-user-av">${av}</div>
         <span class="hl-user-name">${esc(user.name)}</span>
       </div>
@@ -2888,8 +2911,8 @@ async function shareHighlightNew(uid, tipo, name, label, title, pts, piratecas, 
   else { grad.addColorStop(0,'#1a160a'); grad.addColorStop(1,'#1e1a08'); }
   ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
 
-  // Left panel background (GIF zone)
-  const leftW = 170;
+  // Left panel background (video zone)
+  const leftW = 220;
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
   ctx.fillRect(0, 0, leftW, H);
 
@@ -2898,8 +2921,8 @@ async function shareHighlightNew(uid, tipo, name, label, title, pts, piratecas, 
   if (videoEl && videoEl.readyState >= 2) {
     ctx.save();
     ctx.beginPath(); ctx.rect(0, 0, leftW, H); ctx.clip();
-    // Fit cover
-    const scale = Math.max(leftW / videoEl.videoWidth, H / videoEl.videoHeight);
+    // Fit contain so the exported frame keeps the whole video visible.
+    const scale = Math.min(leftW / videoEl.videoWidth, H / videoEl.videoHeight);
     const dw = videoEl.videoWidth * scale, dh = videoEl.videoHeight * scale;
     ctx.drawImage(videoEl, (leftW - dw)/2, (H - dh)/2, dw, dh);
     ctx.restore();
@@ -2960,7 +2983,7 @@ async function shareHighlightNew(uid, tipo, name, label, title, pts, piratecas, 
     { label:'Piratecas', val: piratecas, color:'#ff7b7b' },
     { label:'Total', val: total,      color:'#7b8fe8' }
   ];
-  const bw = 84, bh = 52, bpad = 8;
+  const bw = 74, bh = 50, bpad = 6;
   boxes.forEach((b, i) => {
     const bx = rx + i*(bw+bpad);
     ctx.fillStyle = 'rgba(255,255,255,0.07)';
