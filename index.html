@@ -100,6 +100,23 @@ body {
     radial-gradient(ellipse 60% 40% at 10% 80%, rgba(60,172,59,0.08) 0%, transparent 50%),
     radial-gradient(ellipse 50% 30% at 90% 70%, rgba(230,29,37,0.08) 0%, transparent 50%);
 }
+body.scene-bg {
+  background-color: var(--black);
+  background-image:
+    linear-gradient(rgba(13,13,13,0.72), rgba(13,13,13,0.86)),
+    radial-gradient(ellipse 100% 60% at 50% 0%, rgba(42,57,141,0.18) 0%, transparent 60%),
+    url('scene.gif');
+  background-position: center center, center top, center center;
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-size: cover, cover, cover;
+  background-attachment: fixed, fixed, fixed;
+}
+body.light-mode.scene-bg {
+  background-image:
+    linear-gradient(rgba(245,247,250,0.76), rgba(245,247,250,0.9)),
+    radial-gradient(ellipse 100% 60% at 50% 0%, rgba(42,57,141,0.08) 0%, transparent 60%),
+    url('scene.gif');
+}
 .hidden { display: none !important; }
 #app { min-height: 100vh; }
 
@@ -435,6 +452,16 @@ header {
 .pts-label { flex: 1; font-size: 14px; color: var(--muted); }
 .pts-inp { width: 64px; padding: 8px 4px; text-align: center; background: var(--dark3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font-display); font-size: 22px; outline: none; transition: .2s; }
 .pts-inp:focus { border-color: var(--gold); }
+.settings-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.settings-toggle-row:last-child { border-bottom: none; }
+.settings-toggle-text { min-width: 0; }
+.settings-toggle-title { font-size: 14px; color: var(--text); font-weight: 600; margin-bottom: 4px; }
+.settings-toggle-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.switch-input { position: absolute; opacity: 0; pointer-events: none; }
+.switch-ui { width: 52px; height: 28px; border-radius: 999px; border: 1px solid var(--border); background: var(--dark4); position: relative; flex-shrink: 0; cursor: pointer; transition: .2s; }
+.switch-ui::after { content: ''; position: absolute; width: 22px; height: 22px; border-radius: 50%; background: var(--muted); top: 2px; left: 3px; transition: .2s; }
+.switch-input:checked + .switch-ui { background: rgba(201,168,76,0.2); border-color: rgba(201,168,76,0.55); }
+.switch-input:checked + .switch-ui::after { transform: translateX(23px); background: var(--gold); }
 .admin-result-form { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
 .btn-gold { padding: 10px 20px; border: 1px solid rgba(201,168,76,0.3); background: rgba(201,168,76,0.1); border-radius: 10px; color: var(--gold); font-family: var(--font-display); font-size: 16px; font-weight: 700; letter-spacing: 1px; cursor: pointer; transition: .2s; }
 .btn-gold:hover { background: rgba(201,168,76,0.2); }
@@ -1233,6 +1260,17 @@ header {
         </div>
       </div>
       <div class="set-card">
+        <h3>🎬 Visual do Site</h3>
+        <label class="settings-toggle-row" for="s-scene-bg">
+          <span class="settings-toggle-text">
+            <span class="settings-toggle-title">Background animado scene.gif</span>
+            <span class="settings-toggle-desc">Liga ou desliga o GIF <strong style="color:var(--text)">scene.gif</strong> como fundo do site, mantendo uma película escura para preservar a leitura.</span>
+          </span>
+          <input type="checkbox" class="switch-input" id="s-scene-bg" onchange="saveSettings()">
+          <span class="switch-ui" aria-hidden="true"></span>
+        </label>
+      </div>
+      <div class="set-card">
         <h3>⚙️ Google Sheets</h3>
         <div class="fgroup">
           <label class="flabel">Script Web App URL (Fixa no código)</label>
@@ -1495,7 +1533,7 @@ function makeFallbackGame(data) {
 // ================================================================
 let S = {
   users: {}, me: null, results: {},
-  settings: { exact:10, result:5, streak:5, semi:15, final:25, lockMinsBet:10, lockMinsVote:10 },
+  settings: { exact:10, result:5, streak:5, semi:15, final:25, lockMinsBet:10, lockMinsVote:10, sceneBg:false },
   viewingUser: null, apostas: {}, testMode: false
 };
 let saveTimers = {}; let adminUsers = []; let adminEditTarget = null;
@@ -1513,6 +1551,7 @@ function hydrateSettings() {
     S.results  = d.results  || {};
     S.settings = { ...S.settings, ...(d.settings||{}) };
   }
+  applySceneBackground();
 
   // Session user (who is logged in)
   const session = localStorage.getItem('bolao26_session');
@@ -3249,8 +3288,10 @@ function renderSettingsPage() {
   document.getElementById('s-final').value  = S.settings.final;
   document.getElementById('s-lock-bet').value  = S.settings.lockMinsBet ?? 10;
   document.getElementById('s-lock-vote').value = S.settings.lockMinsVote ?? 10;
+  const sceneBgToggle = document.getElementById('s-scene-bg');
+  if (sceneBgToggle) sceneBgToggle.checked = !!S.settings.sceneBg;
   
-  ['s-exact','s-result','s-streak','s-semi','s-final','s-lock-bet','s-lock-vote','adm-game','adm-a','adm-b','adm-status'].forEach(id => {
+  ['s-exact','s-result','s-streak','s-semi','s-final','s-lock-bet','s-lock-vote','s-scene-bg','adm-game','adm-a','adm-b','adm-status'].forEach(id => {
     const el = document.getElementById(id); if(el) el.disabled = !admin;
   });
   document.querySelectorAll('#page-settings button').forEach(btn => { btn.disabled=!admin; btn.style.opacity=admin?'1':'0.5'; });
@@ -3286,6 +3327,8 @@ function saveSettings() {
   S.settings.final  = parseInt(document.getElementById('s-final').value)||25;
   S.settings.lockMinsBet  = parseInt(document.getElementById('s-lock-bet').value) ?? 10;
   S.settings.lockMinsVote = parseInt(document.getElementById('s-lock-vote').value) ?? 10;
+  S.settings.sceneBg = !!document.getElementById('s-scene-bg')?.checked;
+  applySceneBackground();
   persistSettings(); toast('Configurações salvas!','ok');
 }
 
@@ -3507,6 +3550,10 @@ function applyStoredTheme() {
   } catch(e) {}
 }
 
+function applySceneBackground() {
+  document.body.classList.toggle('scene-bg', !!S.settings.sceneBg);
+}
+
 function refreshNavUser() {
   const u = S.users[S.me]; if(!u) return;
   document.getElementById('nav-name').textContent = u.name;
@@ -3546,23 +3593,166 @@ function toast(msg, type='info') {
 async function shareHelpCard(btn) {
   const card = btn.closest('.help-card, .set-card, .help-tip');
   if (!card) { toast('Card de ajuda não encontrado','err'); return; }
-  const title = (card.querySelector('h3,h4')?.innerText || 'Ajuda do Bolão').trim();
-  const lines = [...card.querySelectorAll('p,li,tr')]
-    .map(el => el.innerText.replace(/\s+/g, ' ').trim())
-    .filter(Boolean);
-  const message = `📌 ${title}\n\n${lines.join('\n')}\n\nBolão Copa 2026`;
+  toast('Gerando imagem do card...','info');
+  const { blob, title } = await renderHelpCardImage(card);
+  if (!blob) { toast('Não foi possível gerar a imagem','err'); return; }
+  const file = new File([blob], `ajuda-${slugifyFileName(title)}.png`, { type:'image/png' });
+  const shareText = `📌 ${title}\nBolão Copa 2026`;
 
-  if (navigator.share) {
+  if (navigator.canShare && navigator.canShare({ files:[file] })) {
     try {
-      await navigator.share({ title: `Bolão Copa 26 - ${title}`, text: message });
+      await navigator.share({ files:[file], title:`Bolão Copa 26 - ${title}`, text:shareText });
       return;
     } catch(e) {
       if (e.name === 'AbortError') return;
     }
   }
 
-  window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-  toast('Abrindo WhatsApp...','ok');
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = file.name;
+  a.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+    window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText}\n\nBaixe a imagem gerada e envie no grupo.`)}`, '_blank');
+  }, 700);
+  toast('Imagem baixada. Abrindo WhatsApp...','ok');
+}
+
+async function renderHelpCardImage(card) {
+  const title = (card.querySelector('h3,h4')?.innerText || 'Ajuda do Bolão').trim();
+  const icon = (card.querySelector('.help-card-icon')?.innerText || '📌').trim();
+  const rows = [...card.querySelectorAll('p,li,tr')]
+    .filter(el => !el.closest('.help-card-actions'))
+    .map(el => {
+      if (el.tagName === 'TR') {
+        return [...el.children].map(td => td.innerText.replace(/\s+/g, ' ').trim()).filter(Boolean).join(' — ');
+      }
+      const text = el.innerText.replace(/\s+/g, ' ').trim();
+      return el.tagName === 'LI' ? `• ${text}` : text;
+    })
+    .filter(Boolean);
+
+  if (document.fonts && document.fonts.ready) {
+    try { await document.fonts.ready; } catch(e) {}
+  }
+
+  const W = 1080;
+  const pad = 72;
+  const lineGap = 16;
+  const bodySize = 34;
+  const titleSize = 58;
+  const labelSize = 28;
+  const footerSize = 24;
+  const maxTextW = W - pad * 2;
+  const measure = document.createElement('canvas').getContext('2d');
+  measure.font = `900 ${titleSize}px "Barlow Condensed", Barlow, sans-serif`;
+  const titleLineCount = wrapCanvasText(measure, title.toUpperCase(), maxTextW - 96).length;
+  const titleHeight = Math.max(86, titleLineCount * 58 + 8);
+  measure.font = `500 ${bodySize}px Barlow, sans-serif`;
+
+  const wrappedBlocks = rows.map(row => ({
+    text: row,
+    lines: wrapCanvasText(measure, row, maxTextW),
+    bullet: row.startsWith('• ')
+  }));
+  const textLines = wrappedBlocks.reduce((sum, b) => sum + b.lines.length, 0);
+  const H = Math.max(760, pad + titleHeight + 36 + 76 + (textLines * (bodySize + 12)) + (wrappedBlocks.length * lineGap) + 88);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  const grad = ctx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0, '#141414');
+  grad.addColorStop(0.55, '#1b1b1b');
+  grad.addColorStop(1, '#0d0d0d');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = 'rgba(201,168,76,0.08)';
+  ctx.beginPath(); ctx.arc(W - 110, 110, 190, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(42,57,141,0.14)';
+  ctx.beginPath(); ctx.arc(70, H - 120, 210, 0, Math.PI * 2); ctx.fill();
+
+  ctx.strokeStyle = 'rgba(201,168,76,0.35)';
+  ctx.lineWidth = 3;
+  roundRect(ctx, 28, 28, W - 56, H - 56, 28);
+  ctx.stroke();
+
+  let y = pad;
+  ctx.font = `900 66px "Barlow Condensed", Barlow, sans-serif`;
+  ctx.fillStyle = '#F0C040';
+  ctx.textBaseline = 'top';
+  ctx.fillText(icon, pad, y - 4);
+
+  ctx.font = `900 ${titleSize}px "Barlow Condensed", Barlow, sans-serif`;
+  ctx.fillStyle = '#F0F0F0';
+  const titleLines = wrapCanvasText(ctx, title.toUpperCase(), maxTextW - 96);
+  titleLines.forEach((line, i) => ctx.fillText(line, pad + 92, y + i * 58));
+  y += titleHeight;
+
+  ctx.fillStyle = '#C9A84C';
+  roundRect(ctx, pad, y, 170, 32, 16); ctx.fill();
+  ctx.fillStyle = '#0D0D0D';
+  ctx.font = `800 ${labelSize}px "Barlow Condensed", Barlow, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('AJUDA', pad + 85, y + 1);
+  ctx.textAlign = 'left';
+  y += 64;
+
+  ctx.font = `500 ${bodySize}px Barlow, sans-serif`;
+  ctx.fillStyle = '#F0F0F0';
+  wrappedBlocks.forEach(block => {
+    const x = block.bullet ? pad + 18 : pad;
+    block.lines.forEach((line, idx) => {
+      ctx.fillStyle = line.includes('Exemplo') || line.includes('Importante') ? '#F0C040' : '#F0F0F0';
+      ctx.fillText(line, x, y);
+      y += bodySize + 12;
+      if (idx === block.lines.length - 1) y += lineGap;
+    });
+  });
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad, H - 74); ctx.lineTo(W - pad, H - 74); ctx.stroke();
+  ctx.font = `800 ${footerSize}px "Barlow Condensed", Barlow, sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.62)';
+  ctx.textAlign = 'left';
+  ctx.fillText('BOLÃO COPA 2026', pad, H - 54);
+  ctx.textAlign = 'right';
+  ctx.fillText('Compartilhado da página de ajuda', W - pad, H - 54);
+
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 0.95));
+  return { blob, title };
+}
+
+function wrapCanvasText(ctx, text, maxWidth) {
+  const words = String(text || '').split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = '';
+  words.forEach(word => {
+    const test = line ? `${line} ${word}` : word;
+    if (ctx.measureText(test).width <= maxWidth || !line) {
+      line = test;
+    } else {
+      lines.push(line);
+      line = word;
+    }
+  });
+  if (line) lines.push(line);
+  return lines.length ? lines : [''];
+}
+
+function slugifyFileName(value) {
+  return String(value || 'card-ajuda')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48) || 'card-ajuda';
 }
 
 async function voteBosta(gameId, target) {
