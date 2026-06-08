@@ -6,6 +6,8 @@
 <title>BolãoCopa — FIFA World Cup 26™</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- ── OneSignal Web Push SDK ─────────────────────────────── -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <style>
 :root {
   --red:    #E61D25;
@@ -1316,6 +1318,41 @@ header {
           <div><label class="flabel">&nbsp;</label><button class="btn-gold" onclick="adminSetResult()">✅ DEFINIR</button></div>
         </div>
       </div>
+
+      <!-- ══════════ CARD: NOTIFICAÇÕES PUSH (OneSignal) ══════════ -->
+      <div class="set-card" style="grid-column:1/-1">
+        <h3>🔔 Notificações Push (OneSignal)</h3>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
+          Configure os tempos de disparo automático. O <strong style="color:var(--text)">App ID</strong> deve ser preenchido na constante <code style="background:var(--dark3);padding:1px 5px;border-radius:4px;">ONESIGNAL_APP_ID</code> do <strong style="color:var(--text)">index.html</strong>.
+          As chaves secretas (<code style="background:var(--dark3);padding:1px 5px;border-radius:4px;">ONESIGNAL_APP_ID</code> e <code style="background:var(--dark3);padding:1px 5px;border-radius:4px;">ONESIGNAL_REST_API_KEY</code>) ficam nas <strong style="color:var(--text)">Script Properties</strong> do GAS.
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:14px">
+          <div class="pts-row">
+            <div class="pts-label">⏰ Aviso pré-jogo "X" <span style="font-size:11px">(min)</span></div>
+            <input type="number" class="pts-inp" id="s-notif-x" value="30" min="1" max="120" onchange="saveSettings()">
+          </div>
+          <div class="pts-row">
+            <div class="pts-label">🔒 Aviso de bloqueio "Y" <span style="font-size:11px">(min)</span></div>
+            <input type="number" class="pts-inp" id="s-notif-y" value="15" min="1" max="120" onchange="saveSettings()">
+          </div>
+        </div>
+        <div style="background:var(--dark3);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:14px">
+          <strong style="color:var(--text)">X</strong>: "Faltam X min para [Time A] x [Time B]" + aviso de bloqueio de palpites.<br>
+          <strong style="color:var(--text)">Y</strong>: "Apostas Bosta/Mestre bloqueiam em Y min" (deve ser ≤ X).
+        </div>
+        <button class="btn-gold" id="btn-save-notif" onclick="saveNotifConfig()" style="margin-bottom:20px;width:100%">💾 SALVAR CONFIGURAÇÕES NO SERVIDOR</button>
+        <div style="border-top:1px solid var(--border);padding-top:16px;">
+          <h4 style="margin:0 0 8px;font-size:14px;color:var(--text)">📢 Disparo Manual (Broadcast)</h4>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Envia uma notificação imediata para <strong style="color:var(--text)">todos os usuários</strong> cadastrados via OneSignal.</div>
+          <div class="fgroup" style="margin-bottom:10px">
+            <label class="flabel">Mensagem do broadcast</label>
+            <input type="text" class="finput" id="s-notif-msg" placeholder="Ex: Jogo começa em 5 min! Corra para o bolão 🏆" maxlength="150">
+          </div>
+          <button class="btn-gold" id="btn-send-broadcast" onclick="sendTestBroadcast()" style="width:100%">📤 ENVIAR PARA TODOS AGORA</button>
+        </div>
+      </div>
+      <!-- ═══════════════════════════════════════════════════════════ -->
+
     </div>
   </div>
 
@@ -1459,6 +1496,9 @@ header {
 const GS_URL = 'https://script.google.com/macros/s/AKfycbxbK2qzW1zxmoR9Tb3J3UnNK0xkbzn2AATWK35S1R_Av21pKjx-tWnIVO5IJR13DhwFKg/exec';
 // Exemplo: const GS_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
 
+// ── OneSignal: substitua pelo seu App ID (painel OneSignal → Settings → Keys & IDs) ──
+const ONESIGNAL_APP_ID = 'COLE_SEU_ONESIGNAL_APP_ID_AQUI';
+
 // Dicionário convertido para Imagens (Resolve o problema do Windows)
 const ISO_MAP = {
   // Américas
@@ -1533,7 +1573,7 @@ function makeFallbackGame(data) {
 // ================================================================
 let S = {
   users: {}, me: null, results: {},
-  settings: { exact:10, result:5, streak:5, semi:15, final:25, lockMinsBet:10, lockMinsVote:10, sceneBg:false },
+  settings: { exact:10, result:5, streak:5, semi:15, final:25, lockMinsBet:10, lockMinsVote:10, sceneBg:false, notifMinsPre:30, notifMinsLockBet:15 },
   viewingUser: null, apostas: {}, testMode: false
 };
 let saveTimers = {}; let adminUsers = []; let adminEditTarget = null;
@@ -1674,9 +1714,11 @@ async function doLogin() {
 
     if (user.mustChangePass) {
       enterApp();
+      initOneSignalForUser();
       document.getElementById('change-pass-modal').classList.remove('hidden');
     } else {
       enterApp();
+      initOneSignalForUser();
     }
   } catch(e) {
     authMsg('Erro de conexão. Verifique a URL do Apps Script no código.');
@@ -1711,6 +1753,7 @@ async function doRegister() {
 
     await loadTournamentData(false);
     enterApp();
+    initOneSignalForUser();
     toast('Conta criada com sucesso! ✅','ok');
   } catch(e) {
     authMsg('Erro de conexão. Verifique a URL do Apps Script no código.');
@@ -3288,10 +3331,14 @@ function renderSettingsPage() {
   document.getElementById('s-final').value  = S.settings.final;
   document.getElementById('s-lock-bet').value  = S.settings.lockMinsBet ?? 10;
   document.getElementById('s-lock-vote').value = S.settings.lockMinsVote ?? 10;
+  const notifX = document.getElementById('s-notif-x');
+  const notifY = document.getElementById('s-notif-y');
+  if (notifX) notifX.value = S.settings.notifMinsPre     ?? 30;
+  if (notifY) notifY.value = S.settings.notifMinsLockBet ?? 15;
   const sceneBgToggle = document.getElementById('s-scene-bg');
   if (sceneBgToggle) sceneBgToggle.checked = !!S.settings.sceneBg;
   
-  ['s-exact','s-result','s-streak','s-semi','s-final','s-lock-bet','s-lock-vote','s-scene-bg','adm-game','adm-a','adm-b','adm-status'].forEach(id => {
+  ['s-exact','s-result','s-streak','s-semi','s-final','s-lock-bet','s-lock-vote','s-scene-bg','adm-game','adm-a','adm-b','adm-status','s-notif-x','s-notif-y','s-notif-msg'].forEach(id => {
     const el = document.getElementById(id); if(el) el.disabled = !admin;
   });
   document.querySelectorAll('#page-settings button').forEach(btn => { btn.disabled=!admin; btn.style.opacity=admin?'1':'0.5'; });
@@ -3327,6 +3374,8 @@ function saveSettings() {
   S.settings.final  = parseInt(document.getElementById('s-final').value)||25;
   S.settings.lockMinsBet  = parseInt(document.getElementById('s-lock-bet').value) ?? 10;
   S.settings.lockMinsVote = parseInt(document.getElementById('s-lock-vote').value) ?? 10;
+  S.settings.notifMinsPre     = parseInt(document.getElementById('s-notif-x')?.value) || 30;
+  S.settings.notifMinsLockBet = parseInt(document.getElementById('s-notif-y')?.value) || 15;
   S.settings.sceneBg = !!document.getElementById('s-scene-bg')?.checked;
   applySceneBackground();
   persistSettings(); toast('Configurações salvas!','ok');
@@ -3868,9 +3917,96 @@ async function adminSetTestResult() {
 }
   
 // ================================================================
+//  ONESIGNAL — INICIALIZAÇÃO E REGISTRO DE USUÁRIO
+// ================================================================
+function initOneSignal() {
+  if (typeof ONESIGNAL_APP_ID === 'undefined' || ONESIGNAL_APP_ID.includes('COLE_SEU')) return;
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: ONESIGNAL_APP_ID,
+      notifyButton: { enable: true, size: 'small', position: 'bottom-right' },
+      serviceWorkerParam: { scope: '/' }
+    });
+  });
+}
+
+// Chamado após login/registro bem-sucedido para vincular o player ID ao e-mail no servidor
+async function initOneSignalForUser() {
+  if (!S.me) return;
+  if (typeof ONESIGNAL_APP_ID === 'undefined' || ONESIGNAL_APP_ID.includes('COLE_SEU')) return;
+  try {
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      // Associa o e-mail do usuário como External ID no OneSignal (para push individuais)
+      await OneSignal.login(S.me);
+      // Aguarda a subscrição estar disponível
+      await new Promise(r => setTimeout(r, 1500));
+      const subId = OneSignal.User.PushSubscription.id;
+      if (subId) {
+        await gsCall({ action: 'saveOneSignalId', email: S.me, playerId: subId });
+      }
+    });
+  } catch(e) {
+    console.warn('[OneSignal] Registro de usuário falhou:', e);
+  }
+}
+
+// ================================================================
+//  ONESIGNAL — SALVAR CONFIG (X e Y) NO SERVIDOR (GAS)
+// ================================================================
+async function saveNotifConfig() {
+  if (!isAdmin()) { toast('Apenas administradores podem alterar isso','warn'); return; }
+  const x = parseInt(document.getElementById('s-notif-x')?.value) || 30;
+  const y = parseInt(document.getElementById('s-notif-y')?.value) || 15;
+  if (y > x) { toast('⚠️ O valor de "Y" deve ser menor ou igual ao de "X".','warn'); return; }
+  // Persiste localmente
+  S.settings.notifMinsPre     = x;
+  S.settings.notifMinsLockBet = y;
+  persistSettings();
+  // Salva no servidor
+  const btn = document.getElementById('btn-save-notif');
+  if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
+  try {
+    const res = await gsCall({ action: 'saveNotifConfig', callerEmail: S.me, notifX: x, notifY: y });
+    toast(res.ok ? `✅ Configuração salva! X=${x}min | Y=${y}min` : (res.error || 'Erro ao salvar'), res.ok ? 'ok' : 'err');
+  } catch(e) {
+    toast('Erro de conexão: ' + e.message, 'err');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '💾 SALVAR CONFIGURAÇÕES NO SERVIDOR'; }
+  }
+}
+
+// ================================================================
+//  ONESIGNAL — BROADCAST MANUAL (ADMIN)
+// ================================================================
+async function sendTestBroadcast() {
+  if (!isAdmin()) { toast('Acesso negado','err'); return; }
+  const msg = (document.getElementById('s-notif-msg')?.value || '').trim();
+  if (!msg) { toast('Digite uma mensagem antes de enviar.','warn'); return; }
+  const btn = document.getElementById('btn-send-broadcast');
+  if (btn) { btn.disabled = true; btn.textContent = 'Enviando…'; }
+  try {
+    const res = await gsCall({ action: 'sendBroadcast', callerEmail: S.me, message: encodeURIComponent(msg) });
+    if (res.ok) {
+      toast('📤 Notificação enviada para todos os usuários!','ok');
+      const inp = document.getElementById('s-notif-msg');
+      if (inp) inp.value = '';
+    } else {
+      toast(res.error || 'Erro ao enviar broadcast.','err');
+    }
+  } catch(e) {
+    toast('Erro de conexão: ' + e.message,'err');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '📤 ENVIAR PARA TODOS AGORA'; }
+  }
+}
+
+// ================================================================
 //  BOOT
 // ================================================================
 applyStoredTheme();
+initOneSignal();
 boot();
 </script>
 </body>
