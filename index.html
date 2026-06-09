@@ -2,8 +2,15 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>BolãoCopa — FIFA World Cup 26™</title>
+<!-- ── PWA + iOS ──────────────────────────────────────────── -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#C9A84C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bolão Copa">
+<link rel="apple-touch-icon" href="taca.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
 <!-- ── OneSignal Web Push SDK ─────────────────────────────── -->
@@ -885,6 +892,24 @@ header {
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: var(--black); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+/* ── iOS Install Banner ───────────────────────────────────── */
+#ios-install-banner {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
+  background: var(--dark2); border-top: 2px solid var(--accent);
+  padding: 12px 16px 20px; display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,.5);
+  animation: slideUp .3s ease;
+}
+#ios-install-banner .ios-icon { font-size: 30px; flex-shrink: 0; }
+#ios-install-banner .ios-text { flex: 1; }
+#ios-install-banner .ios-text strong.ios-title { display: block; color: var(--accent); font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+#ios-install-banner .ios-text span { color: var(--muted); font-size: 12px; line-height: 1.5; }
+#ios-install-banner .ios-close {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  border-radius: 50%; width: 26px; height: 26px; font-size: 13px;
+  cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 </style>
 </head>
 <body>
@@ -3922,13 +3947,44 @@ async function adminSetTestResult() {
 function initOneSignal() {
   if (typeof ONESIGNAL_APP_ID === 'undefined' || ONESIGNAL_APP_ID.includes('COLE_SEU')) return;
   window.OneSignalDeferred = window.OneSignalDeferred || [];
+  const isIOS        = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true;
+
   OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
       appId: ONESIGNAL_APP_ID,
-      notifyButton: { enable: true, size: 'small', position: 'bottom-right' },
+      // notifyButton (sino flutuante) só funciona em desktop/Android
+      notifyButton: isIOS ? { enable: false } : { enable: true, size: 'small', position: 'bottom-right' },
       serviceWorkerParam: { scope: '/' }
     });
+
+    // iOS standalone (aberto pelo ícone da tela inicial): pede permissão automaticamente
+    if (isIOS && isStandalone) {
+      const hasPermission = OneSignal.Notifications.permission;
+      if (!hasPermission) {
+        setTimeout(async () => {
+          try { await OneSignal.Notifications.requestPermission(); } catch(e) {}
+        }, 2000);
+      }
+    }
   });
+
+  // Mostra banner de instrução para usuários iOS no Safari normal (não standalone)
+  if (isIOS && !isStandalone) {
+    showIOSInstallBanner();
+  }
+}
+
+// ── Banner de instalação iOS ──────────────────────────────────
+function showIOSInstallBanner() {
+  if (localStorage.getItem('ios_banner_dismissed')) return;
+  const banner = document.getElementById('ios-install-banner');
+  if (banner) banner.style.display = 'flex';
+}
+function dismissIOSBanner() {
+  const banner = document.getElementById('ios-install-banner');
+  if (banner) banner.style.display = 'none';
+  localStorage.setItem('ios_banner_dismissed', '1');
 }
 
 // Chamado após login/registro bem-sucedido para vincular o player ID ao e-mail no servidor
@@ -4009,5 +4065,15 @@ applyStoredTheme();
 initOneSignal();
 boot();
 </script>
+<!-- ── iOS Install Banner (só aparece no Safari iOS fora do PWA) ── -->
+<div id="ios-install-banner" style="display:none">
+  <div class="ios-icon">⚽</div>
+  <div class="ios-text">
+    <strong class="ios-title">Ative as notificações no iPhone!</strong>
+    <span>Toque em <strong style="color:var(--text)">Compartilhar ⬆️</strong> no Safari e depois em <strong style="color:var(--text)">"Adicionar à Tela de Início"</strong> para receber alertas de jogos.</span>
+  </div>
+  <button class="ios-close" onclick="dismissIOSBanner()">✕</button>
+</div>
+
 </body>
 </html>
