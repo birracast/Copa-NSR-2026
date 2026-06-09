@@ -3969,10 +3969,10 @@ function initOneSignal() {
     }
   });
 
-  // Mostra banner de instrução para usuários iOS no Safari normal (não standalone)
-  if (isIOS && !isStandalone) {
-    showIOSInstallBanner();
-  }
+// Mostra banner de instrução para usuários iOS no Safari normal (não standalone)
+if (isIOS && !isStandalone) {
+  setTimeout(showIOSInstallBanner, 0); // aguarda o DOM terminar de carregar
+}
 }
 
 // ── Banner de instalação iOS ──────────────────────────────────
