@@ -3925,7 +3925,7 @@ function initOneSignal() {
   OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
       appId: ONESIGNAL_APP_ID,
-      notifyButton: { enable: true, size: 'small', position: 'bottom-right' },
+      notifyButton: { enable: true, size: 'small', position: 'bottom-right' }, path: '/Copa-NSR-2026/',
       serviceWorkerParam: { scope: '/Copa-NSR-2026/' }
     });
   });
