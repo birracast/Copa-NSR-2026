@@ -1,0 +1,26 @@
+{
+  "name": "Bolão Copa 2026",
+  "short_name": "Bolão Copa",
+  "description": "Bolão oficial da Copa do Mundo 2026",
+  "start_url": "/Copa-NSR-2026/",
+  "scope": "/Copa-NSR-2026/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0d1a",
+  "theme_color": "#C9A84C",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "taca.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "taca.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
