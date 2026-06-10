@@ -2092,6 +2092,9 @@ function isVoteLocked(game) {
   return (kickoff - Date.now()) < mins*60*1000;
 }
 
+// Normaliza email igual ao GAS (aposta_ keys usam este formato)
+function normEmail(e) { return String(e).replace(/[@.]/g, '_').substring(0, 50); }
+
 // Count how many votes of a given type the voter has cast FOR A SPECIFIC GAME
 function countVotesInGame(voterEmail, gameId, type) {
   let count = 0;
@@ -2414,7 +2417,7 @@ function renderGameCard(game) {
 
     const rows = othersWithBet.map(u => {
       const ub        = (u.bets||{})[game.id];
-      const apostaKey = `aposta_${game.id}_${u.email}`;
+      const apostaKey = `aposta_${game.id}_${normEmail(u.email)}`;
       const votersObj = (S.apostas||{})[apostaKey]||{};
       const myVote    = votersObj[S.me];
 
@@ -2447,7 +2450,7 @@ function renderGameCard(game) {
       const av = u.avatar ? `<img src="${u.avatar}">` : '🧑';
 
       // Build voter faces for bosta and mestre — visible to everyone
-      const apostaKey2 = `aposta_${game.id}_${u.email}`;
+      const apostaKey2 = `aposta_${game.id}_${normEmail(u.email)}`;
       const allVoters = (S.apostas||{})[apostaKey2] || {};
       let bostaFaces = '', mestreFaces = '';
       Object.entries(allVoters).forEach(([ve, vtype]) => {
@@ -2499,7 +2502,7 @@ function renderGameCard(game) {
 }
 
 function showBetsInfoModal(gameId, targetEmail) {
-  const apostaKey = `aposta_${gameId}_${targetEmail}`;
+  const apostaKey = `aposta_${gameId}_${normEmail(targetEmail)}`;
   const votersObj = (S.apostas || {})[apostaKey] || {};
   const targetUser = S.users[targetEmail];
   
@@ -3854,7 +3857,7 @@ async function voteBosta(gameId, target) {
 // ================================================================
 async function voteExtra(gameId, target, type) {
   if (!S.apostas) S.apostas = {};
-  const key = `aposta_${gameId}_${target}`;
+  const key = `aposta_${gameId}_${normEmail(target)}`;
   if (!S.apostas[key]) S.apostas[key] = {};
 
   const existingVote = S.apostas[key][S.me];
