@@ -2427,24 +2427,23 @@ function renderGameCard(game) {
         else                                                  scoreClass='wrong-sc';
       }
 
-      let voteHtml = '';
+let voteHtml = '';
       if (r.status==='finished' && r.h!==null) {
-        if (myVote && !isMeRow) {
+        if (isMeRow) {
+          voteHtml = `<span style="font-size:11px;color:var(--muted)">Você</span>`;
+        } else if (myVote) {
           const tPts = calcGamePoints(u, game.id);
           const win  = myVote==='bosta' ? (tPts===0) : (tPts>0);
           const label = myVote==='bosta' ? '💩' : `<span style="color:var(--green)">✅ Mestre</span>`;
           voteHtml = `<span class="pr-result-badge ${win?'win':'lose'}">${label} ${win?'+2 🏴‍☠️':'−2 🏴‍☠️'}</span>`;
         }
-      } else if (!voteLocked && !isMeRow) { // Mostra botões só se a linha não for sua
-        const canB = myVote==='bosta' || myBostaCount<2;
-        const canM = myVote==='mestre' || myMestreCount<2;
-        const bTitle = !canB ? 'Limite: 2 votos Bosta/jogo' : (myVote==='bosta'?'Clique para remover seu voto Bosta':'');
-        const mTitle = !canM ? 'Limite: 2 votos Mestre/jogo' : (myVote==='mestre'?'Clique para remover seu voto Mestre':'');
-        voteHtml = `<button class="pr-vote-btn ${myVote==='bosta'?'bosta-on':''}" onclick="voteExtra(${game.id},'${u.email}','bosta')" ${canB?'':'disabled'} title="${bTitle}">💩</button>`
-                 + `<button class="pr-vote-btn ${myVote==='mestre'?'mestre-on':''}" onclick="voteExtra(${game.id},'${u.email}','mestre')" ${canM?'':'disabled'} title="${mTitle}">✅</button>`;
       } else if (isMeRow) {
-        // Na sua própria linha, não mostramos os botões
         voteHtml = `<span style="font-size:11px;color:var(--muted)">Você</span>`;
+      } else if (!voteLocked) {
+        const bTitle = myVote==='bosta' ? 'Clique para remover seu voto Bosta' : 'Votar Bosta 💩 (Máx 2 por jogo)';
+        const mTitle = myVote==='mestre' ? 'Clique para remover seu voto Mestre' : 'Votar Mestre ✅ (Máx 2 por jogo)';
+        voteHtml = `<button class="pr-vote-btn ${myVote==='bosta'?'bosta-on':''}" onclick="voteExtra(${game.id},'${u.email}','bosta')" title="${bTitle}">💩</button>`
+                 + `<button class="pr-vote-btn ${myVote==='mestre'?'mestre-on':''}" onclick="voteExtra(${game.id},'${u.email}','mestre')" title="${mTitle}">✅</button>`;
       } else if (myVote) {
         voteHtml = `<span style="font-size:11px;color:var(--muted)">${myVote==='bosta'?'💩':'✅'} bloq.</span>`;
       }
