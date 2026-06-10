@@ -2398,10 +2398,10 @@ function renderGameCard(game) {
   else if (outcome==='wrong')     badge = `<div class="bet-result-badge wrong">❌ ERROU 0 pts</div>`;
   else if (myBet)                 badge = `<div class="bet-result-badge pending">⏳ AGUARDANDO RESULTADO</div>`;
 
-  // ---- Palpite list (other users, filtered by chip) ----
+// ---- Palpite list (other users, filtered by chip) ----
   const filterEmail = (S.viewingUser && S.viewingUser !== S.me) ? S.viewingUser : null;
   const othersWithBet = Object.values(S.users).filter(u => {
-    if (u.email === S.me) return false;
+    // A linha que excluía você da lista foi removida daqui!
     if (filterEmail && u.email !== filterEmail) return false;
     return (u.bets||{})[game.id] != null;
   });
@@ -2415,9 +2415,10 @@ function renderGameCard(game) {
 
     const rows = othersWithBet.map(u => {
       const ub        = (u.bets||{})[game.id];
-      const apostaKey = `aposta_${game.id}_${normEmail(u.email)}`;
+      const apostaKey = `aposta_${game.id}_${u.email}`;
       const votersObj = (S.apostas||{})[apostaKey]||{};
       const myVote    = votersObj[S.me];
+      const isMeRow   = u.email === S.me; // <- Verifica se a linha renderizada é você
 
       let scoreClass = '';
       if (r.status==='finished' && ub && r.h!==null) {
@@ -2428,19 +2429,22 @@ function renderGameCard(game) {
 
       let voteHtml = '';
       if (r.status==='finished' && r.h!==null) {
-        if (myVote) {
+        if (myVote && !isMeRow) {
           const tPts = calcGamePoints(u, game.id);
           const win  = myVote==='bosta' ? (tPts===0) : (tPts>0);
           const label = myVote==='bosta' ? '💩' : `<span style="color:var(--green)">✅ Mestre</span>`;
           voteHtml = `<span class="pr-result-badge ${win?'win':'lose'}">${label} ${win?'+2 🏴‍☠️':'−2 🏴‍☠️'}</span>`;
         }
-      } else if (!voteLocked) {
+      } else if (!voteLocked && !isMeRow) { // Mostra botões só se a linha não for sua
         const canB = myVote==='bosta' || myBostaCount<2;
         const canM = myVote==='mestre' || myMestreCount<2;
         const bTitle = !canB ? 'Limite: 2 votos Bosta/jogo' : (myVote==='bosta'?'Clique para remover seu voto Bosta':'');
         const mTitle = !canM ? 'Limite: 2 votos Mestre/jogo' : (myVote==='mestre'?'Clique para remover seu voto Mestre':'');
         voteHtml = `<button class="pr-vote-btn ${myVote==='bosta'?'bosta-on':''}" onclick="voteExtra(${game.id},'${u.email}','bosta')" ${canB?'':'disabled'} title="${bTitle}">💩</button>`
                  + `<button class="pr-vote-btn ${myVote==='mestre'?'mestre-on':''}" onclick="voteExtra(${game.id},'${u.email}','mestre')" ${canM?'':'disabled'} title="${mTitle}">✅</button>`;
+      } else if (isMeRow) {
+        // Na sua própria linha, não mostramos os botões
+        voteHtml = `<span style="font-size:11px;color:var(--muted)">Você</span>`;
       } else if (myVote) {
         voteHtml = `<span style="font-size:11px;color:var(--muted)">${myVote==='bosta'?'💩':'✅'} bloq.</span>`;
       }
