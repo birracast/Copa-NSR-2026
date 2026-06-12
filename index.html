@@ -2225,7 +2225,8 @@ function getRodada(id) {
 function calcGamePoints(user, gameId) {
   if (!user) return 0;
   const s = S.settings; const r = S.results[gameId]; const b = (user.bets||{})[gameId];
-  if (!r || r.status !== 'finished' || !b || r.h === null) return 0;
+  // Agora aceita tanto 'finished' quanto 'live'
+  if (!r || (r.status !== 'finished' && r.status !== 'live') || !b || r.h === null) return 0;
   let pts = 0;
   if (b.h === r.h && b.a === r.a) {
     pts += s.exact;
@@ -2244,7 +2245,8 @@ function calcUserPiratecas(email) {
   const rodadas = {};
   GAMES.forEach(g => {
     const r = S.results[g.id];
-    if(r && r.status === 'finished' && r.h !== null) {
+    // Considera jogos encerrados OU ao vivo para o ranking parcial
+    if(r && (r.status === 'finished' || r.status === 'live') && r.h !== null) {
        const rodada = getRodada(g.id);
        if(!rodadas[rodada]) rodadas[rodada] = { users: {} };
        Object.values(S.users).forEach(user => {
@@ -2276,7 +2278,7 @@ function calcUserPiratecas(email) {
      if (votersObj[email]) {
         const type = votersObj[email]; 
         const r = S.results[gId];
-        if (r && r.status === 'finished' && r.h !== null) {
+        if (r && (r.status === 'finished' || r.status === 'live') && r.h !== null) {
            // CORREÇÃO: Transforma o e-mail seguro de volta no e-mail com @ para achar o amigo
            const realTargetEmail = Object.keys(S.users).find(usr => normEmail(usr) === targetNorm) || targetNorm;
            const targetPts = calcGamePoints(S.users[realTargetEmail], gId);
