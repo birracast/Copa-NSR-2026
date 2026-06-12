@@ -2802,7 +2802,19 @@ function onBetInput(gameId) {
 // ================================================================
 function calcRankAll() {
   return Object.values(S.users).map(u=>({...u,pts:calcPoints(u)}))
-    .sort((a,b) => { if(b.pts.total!==a.pts.total)return b.pts.total-a.pts.total; if(b.pts.exact!==a.pts.exact)return b.pts.exact-a.pts.exact; return b.pts.res-a.pts.res; });
+    .sort((a,b) => { 
+      // 1º Critério: Total de Pontos
+      if (b.pts.total !== a.pts.total) return b.pts.total - a.pts.total; 
+      
+      // 2º Critério: Quantidade de Placares Exatos
+      if (b.pts.exact !== a.pts.exact) return b.pts.exact - a.pts.exact; 
+      
+      // 3º Critério: Quantidade de Resultados Certos
+      if (b.pts.res !== a.pts.res) return b.pts.res - a.pts.res; 
+      
+      // 4º Critério (NOVO): Saldo de Piratecas
+      return b.pts.piratecas - a.pts.piratecas; 
+    });
 }
 function calcRankPiratecas() {
   return Object.values(S.users).map(u=>({...u,pts:calcPoints(u)}))
