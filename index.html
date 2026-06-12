@@ -1656,7 +1656,10 @@ let saveTimers = {}; let adminUsers = []; let adminEditTarget = null;
 //  PERSIST SETTINGS (only settings in localStorage, not users)
 // ================================================================
 function persistSettings() {
-  localStorage.setItem('bolao26_settings', JSON.stringify({ version:1, results:S.results, settings:S.settings }));
+  // Salva apenas a preferência visual (sceneBg) no celular do usuário.
+  // Pontuações e Bloqueios agora vivem EXCLUSIVAMENTE no Google Sheets.
+  const localSettings = { sceneBg: S.settings.sceneBg };
+  localStorage.setItem('bolao26_settings', JSON.stringify({ version:1, results:S.results, settings:localSettings }));
 }
 function hydrateSettings() {
   const raw = localStorage.getItem('bolao26_settings');
@@ -1690,29 +1693,39 @@ function clearSession() {
   localStorage.removeItem('bolao26_session');
 }
 
+
+async function syncGlobalSettings() {
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) return;
+  try {
+    const res = await gsGet('loadGlobalSettings');
+    if (res.ok && res.settings && Object.keys(res.settings).length > 0) {
+      S.settings = { ...S.settings, ...res.settings };
+    }
+  } catch(e) {}
+}
+
+
+
+  
 // ================================================================
 //  BOOT
 // ================================================================
 async function boot() {
   hydrateSettings();
   if (!GS_URL || GS_URL.includes('COLE_AQUI')) {
-    hideLoading();
-    showAuth();
-    authMsg('Aviso: O administrador ainda não configurou a URL do servidor no código.', false);
-    return;
+    hideLoading(); showAuth();
+    authMsg('Aviso: O administrador ainda não configurou a URL.', false); return;
   }
-  // If we have a session, try to re-validate and load all users
   if (S.me) {
     try {
       await loadTournamentData(false);
+      await syncGlobalSettings(); // Busca regras no Sheets
       const data = await gsLoadAll();
       if (data && data.users) mergeRemoteData(data);
     } catch(e) {}
-    hideLoading();
-    enterApp();
+    hideLoading(); enterApp();
   } else {
-    hideLoading();
-    showAuth();
+    hideLoading(); showAuth();
   }
 }
 
@@ -3417,20 +3430,41 @@ function renderSettingsPage() {
   }
 }
 
-function saveSettings() {
-  if (!isAdmin()) { toast('Apenas administradores podem alterar isso','warn'); return; }
-  S.settings.exact  = parseInt(document.getElementById('s-exact').value)||10;
-  S.settings.result = parseInt(document.getElementById('s-result').value)||5;
-  S.settings.streak = parseInt(document.getElementById('s-streak').value)||5;
-  S.settings.semi   = parseInt(document.getElementById('s-semi').value)||15;
-  S.settings.final  = parseInt(document.getElementById('s-final').value)||25;
-  S.settings.lockMinsBet  = parseInt(document.getElementById('s-lock-bet').value) ?? 10;
-  S.settings.lockMinsVote = parseInt(document.getElementById('s-lock-vote').value) ?? 10;
-  S.settings.notifMinsPre     = parseInt(document.getElementById('s-notif-x')?.value) || 30;
-  S.settings.notifMinsLockBet = parseInt(document.getElementById('s-notif-y')?.value) || 15;
+async function saveSettings() {
+  if (!isAdmin()) { toast('Acesso negado','warn'); return; }
+  
+  toast('Enviando para o Google Sheets...', 'info');
+
+  const exact = parseInt(document.getElementById('s-exact').value)||10;
+  const result = parseInt(document.getElementById('s-result').value)||5;
+  const streak = parseInt(document.getElementById('s-streak').value)||5;
+  const semi = parseInt(document.getElementById('s-semi').value)||15;
+  const final = parseInt(document.getElementById('s-final').value)||25;
+  const lockMinsBet = parseInt(document.getElementById('s-lock-bet').value) ?? 10;
+  const lockMinsVote = parseInt(document.getElementById('s-lock-vote').value) ?? 10;
+  
+  // Salva apenas o fundo visual no celular local
   S.settings.sceneBg = !!document.getElementById('s-scene-bg')?.checked;
   applySceneBackground();
-  persistSettings(); toast('Configurações salvas!','ok');
+  persistSettings();
+
+  try {
+    // Comunica com a função do seu arquivo google-apps-script.js
+    const res = await gsCall({
+      action: 'adminSaveSettings', callerEmail: S.me,
+      exact, result, streak, semi, final, lockMinsBet, lockMinsVote
+    });
+    
+    if (!res.ok) { toast(res.error || 'Erro ao salvar na nuvem', 'err'); return; }
+    
+    // Atualiza a memória do site na mesma hora
+    S.settings = { ...S.settings, exact, result, streak, semi, final, lockMinsBet, lockMinsVote };
+    
+    renderGames(); renderRanking(); renderStats();
+    toast('✅ Regras salvas no Google Sheets!', 'ok');
+  } catch(e) {
+    toast('Erro de conexão ao salvar na nuvem.', 'err');
+  }
 }
 
 function adminSetResult() {
