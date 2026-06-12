@@ -2242,21 +2242,25 @@ function calcUserPiratecas(email) {
      }
   });
 
-  Object.keys(S.bosta || {}).forEach(key => {
-     const parts = key.split('_'); const gId = parseInt(parts[1]); const target = parts[2];
-     const voters = S.bosta[key];
-     if (voters.includes(email)) {
+  Object.keys(S.apostas || {}).forEach(key => {
+     const parts = key.split('_'); const gId = parseInt(parts[1]); const targetNorm = parts[2];
+     const votersObj = S.apostas[key];
+     if (votersObj[email]) {
+        const type = votersObj[email]; 
         const r = S.results[gId];
         if (r && r.status === 'finished' && r.h !== null) {
-           const targetPts = calcGamePoints(S.users[target], gId);
-           if (targetPts === 0) balance += 2; 
-           else balance -= 2; 
+           // CORREÇÃO: Transforma o e-mail seguro de volta no e-mail com @ para achar o amigo
+           const realTargetEmail = Object.keys(S.users).find(usr => normEmail(usr) === targetNorm) || targetNorm;
+           const targetPts = calcGamePoints(S.users[realTargetEmail], gId);
+           const targetHit = targetPts > 0;
+           
+           if (type === 'bosta') { if (!targetHit) balance += 2; else balance -= 2; } 
+           else if (type === 'mestre') { if (targetHit) balance += 2; else balance -= 2; }
         }
      }
   });
   return balance;
 }
-
 
 function calcGamePoints(user, gameId) {
   if (!user) return 0;
@@ -2465,8 +2469,8 @@ function renderGameCard(game) {
     const voteLocked = isVoteLocked(game);
 
     const rows = othersWithBet.map(u => {
-      const ub        = (u.bets||{})[game.id];
-      const apostaKey = `aposta_${game.id}_${u.email}`;
+    const ub   = (u.bets||{})[game.id];
+      const apostaKey = `aposta_${game.id}_${normEmail(u.email)}`;
       const votersObj = (S.apostas||{})[apostaKey]||{};
       const myVote    = votersObj[S.me];
       const isMeRow   = u.email === S.me; // <- Verifica se a linha renderizada é você
@@ -2710,10 +2714,12 @@ function showHistoryModal(email, type) {
 
         html += `<div style="padding:6px 8px 4px;background:rgba(255,255,255,0.03);border-radius:6px;margin:4px 0;font-size:12px;font-weight:700;color:var(--muted);">${gameLabel}</div>`;
 
-        byGame[gId].forEach(({ target, tipo }) => {
-          const tUser   = S.users[target];
+      byGame[gId].forEach(({ target, tipo }) => {
+          const realTargetEmail = Object.keys(S.users).find(usr => normEmail(usr) === target) || target;
+          const tUser   = S.users[realTargetEmail];
           const targetPts = calcGamePoints(tUser, gId);
           const targetHit = targetPts > 0;
+  
           let diff = tipo==='bosta' ? (!targetHit?2:-2) : (targetHit?2:-2);
           balance += diff;
           const color    = diff>0?'var(--green)':'#ff7b7b';
