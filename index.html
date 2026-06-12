@@ -2581,7 +2581,10 @@ function showHistoryModal(email, type) {
 
   if (!isPiratecas) {
     // ---- PONTOS: show flags next to team codes ----
-    const sortedGames = GAMES.filter(g=>(S.results[g.id]||{}).status==='finished'&&(u.bets||{})[g.id]).sort((a,b)=>a.id-b.id);
+    const sortedGames = GAMES.filter(g => {
+      const rs = (S.results[g.id]||{}).status;
+      return (rs === 'finished' || rs === 'live') && (u.bets||{})[g.id];
+    }).sort((a,b) => a.id - b.id);
     sortedGames.forEach(g => {
       const r = S.results[g.id];
       const b = u.bets[g.id];
@@ -2623,7 +2626,7 @@ function showHistoryModal(email, type) {
     const rodadas = {};
     GAMES.forEach(g => {
       const r = S.results[g.id];
-      if(r && r.status==='finished' && r.h!==null) {
+      if(r && (r.status==='finished'||r.status==='live') && r.h!==null) {
         const rodada = getRodada(g.id);
         if(!rodadas[rodada]) rodadas[rodada] = { users:{} };
         Object.values(S.users).forEach(user => {
@@ -2667,7 +2670,7 @@ function showHistoryModal(email, type) {
       const votersObj = S.apostas[key];
       if (!votersObj[email]) return;
       const r = S.results[gId];
-      if (!r || r.status!=='finished' || r.h===null) return;
+      if (!r || (r.status!=='finished' && r.status!=='live') || r.h===null) return;
       apostasForUser.push({ gId, target, tipo: votersObj[email] });
     });
 
