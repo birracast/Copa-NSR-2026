@@ -1058,12 +1058,12 @@ header {
 
   <div id="page-games" class="main-wrap">
     <div class="hero">
-      <div class="sync-bar">
-        <div class="sync-dot"></div>
-        <div class="sync-text"><span id="data-source-label">Tabela oficial: aguardando configuração</span> • Próximo sync: <strong id="sync-countdown">5:00</strong></div>
-        <div class="sync-saving hidden" id="saving-indicator"><span class="save-spin"></span> Salvando...</div>
-        <button class="sync-btn" onclick="forceSyncAll()">🔄 Sync</button>
-      </div>
+  <div class="sync-bar">
+    <div class="sync-dot"></div>
+    <div class="sync-text"><span id="data-source-label">Tabela oficial: aguardando configuração</span> • Sincronização: <strong id="sync-countdown">Aguardando Admin</strong></div>
+    <div class="sync-saving hidden" id="saving-indicator"><span class="save-spin"></span> Salvando...</div>
+    <button class="sync-btn hidden" id="btn-main-sync" onclick="forceSyncAll()">🔄 Sync</button>
+  </div>
       <div class="stats-row" id="stats-row"></div>
     </div>
     <div style="margin-bottom:16px">
@@ -1890,11 +1890,22 @@ function enterApp() {
   document.getElementById('screen-main').classList.remove('hidden');
   S.viewingUser = S.me;
   refreshNavUser();
-  // Show admin tab if admin
+  
   const isAdm = isAdmin();
   document.getElementById('nt-admin').classList.toggle('hidden', !isAdm);
+  
+  const syncBtn = document.getElementById('btn-main-sync');
+  if (syncBtn) syncBtn.classList.toggle('hidden', !isAdm);
+  
   navTo('games');
-  startSyncTimer();
+  
+  const countdownEl = document.getElementById('sync-countdown');
+  if (isAdm) {
+    forceSyncAll();
+    startSyncTimer();
+  } else {
+    if (countdownEl) countdownEl.textContent = 'Gerenciado pelo Admin 🔒';
+  }
 }
 
 // ================================================================
@@ -2261,71 +2272,7 @@ function calcUserPiratecas(email) {
   });
   return balance;
 }
-
-function calcGamePoints(user, gameId) {
-  if (!user) return 0;
-  const s = S.settings; const r = S.results[gameId]; const b = (user.bets||{})[gameId];
-  if (!r || r.status !== 'finished' || !b || r.h === null) return 0;
-  let pts = 0;
-  if (b.h === r.h && b.a === r.a) {
-    pts += s.exact;
-    const game = GAMES.find(g=>g.id===gameId);
-    if (game && game.phase === 'Semifinal') pts += s.semi;
-    if (game && game.phase === 'Final') pts += s.final;
-  } else if (getWDL(b.h,b.a) === getWDL(r.h,r.a)) { pts += s.result; }
-  return pts;
-}
-
-function calcUserPiratecas(email) {
-  let balance = 100;
-  const u = S.users[email];
-  if(!u) return balance;
-
-  const rodadas = {};
-  GAMES.forEach(g => {
-    const r = S.results[g.id];
-    if(r && r.status === 'finished' && r.h !== null) {
-       const rodada = getRodada(g.id);
-       if(!rodadas[rodada]) rodadas[rodada] = { users: {} };
-       Object.values(S.users).forEach(user => {
-         if(!rodadas[rodada].users[user.email]) rodadas[rodada].users[user.email] = 0;
-         rodadas[rodada].users[user.email] += calcGamePoints(user, g.id);
-       });
-    }
-  });
-
-  Object.keys(rodadas).forEach(rodada => {
-     const rData = rodadas[rodada];
-     const ptsArray = Object.values(rData.users).sort((a,b)=>a-b);
-     const maxPts = ptsArray[ptsArray.length-1];
-     const minPts = ptsArray[0];
-     let medPts = (ptsArray.length % 2 === 0) ? (ptsArray[ptsArray.length/2 - 1] + ptsArray[ptsArray.length/2]) / 2 : ptsArray[Math.floor(ptsArray.length/2)];
-
-     if (maxPts !== minPts) { 
-       const myPts = rData.users[email];
-       if (myPts === maxPts) balance += 5; 
-       else if (myPts === minPts) balance -= 5; 
-       else if (myPts === medPts) balance -= 1; 
-       else if (myPts < medPts && myPts > minPts) balance -= 1; 
-     }
-  });
-
-  Object.keys(S.apostas || {}).forEach(key => {
-     const parts = key.split('_'); const gId = parseInt(parts[1]); const target = parts[2];
-     const votersObj = S.apostas[key];
-     if (votersObj[email]) {
-        const type = votersObj[email]; 
-        const r = S.results[gId];
-        if (r && r.status === 'finished' && r.h !== null) {
-           const targetPts = calcGamePoints(S.users[target], gId);
-           const targetHit = targetPts > 0;
-           if (type === 'bosta') { if (!targetHit) balance += 2; else balance -= 2; } 
-           else if (type === 'mestre') { if (targetHit) balance += 2; else balance -= 2; }
-        }
-     }
-  });
-  return balance;
-}
+  
 
 function calcPoints(user) {
   const s = S.settings; let total=0, exact=0, res=0, streak=0, maxStreak=0;
