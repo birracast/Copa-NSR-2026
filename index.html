@@ -1663,7 +1663,11 @@ function hydrateSettings() {
   if (raw) {
     const d = JSON.parse(raw);
     S.results  = d.results  || {};
-    S.settings = { ...S.settings, ...(d.settings||{}) };
+    // Ignora os pontos e bloqueios da memória local para forçar a regra global igual para todos.
+    // Recupera apenas a preferência visual de Background (GIF Animado).
+    if (d.settings && d.settings.sceneBg !== undefined) {
+      S.settings.sceneBg = d.settings.sceneBg;
+    }
   }
   applySceneBackground();
 
