@@ -2254,7 +2254,7 @@ function calcUserPiratecas(email) {
   });
 
   Object.keys(S.apostas || {}).forEach(key => {
-     const parts = key.split('_'); const gId = parseInt(parts[1]); const targetNorm = parts[2];
+     const parts = key.split('_'); const gId = parseInt(parts[1]); const targetNorm = parts.slice(2).join('_');
      const votersObj = S.apostas[key];
      if (votersObj[email]) {
         const type = votersObj[email]; 
@@ -2632,12 +2632,12 @@ function showHistoryModal(email, type) {
       }
     });
 
-    // Group apostas by game
+// Group apostas by game
     const apostasForUser = [];
     Object.keys(S.apostas || {}).forEach(key => {
       const parts = key.split('_');
       const gId = parseInt(parts[1]);
-      const target = parts[2];
+      const target = parts.slice(2).join('_');
       const votersObj = S.apostas[key];
       if (!votersObj[email]) return;
       const r = S.results[gId];
@@ -2675,12 +2675,15 @@ function showHistoryModal(email, type) {
             ? `<span style="color:var(--green);font-weight:bold;">Mestre ✅</span>`
             : `💩`;
 
+// Busca o palpite do amigo para este jogo específico
+          const tBet = (tUser && tUser.bets) ? tUser.bets[gId] : null;
+          const palpiteAmigo = tBet ? ` (Palpite: ${tBet.h}–${tBet.a})` : ' (Sem palpite)';
+
           html += `<div style="padding:7px 8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;">
             <span style="font-size:13px;flex:1;min-width:0;">
-              <strong style="color:var(--text)">${esc(u.name)}</strong>
-              <span style="color:var(--muted)"> disse que </span>
-              <strong style="color:var(--text)">${esc(tName)}</strong>
-              <span style="color:var(--muted)"> é um palpiteiro </span>${tipoLabel}
+              <strong style="color:var(--text)">${esc(tName)}</strong> 
+              <span style="color:var(--muted)">• Voto:</span> ${tipoLabel}
+              <span style="color:var(--muted); font-size:12px;">${palpiteAmigo}</span>
             </span>
             <span style="color:${color};font-weight:bold;white-space:nowrap;">${diff>0?'+':''}${diff} 🏴‍☠️</span>
           </div>`;
