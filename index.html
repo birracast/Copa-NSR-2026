@@ -2297,8 +2297,15 @@ function calcPoints(user) {
   const s = S.settings; let total=0, exact=0, res=0, streak=0, maxStreak=0;
   GAMES.forEach(g => {
     const r = S.results[g.id]; const b = (user.bets||{})[g.id];
-    if (!r||r.status!=='finished'||!b||r.h===null) return;
-    if (b.h===r.h&&b.a===r.a) { total+=s.exact; exact++; streak++; if(streak>maxStreak)maxStreak=streak; if(g.phase==='Semifinal')total+=s.semi; if(g.phase==='Final')total+=s.final; }
+    // CORREÇÃO: Agora aceita status 'finished' OU 'live'
+    if (!r || (r.status !== 'finished' && r.status !== 'live') || !b || r.h === null) return;
+    
+    if (b.h===r.h && b.a===r.a) { 
+      total+=s.exact; exact++; streak++; 
+      if(streak>maxStreak)maxStreak=streak; 
+      if(g.phase==='Semifinal')total+=s.semi; 
+      if(g.phase==='Final')total+=s.final; 
+    }
     else if (getWDL(b.h,b.a)===getWDL(r.h,r.a)) { total+=s.result; res++; streak=0; }
     else { streak=0; }
   });
