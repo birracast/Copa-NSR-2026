@@ -380,24 +380,6 @@ header {
 .vs-label { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--dark4); }
 .venue-text { font-size: 10px; color: var(--muted); margin-top: 2px; }
 
-/* ===== COLLAPSIBLE FINISHED GAMES ===== */
-.game-card.is-collapsed .game-details {
-  display: none;
-}
-.game-card.is-collapsed .teams-section {
-  margin-bottom: 0; /* Remove a sobra de espaço embaixo do placar quando fechado */
-}
-.toggle-details-btn {
-  background: var(--dark3); border: 1px solid var(--border); color: var(--text);
-  border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700;
-  cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: .2s;
-}
-.toggle-details-btn:hover { background: var(--dark4); border-color: var(--muted); }
-.game-card:not(.is-collapsed) .toggle-icon { transform: rotate(180deg); }
-.toggle-icon { transition: transform 0.3s; display: inline-block; line-height: 1; }
-
-  
-
 .bet-row { margin-top: 10px; }
 .bet-owner-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; }
 .bet-owner-label .you-tag { background: rgba(201,168,76,0.15); color: var(--gold); padding: 2px 6px; border-radius: 4px; font-size: 10px; }
@@ -2384,16 +2366,6 @@ function renderGames() {
   let html = '';
   phases.forEach(ph => {
     const gs = GAMES.filter(g=>g.phase===ph);
-    
-    // Agrupa os jogos: Ao vivo e Agendados no topo, Finalizados por último
-    gs.sort((a,b) => {
-      const aFin = getGameStatus(a) === 'finished';
-      const bFin = getGameStatus(b) === 'finished';
-      if (aFin && !bFin) return 1;
-      if (!aFin && bFin) return -1;
-      return a.id - b.id; // Mantém a ordem cronológica dentro dos grupos
-    });
-
     const pillClass = ph==='Fase de Grupos'?'groups':ph==='Final'||ph==='Terceiro Lugar'?'final':'knockout';
     html += `<div class="phase-hdr"><span class="phase-hdr-text">${ph}</span><span class="phase-pill ${pillClass}">${gs.length} jogos</span></div><div class="games-grid">`;
     gs.forEach(g => { html += renderGameCard(g); });
@@ -2402,22 +2374,6 @@ function renderGames() {
   document.getElementById('games-content').innerHTML = html;
 }
 
-
-// ================================================================
-//  TOGGLE FINISHED GAMES DETAILS
-// ================================================================
-function toggleGameDetails(gameId) {
-  const card = document.getElementById(`gc-${gameId}`);
-  if (card) {
-    card.classList.toggle('is-collapsed');
-    const textSpan = card.querySelector('.toggle-text');
-    if (textSpan) {
-      textSpan.textContent = card.classList.contains('is-collapsed') ? 'Ver Palpites' : 'Ocultar Palpites';
-    }
-  }
-}
-
-  
 function renderGameCard(game) {
   const r = S.results[game.id]||game.result||{h:null,a:null,status:'upcoming'};
   const meUser   = S.users[S.me];
@@ -2434,9 +2390,6 @@ function renderGameCard(game) {
     else                                                           { outcome='wrong';    cardClass='wrong'; }
   }
 
-const isFinished = status === 'finished';
-  const collapsedClass = isFinished ? ' is-collapsed' : '';
-
   const statusPill = status==='live'
     ? `<span class="status-pill live">🔴 AO VIVO</span>`
     : status==='finished'
@@ -2444,22 +2397,6 @@ const isFinished = status === 'finished';
       : locked&&status==='upcoming'
         ? `<span class="status-pill soon">⏰ Em breve</span>`
         : `<span class="status-pill upcoming">📅 Agendado</span>`;
-
-  // Se o jogo encerrou, agrupa o pill com o botão de toggle
-  let headerActions = statusPill;
-  if (isFinished) {
-    headerActions = `<div style="display:flex; gap:8px; align-items:center;">
-      ${statusPill}
-      <button class="toggle-details-btn" onclick="toggleGameDetails(${game.id})">
-        <span class="toggle-text">Ver Palpites</span> <span class="toggle-icon">🔽</span>
-      </button>
-    </div>`;
-  }
-
-  const realScore = r.h!==null ? `<div class="real-score">${r.h}–${r.a}</div>` : `<div class="vs-label">VS</div>`;
-
-  // ---- MY bet section ----
-  // (Mantém todo o seu código betSection e palpiteListHtml intacto aqui no meio da função...)
 
   const realScore = r.h!==null ? `<div class="real-score">${r.h}–${r.a}</div>` : `<div class="vs-label">VS</div>`;
 
@@ -2580,20 +2517,19 @@ let voteHtml = '';
     </div>`;
   }
 
-return `<div class="game-card ${cardClass}${locked?' locked':''}${collapsedClass}" id="gc-${game.id}">
-    <div class="gcard-top"><span class="gcard-round">${game.group||game.phase}</span>${headerActions}</div>
+  return `<div class="game-card ${cardClass}${locked?' locked':''}" id="gc-${game.id}">
+    <div class="gcard-top"><span class="gcard-round">${game.group||game.phase}</span>${statusPill}</div>
     <div class="gcard-top" style="margin-top:-8px;margin-bottom:10px"><span class="gcard-date">📅 ${formatDate(game.date)}</span><span class="gcard-date" style="font-size:10px">🏟 ${esc(game.venue)}</span></div>
     <div class="teams-section">
       <div class="team-col">${renderTeamMark(game,'h','team-flag')}<div class="team-code" title="${esc(game.hName||game.hCode)}">${esc(game.hCode)}</div></div>
       <div class="center-col">${realScore}<div class="venue-text">${r.h!==null?'Resultado oficial':''}</div></div>
       <div class="team-col">${renderTeamMark(game,'a','team-flag')}<div class="team-code" title="${esc(game.aName||game.aCode)}">${esc(game.aCode)}</div></div>
     </div>
-    <div class="game-details">
-      <div class="bet-row">${betSection}${badge}</div>
-      ${palpiteListHtml}
-    </div>
+    <div class="bet-row">${betSection}${badge}</div>
+    ${palpiteListHtml}
   </div>`;
 }
+
 function showBetsInfoModal(gameId, targetEmail) {
   const apostaKey = `aposta_${gameId}_${normEmail(targetEmail)}`;
   const votersObj = (S.apostas || {})[apostaKey] || {};
