@@ -94,6 +94,26 @@ body.light-mode .modal-box { background: #fff; border-color: var(--border); }
   display: flex; align-items: center; justify-content: center;
   transition: .2s; flex-shrink: 0;
 }
+
+/* Badge estilizado azul para o botão de toggle */
+.btn-pill-blue {
+  background: rgba(42,57,141,0.15);
+  color: #7b8fe8;
+  border: 1px solid rgba(42,57,141,0.25);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: .2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-pill-blue:hover {
+  background: rgba(42,57,141,0.25);
+}
+  
 body.light-mode .theme-toggle { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.18); color: #fff; }
 .theme-toggle:hover { transform: rotate(20deg) scale(1.1); }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1944,6 +1964,19 @@ function navTo(p) {
   if(p==='profile')    renderProfile();
   if(p==='admin')      loadAdminUsers();
 }
+
+function toggleGameDetails(gameId) {
+  const card = document.getElementById(`gc-${gameId}`);
+  if (card) {
+    card.classList.toggle('is-collapsed');
+    const textSpan = card.querySelector('.toggle-text');
+    if (textSpan) {
+      // Atualiza o texto dinamicamente
+      textSpan.textContent = card.classList.contains('is-collapsed') ? 'Ver Palpites' : 'Ocultar';
+    }
+  }
+}
+  
 function rerenderCurrentPage() { navTo(currentPage || 'games'); }
 
 // ================================================================
@@ -2401,12 +2434,13 @@ function renderGameCard(game) {
         ? `<span class="status-pill soon">⏰ Em breve</span>`
         : `<span class="status-pill upcoming">📅 Agendado</span>`;
 
-  let headerActions = statusPill;
+let headerActions = statusPill;
   if (isFinished) {
     headerActions = `<div style="display:flex; gap:8px; align-items:center;">
       ${statusPill}
-      <button class="toggle-details-btn" onclick="toggleGameDetails(${game.id})">
-        <span class="toggle-text">${collapsedClass ? 'Ver Palpites' : 'Ocultar Palpites'}</span> <span class="toggle-icon">🔽</span>
+      <button class="btn-pill-blue" onclick="toggleGameDetails(${game.id})">
+        <span class="toggle-text">${collapsedClass ? 'Ver Palpites' : 'Ocultar'}</span> 
+        <span class="toggle-icon">🔽</span>
       </button>
     </div>`;
   }
