@@ -2390,6 +2390,9 @@ function renderGameCard(game) {
     else                                                           { outcome='wrong';    cardClass='wrong'; }
   }
 
+  const isFinished = status === 'finished';
+  const collapsedClass = isFinished ? ' is-collapsed' : '';
+
   const statusPill = status==='live'
     ? `<span class="status-pill live">🔴 AO VIVO</span>`
     : status==='finished'
@@ -2397,6 +2400,16 @@ function renderGameCard(game) {
       : locked&&status==='upcoming'
         ? `<span class="status-pill soon">⏰ Em breve</span>`
         : `<span class="status-pill upcoming">📅 Agendado</span>`;
+
+  let headerActions = statusPill;
+  if (isFinished) {
+    headerActions = `<div style="display:flex; gap:8px; align-items:center;">
+      ${statusPill}
+      <button class="toggle-details-btn" onclick="toggleGameDetails(${game.id})">
+        <span class="toggle-text">${collapsedClass ? 'Ver Palpites' : 'Ocultar Palpites'}</span> <span class="toggle-icon">🔽</span>
+      </button>
+    </div>`;
+  }
 
   const realScore = r.h!==null ? `<div class="real-score">${r.h}–${r.a}</div>` : `<div class="vs-label">VS</div>`;
 
@@ -2426,27 +2439,25 @@ function renderGameCard(game) {
   else if (outcome==='wrong')     badge = `<div class="bet-result-badge wrong">❌ ERROU 0 pts</div>`;
   else if (myBet)                 badge = `<div class="bet-result-badge pending">⏳ AGUARDANDO RESULTADO</div>`;
 
-// ---- Palpite list (other users, filtered by chip) ----
+  // ---- Palpite list ----
   const filterEmail = (S.viewingUser && S.viewingUser !== S.me) ? S.viewingUser : null;
   const othersWithBet = Object.values(S.users).filter(u => {
-    // A linha que excluía você da lista foi removida daqui!
     if (filterEmail && u.email !== filterEmail) return false;
     return (u.bets||{})[game.id] != null;
   });
 
   let palpiteListHtml = '';
   if (othersWithBet.length > 0) {
-    // Count how many votes of each type I've already cast FOR THIS SPECIFIC GAME
     const myBostaCount  = countVotesInGame(S.me, game.id, 'bosta');
     const myMestreCount = countVotesInGame(S.me, game.id, 'mestre');
     const voteLocked = isVoteLocked(game);
 
     const rows = othersWithBet.map(u => {
-    const ub   = (u.bets||{})[game.id];
+      const ub   = (u.bets||{})[game.id];
       const apostaKey = `aposta_${game.id}_${normEmail(u.email)}`;
       const votersObj = (S.apostas||{})[apostaKey]||{};
       const myVote    = votersObj[S.me];
-      const isMeRow   = u.email === S.me; // <- Verifica se a linha renderizada é você
+      const isMeRow   = u.email === S.me;
 
       let scoreClass = '';
       if (r.status==='finished' && ub && r.h!==null) {
@@ -2455,7 +2466,7 @@ function renderGameCard(game) {
         else                                                  scoreClass='wrong-sc';
       }
 
-let voteHtml = '';
+      let voteHtml = '';
       if (r.status==='finished' && r.h!==null) {
         if (isMeRow) {
           voteHtml = `<span style="font-size:11px;color:var(--muted)">Você</span>`;
@@ -2477,8 +2488,6 @@ let voteHtml = '';
       }
 
       const av = u.avatar ? `<img src="${u.avatar}">` : '🧑';
-
-      // Build voter faces for bosta and mestre — visible to everyone
       const apostaKey2 = `aposta_${game.id}_${normEmail(u.email)}`;
       const allVoters = (S.apostas||{})[apostaKey2] || {};
       let bostaFaces = '', mestreFaces = '';
@@ -2488,12 +2497,8 @@ let voteHtml = '';
         if (vtype === 'bosta') bostaFaces += `<div class="voter-face bosta-face" title="${voter?voter.name:ve}">${faceAv}</div>`;
         else if (vtype === 'mestre') mestreFaces += `<div class="voter-face mestre-face" title="${voter?voter.name:ve}">${faceAv}</div>`;
       });
-      const bostaGroup = bostaFaces
-        ? `<div class="voter-group"><span class="voter-type-icon">💩</span>${bostaFaces}</div>`
-        : `<span style="color:var(--dark4);font-size:11px;">—</span>`;
-      const mestreGroup = mestreFaces
-        ? `<div class="voter-group"><span class="voter-type-icon" style="color:var(--green)">✅</span>${mestreFaces}</div>`
-        : `<span style="color:var(--dark4);font-size:11px;">—</span>`;
+      const bostaGroup = bostaFaces ? `<div class="voter-group"><span class="voter-type-icon">💩</span>${bostaFaces}</div>` : `<span style="color:var(--dark4);font-size:11px;">—</span>`;
+      const mestreGroup = mestreFaces ? `<div class="voter-group"><span class="voter-type-icon" style="color:var(--green)">✅</span>${mestreFaces}</div>` : `<span style="color:var(--dark4);font-size:11px;">—</span>`;
 
       return `<div class="palpite-row">
         <div class="pr-col-av"><div class="pr-avatar">${av}</div></div>
@@ -2517,16 +2522,18 @@ let voteHtml = '';
     </div>`;
   }
 
-  return `<div class="game-card ${cardClass}${locked?' locked':''}" id="gc-${game.id}">
-    <div class="gcard-top"><span class="gcard-round">${game.group||game.phase}</span>${statusPill}</div>
+  return `<div class="game-card ${cardClass}${locked?' locked':''}${collapsedClass}" id="gc-${game.id}">
+    <div class="gcard-top"><span class="gcard-round">${game.group||game.phase}</span>${headerActions}</div>
     <div class="gcard-top" style="margin-top:-8px;margin-bottom:10px"><span class="gcard-date">📅 ${formatDate(game.date)}</span><span class="gcard-date" style="font-size:10px">🏟 ${esc(game.venue)}</span></div>
     <div class="teams-section">
       <div class="team-col">${renderTeamMark(game,'h','team-flag')}<div class="team-code" title="${esc(game.hName||game.hCode)}">${esc(game.hCode)}</div></div>
       <div class="center-col">${realScore}<div class="venue-text">${r.h!==null?'Resultado oficial':''}</div></div>
       <div class="team-col">${renderTeamMark(game,'a','team-flag')}<div class="team-code" title="${esc(game.aName||game.aCode)}">${esc(game.aCode)}</div></div>
     </div>
-    <div class="bet-row">${betSection}${badge}</div>
-    ${palpiteListHtml}
+    <div class="game-details">
+      <div class="bet-row">${betSection}${badge}</div>
+      ${palpiteListHtml}
+    </div>
   </div>`;
 }
 
