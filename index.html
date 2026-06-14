@@ -362,6 +362,32 @@ header {
 .game-card.wrong::before   { background: linear-gradient(90deg, var(--red), #ff7b7b); }
 .game-card.locked { opacity: .75; }
 
+/* ===== GAME CARD COLLAPSE (ocultar/mostrar palpites) ===== */
+.game-card.is-collapsed .game-details { display: none; }
+.toggle-details-btn {
+  border: 1px solid rgba(42,57,141,0.4); background: rgba(42,57,141,0.08);
+  border-radius: 8px; padding: 4px 10px;
+  color: #7b8fe8; font-family: var(--font-body); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: background .2s, border-color .2s;
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+}
+.toggle-details-btn:hover { background: rgba(42,57,141,0.2); border-color: var(--blue); color: #fff; }
+.toggle-arrow { display: inline-block; font-size: 10px; font-style: normal; transition: transform .25s ease; color: inherit; }
+/* expanded → seta aponta para cima */
+.game-card:not(.is-collapsed) .toggle-arrow { transform: rotate(0deg); }
+/* collapsed → seta aponta para baixo */
+.game-card.is-collapsed .toggle-arrow  { transform: rotate(180deg); }
+
+/* ===== GROUP GAME ROW: CLICÁVEL + DESTAQUE ENCERRADO ===== */
+.group-game-row { cursor: pointer; transition: background .15s; }
+.group-game-row:hover { background: rgba(255,255,255,0.06); }
+.group-game-row.finished { background: rgba(230,29,37,0.10); }
+.group-game-row.finished:hover { background: rgba(230,29,37,0.18); }
+/* Light mode */
+body.light-mode .group-game-row:hover { background: rgba(42,57,141,0.06); }
+body.light-mode .group-game-row.finished { background: rgba(230,29,37,0.08); }
+body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14); }
+
 .gcard-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .gcard-round { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
 .gcard-date { font-size: 11px; color: var(--muted); }
@@ -2406,7 +2432,7 @@ function renderGameCard(game) {
     headerActions = `<div style="display:flex; gap:8px; align-items:center;">
       ${statusPill}
       <button class="toggle-details-btn" onclick="toggleGameDetails(${game.id})">
-        <span class="toggle-text">${collapsedClass ? 'Ver Palpites' : 'Ocultar Palpites'}</span> <span class="toggle-icon">🔽</span>
+        <span class="toggle-text">${collapsedClass ? 'Ver Palpites' : 'Ocultar Palpites'}</span><span class="toggle-arrow">▲</span>
       </button>
     </div>`;
   }
@@ -2792,13 +2818,49 @@ function renderStandingRow(row) {
 }
 function renderGroupGameRow(game) {
   const r = S.results[game.id]||game.result||{h:null,a:null,status:'upcoming'};
-  return `<div class="group-game-row" title="${esc(game.venue||'A confirmar')}"><div class="group-game-date">${game.date?formatShortDate(game.date):'A definir'}</div><div class="group-game-team">${renderTeamMark(game,'h','team-mini-logo')}<span class="team-code-small">${esc(game.hCode)}</span></div><div class="group-game-score">${r.h!==null?`${r.h}–${r.a}`:'vs'}</div><div class="group-game-team away"><span class="team-code-small">${esc(game.aCode)}</span>${renderTeamMark(game,'a','team-mini-logo')}</div></div>`;
+  const isFinished = r.status === 'finished';
+  const finishedCls = isFinished ? ' finished' : '';
+  const tipLabel = isFinished
+    ? `Encerrado ${r.h}–${r.a} · clique para ver palpites · ${esc(game.venue||'A confirmar')}`
+    : `Clique para ir ao jogo · ${esc(game.venue||'A confirmar')}`;
+  return `<div class="group-game-row${finishedCls}" onclick="goToGameFromGroup(${game.id})" title="${tipLabel}"><div class="group-game-date">${game.date?formatShortDate(game.date):'A definir'}</div><div class="group-game-team">${renderTeamMark(game,'h','team-mini-logo')}<span class="team-code-small">${esc(game.hCode)}</span></div><div class="group-game-score">${r.h!==null?`${r.h}–${r.a}`:'vs'}</div><div class="group-game-team away"><span class="team-code-small">${esc(game.aCode)}</span>${renderTeamMark(game,'a','team-mini-logo')}</div></div>`;
 }
 function renderTeamLogo(logo, flag) { return logo ? `<img class="team-logo" src="${esc(logo)}" alt="">` : `<span class="team-logo placeholder">${flag||'🏳️'}</span>`; }
 function renderTeamMark(game, side, className) {
   const logo = game[side+'Logo']; const flag = game[side+'Flag']||'🏳️';
   if (logo) return `<img class="${className==='team-flag'?'team-crest':className}" src="${esc(logo)}" alt="">`;
   return `<span class="${className}">${flag}</span>`;
+}
+
+// ================================================================
+//  TOGGLE GAME DETAILS — oculta/expande palpites do card encerrado
+// ================================================================
+function toggleGameDetails(gameId) {
+  const card = document.getElementById('gc-' + gameId);
+  if (!card) return;
+  const nowCollapsed = card.classList.toggle('is-collapsed');
+  const textEl = card.querySelector('.toggle-text');
+  if (textEl) textEl.textContent = nowCollapsed ? 'Ver Palpites' : 'Ocultar Palpites';
+}
+
+// ================================================================
+//  NAVEGAR PARA JOGO A PARTIR DA PÁGINA GRUPOS
+// ================================================================
+function goToGameFromGroup(gameId) {
+  navTo('games');
+  // Aguarda renderGames() terminar antes de rolar/expandir
+  setTimeout(() => {
+    const card = document.getElementById('gc-' + gameId);
+    if (!card) return;
+    // Se o jogo estava retraído (encerrado), expande para mostrar palpites
+    if (card.classList.contains('is-collapsed')) toggleGameDetails(gameId);
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Flash de destaque azul por 2s
+    card.style.transition = 'box-shadow .3s ease, border-color .3s ease';
+    card.style.boxShadow  = '0 0 0 3px rgba(42,57,141,0.55)';
+    card.style.borderColor = 'var(--blue)';
+    setTimeout(() => { card.style.boxShadow = ''; card.style.borderColor = ''; }, 2000);
+  }, 180);
 }
 
 // ================================================================
