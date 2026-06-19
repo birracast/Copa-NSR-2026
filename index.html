@@ -1133,28 +1133,27 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
     </div>
   </div>
 
-  <div id="page-highlights" class="main-wrap hidden">
+<div id="page-highlights" class="main-wrap hidden">
     <div class="phase-hdr">
       <span class="phase-hdr-text">🏆 Highlights</span>
       <span class="phase-pill final">Destaques do Bolão</span>
     </div>
-
-  <div id="page-pibet" class="main-wrap hidden">
-      <div class="phase-hdr">
-        <span class="phase-hdr-text">🎲 Piratabet</span>
-        <span class="phase-pill final">Apostas Livres</span>
-      </div>
-      <div style="margin-bottom:20px; text-align:center;">
-        <button class="btn-main" onclick="openCreatePibet()" style="max-width:300px">+ NOVA APOSTA PIRATABET</button>
-      </div>
-      <div id="pibet-content" class="games-grid"></div>
-    </div>
-    
     <div class="hl-tabs">
       <button class="hl-tab active" id="hlt-rodadas" onclick="hlTab('rodadas')">Por Rodada</button>
       <button class="hl-tab"        id="hlt-jogos"   onclick="hlTab('jogos')">Por Jogo</button>
     </div>
     <div id="highlights-content"></div>
+  </div>
+
+  <div id="page-pibet" class="main-wrap hidden">
+    <div class="phase-hdr">
+      <span class="phase-hdr-text">🎲 Piratabet</span>
+      <span class="phase-pill final">Apostas Livres</span>
+    </div>
+    <div style="margin-bottom:20px; text-align:center;">
+      <button class="btn-main" onclick="openCreatePibet()" style="max-width:300px">+ NOVA APOSTA PIRATABET</button>
+    </div>
+    <div id="pibet-content" class="games-grid"></div>
   </div>
 
   <div id="page-help" class="main-wrap hidden">
@@ -2402,7 +2401,7 @@ function calcUserPiratecas(email) {
 
   return Math.round(balance);
 }
-}
+
   
 
 function calcPoints(user) {
