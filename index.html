@@ -615,9 +615,8 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
 }
 
 .chip-com-foto {
-  /* Primeiro faz o movimento de entrada ao carregar, depois ativa a flutuação contínua */
   animation: entradaChip 0.6s ease-out forwards, flutuarChip 3s ease-in-out infinite 0.6s;
-  border-color: var(--gold) !important; /* Dá um leve destaque dourado na borda de quem tem foto */
+  border-color: var(--gold) !important;
   box-shadow: 0 4px 12px rgba(201, 168, 76, 0.15);
 }
 
@@ -865,13 +864,9 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
 .hl-tab.active { background: var(--dark3); color: var(--text); border-color: var(--gold); }
 .hl-empty { color: var(--muted); font-size: 14px; text-align: center; padding: 40px; }
 
-/* ── Palpite table responsivo ───────────────────────────────
-   375px phone: padding main 16px×2 + padding card 18px×2 = 68px → 307px disponíveis
-   Nome vira 1fr (truncado com ellipsis), tudo escala proporcional
-   ─────────────────────────────────────────────────────────── */
+/* ── Palpite table responsivo ─────────────────────────────── */
 @media (max-width: 480px) {
   .palpite-table {
-    /* avatar | nome(1fr = trunca, todos iguais) | placar | bosta | mestre | voto */
     grid-template-columns: 22px 1fr minmax(46px, max-content) auto auto auto;
     column-gap: 4px;
   }
@@ -887,7 +882,6 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
   .pr-result-badge{ font-size: 9px; padding: 2px 5px; }
   .vote-limit-info{ font-size: 9px; }
 }
-/* 360px phone → 292px disponíveis */
 @media (max-width: 360px) {
   .palpite-table {
     grid-template-columns: 20px 1fr minmax(42px, max-content) auto auto auto;
@@ -933,7 +927,6 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-  /* Novo Menu Responsivo */
   .header-top { flex-wrap: wrap; justify-content: space-between; padding: 12px 16px 0; }
   .logo-wrap { order: 1; }
   .nav-user { order: 2; margin-left: 0; }
@@ -946,7 +939,6 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
   .nav-tab { white-space: nowrap; font-size: 13px; padding: 10px 14px; }
   
   .rank-dual { grid-template-columns: 1fr; }
-  /* Restante das regras originais que já estavam aí */
   .main-wrap { padding: 16px; }
   .games-grid { grid-template-columns: 1fr; }
   .groups-grid { grid-template-columns: 1fr; }
@@ -978,7 +970,7 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
 }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-/* ===== NOVOS ESTILOS PARA SEÇÕES NA PÁGINA JOGOS ===== */
+/* ===== SEÇÕES DE APOSTAS (PIRATABET) ===== */
 .games-section {
   background: var(--dark2);
   border: 1px solid var(--border);
@@ -1015,37 +1007,10 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
   padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 14px; /* mesmo gap dos cards */
+  gap: 14px;
 }
 .games-section.is-collapsed .games-section-body {
   display: none;
-}
-
-/* Botão flutuante "Retrair Tudo" na página Jogos */
-.collapse-all-btn-games {
-  position: sticky;
-  top: 80px;
-  float: right;
-  z-index: 50;
-  background: var(--gold);
-  color: #000;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-  transition: .2s;
-  border: none;
-  margin-top: -10px;
-  margin-bottom: 10px;
-}
-.collapse-all-btn-games:hover {
-  transform: scale(1.1);
 }
 </style>
 </head>
@@ -1161,7 +1126,6 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
       <div style="font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">👁 VER PALPITES DE:</div>
       <div class="view-selector" id="user-chips"></div>
     </div>
-    <!-- Botão flutuante "Retrair Tudo" na página Jogos -->
     <button class="collapse-all-btn-games" onclick="toggleAllGamesSections()" title="Retrair/Expandir todas as seções">▲</button>
     <div id="games-content"></div>
   </div>
@@ -1219,7 +1183,7 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
     <div style="margin-bottom:20px; text-align:center;">
       <button class="btn-main" onclick="openCreatePibet()" style="max-width:300px">+ NOVA APOSTA PIRATABET</button>
     </div>
-    <div id="pibet-content" class="games-grid"></div>
+    <div id="pibet-content"></div>
   </div>
 
   <div id="page-help" class="main-wrap hidden">
@@ -2487,7 +2451,7 @@ function renderStats() {
 // ================================================================
 function renderUserChips() {
   const chips = Object.values(S.users)
-    .filter(u => u.name && u.name.trim().length > 0) // Ignora usuários sem nome
+    .filter(u => u.name && u.name.trim().length > 0)
     .map(u => {
       const isMe = u.email === S.me;
       const isFiltered = !isMe && S.viewingUser === u.email;
@@ -2510,7 +2474,7 @@ function setViewUser(email) {
 }
 
 // ================================================================
-//  RENDER GAMES (agora com seções colapsáveis)
+//  RENDER GAMES (com seções colapsáveis)
 // ================================================================
 function renderGames() {
   renderUserChips();
@@ -3144,7 +3108,7 @@ function renderRanking() {
 }
 
 // ================================================================
-//  HIGHLIGHTS (idêntico ao original, mantido)
+//  HIGHLIGHTS (mantido)
 // ================================================================
 let hlCurrentTab = 'rodadas';
 function hlTab(tab) {
@@ -4195,7 +4159,7 @@ async function adminSetTestResult() {
 }
 
 // ================================================================
-//  PIBET (mantido)
+//  PIBET (com agrupamento e botão cancelar)
 // ================================================================
 function renderPibets() {
   const content = document.getElementById('pibet-content');
@@ -4204,86 +4168,157 @@ function renderPibets() {
     return;
   }
   
-  const sorted = [...S.pibets].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-  
+  // Separar em ativas (pending, active) e finalizadas (creator_won, target_won, rejected)
+  const ativas = S.pibets.filter(p => p.status === 'pending' || p.status === 'active');
+  const finalizadas = S.pibets.filter(p => p.status === 'creator_won' || p.status === 'target_won' || p.status === 'rejected');
+
+  const sortByDate = (a,b) => new Date(b.createdAt) - new Date(a.createdAt);
+  ativas.sort(sortByDate);
+  finalizadas.sort(sortByDate);
+
   let html = '';
-  sorted.forEach(pbt => {
-    const creator = S.users[pbt.creator] || { name: pbt.creator };
-    const target = pbt.target ? (S.users[pbt.target] || { name: pbt.target }) : null;
-    
-    let statusBadge = '';
-    if (pbt.status === 'pending') statusBadge = '<span class="status-pill upcoming">⏳ Pendente (Adm)</span>';
-    else if (pbt.status === 'active') statusBadge = '<span class="status-pill live" style="animation:none;background:rgba(42,57,141,0.2);color:#7b8fe8">🔥 Valendo</span>';
-    else if (pbt.status === 'creator_won') statusBadge = '<span class="status-pill finished">🏆 Criador Venceu</span>';
-    else if (pbt.status === 'target_won') statusBadge = '<span class="status-pill finished">🎯 Desafiados Venceram</span>';
-    else if (pbt.status === 'rejected') statusBadge = '<span class="status-pill" style="background:rgba(230,29,37,0.1);color:#ff7b7b">❌ Rejeitada</span>';
 
-    let typeLabel = target ? `Desafiado: <strong>${esc(target.name)}</strong>` : 'Aposta Livre (Qualquer um pode entrar)';
-    
-    let actionHtml = '';
-    const isAdm = isAdmin();
-    
-    if (pbt.status === 'pending' && isAdm) {
-      actionHtml = `<div style="margin-top:12px;border-top:1px dashed var(--border);padding-top:10px;display:flex;gap:8px">
-        <button class="btn-gold" style="padding:8px 12px;font-size:12px;flex:1" onclick="adminResolvePibet('${pbt.id}', 'active')">✔️ Aprovar (Valendo)</button>
-        <button class="btn-red" style="padding:8px 12px;font-size:12px;flex:1" onclick="adminResolvePibet('${pbt.id}', 'rejected')">✖️ Rejeitar</button>
-      </div>`;
-    } else if (pbt.status === 'active') {
-      if (isAdm) {
-        actionHtml = `<div style="margin-top:12px;border-top:1px dashed var(--border);padding-top:10px">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Ações do Adm (Resolver Aposta):</div>
-          <div style="display:flex;gap:8px">
-            <button class="btn-gold" style="padding:8px 12px;font-size:12px;flex:1" onclick="adminResolvePibet('${pbt.id}', 'creator_won')">🏆 Criador Ganhou</button>
-            <button class="btn-red" style="padding:8px 12px;font-size:12px;flex:1" onclick="adminResolvePibet('${pbt.id}', 'target_won')">🎯 Duvidadores Ganharam</button>
-          </div>
-        </div>`;
-      }
-      
-      if (!target && S.me !== pbt.creator) {
-        if (pbt.doubters.includes(S.me)) {
-          actionHtml = `<div style="margin-top:10px;color:var(--green);font-size:12px;font-weight:bold;text-align:center;">✅ Você entrou nesta aposta!</div>` + actionHtml;
-        } else {
-          actionHtml = `<button class="btn-red" style="margin-top:10px;width:100%" onclick="joinPibet('${pbt.id}')">DUVIDO! (Entrar na Aposta)</button>` + actionHtml;
-        }
-      } else if (target && S.me === pbt.target) {
-        if (pbt.doubters.includes(S.me)) {
-          actionHtml = `<div style="margin-top:10px;color:var(--green);font-size:12px;font-weight:bold;text-align:center;">✅ Você aceitou o desafio!</div>` + actionHtml;
-        } else {
-          actionHtml = `<button class="btn-red" style="margin-top:10px;width:100%" onclick="joinPibet('${pbt.id}')">ACEITAR DESAFIO</button>` + actionHtml;
-        }
-      } else if (target && !pbt.doubters.includes(pbt.target)) {
-         actionHtml = `<div style="margin-top:10px;color:var(--muted);font-size:12px;text-align:center">Aguardando ${esc(target.name)} aceitar...</div>` + actionHtml;
-      }
-    }
-
-    let doubtersHtml = '';
-    if (pbt.doubters && pbt.doubters.length > 0) {
-      const names = pbt.doubters.map(d => (S.users[d]||{}).name || d).join(', ');
-      doubtersHtml = `<div style="margin-top:12px;font-size:12px;color:var(--muted)"><strong>Entraram na Aposta:</strong> ${esc(names)}</div>`;
-    }
-
-    html += `<div class="game-card" style="margin-bottom:14px; padding:20px;">
-      <div class="gcard-top" style="margin-bottom:14px">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div class="rank-mini-av" style="width:34px;height:34px;font-size:16px">${creator.avatar?`<img src="${creator.avatar}">`:'🧑'}</div>
-          <div>
-            <div style="font-size:15px;font-weight:bold;color:var(--text)">${esc(creator.name)}</div>
-            <div style="font-size:11px;color:var(--muted)">${formatDateTime(pbt.createdAt)}</div>
-          </div>
-        </div>
-        ${statusBadge}
+  // Seção Ativas
+  const activeHtml = ativas.map(pbt => renderPibetCard(pbt)).join('');
+  html += `
+    <div class="games-section" id="pibet-active-section">
+      <div class="games-section-header" onclick="document.getElementById('pibet-active-section').classList.toggle('is-collapsed')">
+        <span>Apostas Ativas (${ativas.length})</span>
+        <span class="toggle-arrow">▲</span>
       </div>
-      <div style="margin:16px 0;font-size:16px;line-height:1.5;color:var(--text);">"${esc(pbt.desc)}"</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;background:var(--dark3);padding:10px 14px;border-radius:10px;border:1px solid var(--border)">
-        <div style="font-size:13px;color:var(--muted)">${typeLabel}</div>
-        <div style="font-size:16px;font-weight:bold;color:#ff7b7b">🏴‍☠️ ${pbt.wager} Piratecas</div>
+      <div class="games-section-body">
+        ${activeHtml || '<div class="group-empty">Nenhuma aposta ativa.</div>'}
       </div>
-      ${doubtersHtml}
-      ${actionHtml}
-    </div>`;
-  });
+    </div>
+  `;
+
+  // Seção Finalizadas (retraída por padrão)
+  const finalHtml = finalizadas.map(pbt => renderPibetCard(pbt)).join('');
+  html += `
+    <div class="games-section is-collapsed" id="pibet-finalizadas-section">
+      <div class="games-section-header" onclick="document.getElementById('pibet-finalizadas-section').classList.toggle('is-collapsed')">
+        <span>Apostas Finalizadas (${finalizadas.length})</span>
+        <span class="toggle-arrow">▲</span>
+      </div>
+      <div class="games-section-body">
+        ${finalHtml || '<div class="group-empty">Nenhuma aposta finalizada.</div>'}
+      </div>
+    </div>
+  `;
+
   content.innerHTML = html;
 }
+
+function renderPibetCard(pbt) {
+  const creator = S.users[pbt.creator] || { name: pbt.creator };
+  const target = pbt.target ? (S.users[pbt.target] || { name: pbt.target }) : null;
+  
+  let statusBadge = '';
+  if (pbt.status === 'pending') statusBadge = '<span class="status-pill upcoming">⏳ Pendente (Adm)</span>';
+  else if (pbt.status === 'active') statusBadge = '<span class="status-pill live" style="animation:none;background:rgba(42,57,141,0.2);color:#7b8fe8">🔥 Valendo</span>';
+  else if (pbt.status === 'creator_won') statusBadge = '<span class="status-pill finished">🏆 Criador Venceu</span>';
+  else if (pbt.status === 'target_won') statusBadge = '<span class="status-pill finished">🎯 Desafiados Venceram</span>';
+  else if (pbt.status === 'rejected') statusBadge = '<span class="status-pill" style="background:rgba(230,29,37,0.1);color:#ff7b7b">❌ Rejeitada</span>';
+
+  let typeLabel = target ? `Desafiado: <strong>${esc(target.name)}</strong>` : 'Aposta Livre (Qualquer um pode entrar)';
+  
+  let actionHtml = '';
+  const isAdm = isAdmin();
+  const isCreator = S.me === pbt.creator;
+  
+  // Botão Cancelar para o criador, se:
+  // - status 'pending' (ainda não aprovado) OU
+  // - status 'active' e nenhum duvidador (doubters vazio)
+  const canCancel = isCreator && (
+    pbt.status === 'pending' ||
+    (pbt.status === 'active' && pbt.doubters.length === 0)
+  );
+
+  if (canCancel) {
+    actionHtml += `<button class="btn-sm" style="border-color:var(--red);color:#ff7b7b;margin-top:10px;" onclick="cancelPibet('${pbt.id}')">🗑 Cancelar Aposta</button>`;
+  }
+
+  if (pbt.status === 'pending' && isAdm) {
+    actionHtml += `<div style="margin-top:12px;border-top:1px dashed var(--border);padding-top:10px;display:flex;gap:8px">
+      <button class="btn-gold" style="padding:8px 12px;font-size:12px;flex:1" onclick="adminResolvePibet('${pbt.id}', 'active')">✔️ Aprovar (Valendo)</button>
+      <button class="btn-red" style="padding:8px 12px;font-size:12px;flex:1" onclick="adminResolvePibet('${pbt.id}', 'rejected')">✖️ Rejeitar</button>
+    </div>`;
+  } else if (pbt.status === 'active') {
+    if (isAdm) {
+      actionHtml += `<div style="margin-top:12px;border-top:1px dashed var(--border);padding-top:10px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Ações do Adm (Resolver Aposta):</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-gold" style="padding:8px 12px;font-size:12px;flex:1" onclick="adminResolvePibet('${pbt.id}', 'creator_won')">🏆 Criador Ganhou</button>
+          <button class="btn-red" style="padding:8px 12px;font-size:12px;flex:1" onclick="adminResolvePibet('${pbt.id}', 'target_won')">🎯 Duvidadores Ganharam</button>
+        </div>
+      </div>`;
+    }
+    
+    if (!target && S.me !== pbt.creator) {
+      if (pbt.doubters.includes(S.me)) {
+        actionHtml += `<div style="margin-top:10px;color:var(--green);font-size:12px;font-weight:bold;text-align:center;">✅ Você entrou nesta aposta!</div>`;
+      } else {
+        actionHtml += `<button class="btn-red" style="margin-top:10px;width:100%" onclick="joinPibet('${pbt.id}')">DUVIDO! (Entrar na Aposta)</button>`;
+      }
+    } else if (target && S.me === pbt.target) {
+      if (pbt.doubters.includes(S.me)) {
+        actionHtml += `<div style="margin-top:10px;color:var(--green);font-size:12px;font-weight:bold;text-align:center;">✅ Você aceitou o desafio!</div>`;
+      } else {
+        actionHtml += `<button class="btn-red" style="margin-top:10px;width:100%" onclick="joinPibet('${pbt.id}')">ACEITAR DESAFIO</button>`;
+      }
+    } else if (target && !pbt.doubters.includes(pbt.target)) {
+      actionHtml += `<div style="margin-top:10px;color:var(--muted);font-size:12px;text-align:center">Aguardando ${esc(target.name)} aceitar...</div>`;
+    }
+  }
+
+  let doubtersHtml = '';
+  if (pbt.doubters && pbt.doubters.length > 0) {
+    const names = pbt.doubters.map(d => (S.users[d]||{}).name || d).join(', ');
+    doubtersHtml = `<div style="margin-top:12px;font-size:12px;color:var(--muted)"><strong>Entraram na Aposta:</strong> ${esc(names)}</div>`;
+  }
+
+  return `<div class="game-card" style="margin-bottom:14px; padding:20px;">
+    <div class="gcard-top" style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rank-mini-av" style="width:34px;height:34px;font-size:16px">${creator.avatar?`<img src="${creator.avatar}">`:'🧑'}</div>
+        <div>
+          <div style="font-size:15px;font-weight:bold;color:var(--text)">${esc(creator.name)}</div>
+          <div style="font-size:11px;color:var(--muted)">${formatDateTime(pbt.createdAt)}</div>
+        </div>
+      </div>
+      ${statusBadge}
+    </div>
+    <div style="margin:16px 0;font-size:16px;line-height:1.5;color:var(--text);">"${esc(pbt.desc)}"</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--dark3);padding:10px 14px;border-radius:10px;border:1px solid var(--border)">
+      <div style="font-size:13px;color:var(--muted)">${typeLabel}</div>
+      <div style="font-size:16px;font-weight:bold;color:#ff7b7b">🏴‍☠️ ${pbt.wager} Piratecas</div>
+    </div>
+    ${doubtersHtml}
+    ${actionHtml ? `<div style="margin-top:10px;">${actionHtml}</div>` : ''}
+  </div>`;
+}
+
+async function cancelPibet(id) {
+  if (!confirm('Tem certeza que deseja cancelar esta aposta? Esta ação não pode ser desfeita.')) return;
+  toast('Cancelando aposta...','info');
+  try {
+    const res = await gsCall({ action:'cancelPibet', callerEmail:S.me, id });
+    if (res.ok) {
+      toast('✅ Aposta cancelada com sucesso!','ok');
+      await forceSyncAll();
+      navTo('pibet');
+    } else {
+      toast(res.error || 'Erro ao cancelar aposta.','err');
+    }
+  } catch(e) {
+    toast('Erro de conexão.','err');
+  }
+}
+
+// ================================================================
+//  PIBET - funções existentes (openCreatePibet, submitPibet, joinPibet, adminResolvePibet)
+//  permanecem inalteradas – apenas importei as que já estavam no código.
+// ================================================================
 
 function openCreatePibet() {
   const sel = document.getElementById('pbt-target');
