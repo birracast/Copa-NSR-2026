@@ -1544,4 +1544,2944 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
           </div>
           <div class="profile-uname" id="p-name">Nome</div>
           <div class="profile-team"  id="p-team">Time</div>
-          <div class="profile-grid"
+          <div class="profile-grid"  id="p-stats"></div>
+        </div>
+        <div style="margin-top:12px">
+          <button class="btn-logout" style="width:100%;padding:12px" onclick="doLogout()">🚪 Sair da conta</button>
+        </div>
+        <div class="set-card" style="margin-top:12px">
+          <h3>🔑 Alterar Senha</h3>
+          <div id="pass-msg"></div>
+          <div class="fgroup"><label class="flabel">Senha atual</label><input type="password" id="pp-old" class="finput" placeholder="••••••••"></div>
+          <div class="fgroup"><label class="flabel">Nova senha</label><input type="password" id="pp-new" class="finput" placeholder="Mín. 6 caracteres"></div>
+          <button class="btn-gold" onclick="doChangePass()" style="width:100%">🔒 ALTERAR SENHA</button>
+        </div>
+      </div>
+      <div>
+        <div class="set-card">
+          <h3>✏️ Editar Perfil</h3>
+          <div class="fgroup"><label class="flabel">Nome</label><input type="text" id="pe-name" class="finput" placeholder="Seu nome"></div>
+          <div class="fgroup"><label class="flabel">Time do coração</label><input type="text" id="pe-team" class="finput" placeholder="ex: Brasil"></div>
+          <div class="fgroup"><label class="flabel">Frase / Apelido</label><input type="text" id="pe-motto" class="finput" placeholder="Vai Brasil! 🇧🇷"></div>
+          <button class="btn-main" onclick="saveProfileEdits()">💾 SALVAR</button>
+        </div>
+        <div class="set-card" style="margin-top:16px">
+          <h3>📊 Histórico de Pontos</h3>
+          <div id="p-history"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="page-admin" class="main-wrap hidden">
+    <div class="phase-hdr">
+      <span class="phase-hdr-text">🛡 Painel Admin</span>
+      <span class="phase-pill admin-pill">Restrito</span>
+    </div>
+
+    <div class="admin-stats-row" id="admin-stats-row">
+      <div class="stat-box"><div class="sv gold" id="adm-total-users">—</div><div class="sl">Usuários</div></div>
+      <div class="stat-box"><div class="sv blue" id="adm-reset-count">—</div><div class="sl">Pendentes reset</div></div>
+      <div class="stat-box"><div class="sv green" id="adm-admin-count">—</div><div class="sl">Admins</div></div>
+    </div>
+
+    <div class="set-card" style="margin-bottom:20px">
+      <h3>👥 Usuários Cadastrados</h3>
+      <div class="admin-search">
+        <input type="text" id="adm-filter" class="finput" placeholder="🔍 Filtrar por nome ou e-mail..." oninput="renderAdminTable()" style="flex:1">
+        <button class="btn-gold" onclick="loadAdminUsers()">🔄 Recarregar</button>
+      </div>
+      <div id="admin-table-wrap" style="overflow-x:auto">
+        <table class="admin-table" id="admin-user-table">
+          <thead>
+            <tr>
+              <th>Usuário</th>
+              <th>E-mail</th>
+              <th>Time</th>
+              <th>Desde</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="admin-tbody"></tbody>
+        </table>
+      </div>
+      <div id="admin-empty" style="text-align:center;padding:32px;color:var(--muted);display:none">Nenhum usuário encontrado.</div>
+    </div>
+
+    <div class="set-card" id="admin-edit-card" style="display:none;margin-bottom:20px;border-color:rgba(201,168,76,0.3)">
+      <h3>✏️ Editando: <span id="admin-edit-email" style="color:var(--text);font-size:16px"></span></h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:16px">
+        <div class="fgroup"><label class="flabel">Nome</label><input type="text" id="ae-name" class="finput"></div>
+        <div class="fgroup"><label class="flabel">Time</label><input type="text" id="ae-team" class="finput"></div>
+        <div class="fgroup"><label class="flabel">Frase</label><input type="text" id="ae-motto" class="finput"></div>
+        <div class="fgroup"><label class="flabel">Administrador?</label>
+          <select id="ae-admin" class="finput">
+            <option value="false">Não</option>
+            <option value="true">Sim</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn-gold" onclick="submitAdminEdit()">💾 SALVAR ALTERAÇÕES</button>
+        <button class="btn-red" onclick="submitAdminResetPass()">🔑 RESETAR SENHA → "adminpirata"</button>
+        <button class="btn-sm" onclick="closeAdminEdit()">✕ Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+<!-- Modal de Histórico do Ranking -->
+<div id="history-modal" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width: 500px; max-height: 85vh; display: flex; flex-direction: column;">
+    <div id="hm-avatar-wrap" style="display:flex;flex-direction:column;align-items:center;margin-bottom:12px;">
+      <div id="hm-avatar" style="width:96px;height:96px;border-radius:50%;overflow:hidden;border:3px solid var(--gold);background:var(--dark3);display:flex;align-items:center;justify-content:center;font-size:44px;flex-shrink:0;margin-bottom:8px;box-shadow:0 4px 20px rgba(0,0,0,0.5);">🧑</div>
+      <div class="modal-icon" id="hm-icon" style="font-size:22px;margin:0 0 2px;">🏆</div>
+      <div class="modal-title" id="hm-title" style="margin-bottom:2px;">Histórico</div>
+      <div class="modal-msg" id="hm-subtitle" style="margin-bottom:8px;"></div>
+    </div>
+    <div id="hm-content" style="flex:1; overflow-y:auto; text-align:left; background:var(--dark3); border-radius:12px; padding:12px; border:1px solid var(--border);"></div>
+    <button class="modal-close" style="margin-top:16px;" onclick="document.getElementById('history-modal').classList.add('hidden')">FECHAR</button>
+  </div>
+</div>
+
+<!-- Modal de Detalhes de Apostas (Bosta/Mestre) -->
+<div id="bets-info-modal" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width: 400px; max-height: 80vh; display: flex; flex-direction: column;">
+    <div class="modal-icon">👁️</div>
+    <div class="modal-title">Quem apostou?</div>
+    <div class="modal-msg" id="bim-subtitle" style="margin-bottom: 12px;"></div>
+    <div id="bim-content" style="flex:1; overflow-y:auto; text-align:left; background:var(--dark3); border-radius:12px; padding:12px; border:1px solid var(--border);"></div>
+    <button class="modal-close" style="margin-top:16px;" onclick="document.getElementById('bets-info-modal').classList.add('hidden')">FECHAR</button>
+  </div>
+</div>
+
+<div id="pibet-create-modal" class="modal-overlay hidden">
+  <div class="modal-box" style="text-align:left">
+    <div class="modal-title" style="text-align:center">Nova Aposta Piratabet</div>
+    <div class="fgroup" style="margin-top:16px">
+      <label class="flabel">Desafio / O que vai acontecer?</label>
+      <textarea id="pbt-desc" class="finput" rows="3" placeholder="Ex: O Brasil vai fazer um gol antes dos 15 min do 1º tempo"></textarea>
+    </div>
+    <div class="fgroup">
+      <label class="flabel">Valor (Piratecas)</label>
+      <input type="number" id="pbt-wager" class="finput" value="50" min="1" max="1000">
+    </div>
+    <div class="fgroup">
+      <label class="flabel">Alvo (Contra quem?)</label>
+      <select id="pbt-target" class="finput">
+        <option value="">Aposta Livre (Qualquer um pode duvidar)</option>
+        </select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn-main" onclick="submitPibet()">LANÇAR APOSTA</button>
+      <button class="btn-sm" onclick="document.getElementById('pibet-create-modal').classList.add('hidden')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div id="pibet-share-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-icon">✅</div>
+    <div class="modal-title">Aposta Registrada!</div>
+    <div class="modal-msg">Sua aposta foi registrada e precisa ser <strong>aprovada pelo Administrador</strong> para valer oficialmente.</div>
+    <div style="margin: 20px 0;">
+      <button class="help-share-btn" id="btn-pibet-whatsapp" style="font-size:16px;padding:12px 20px;border-radius:12px;width:100%;justify-content:center">📲 Compartilhar no WhatsApp</button>
+    </div>
+    <div class="modal-msg" style="font-size:12px;color:var(--gold)">⚠️ Dica: Envie no grupo para avisar o Adm!</div>
+    <button class="modal-close" style="width:100%" onclick="closePibetShareModal()">FECHAR</button>
+  </div>
+</div>
+  
+</div><div id="modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-icon">🔒</div>
+    <div class="modal-title">PALPITE BLOQUEADO</div>
+    <div class="modal-msg" id="modal-msg">Este jogo começa em menos de 10 minutos.</div>
+    <button class="modal-close" onclick="document.getElementById('modal').classList.add('hidden')">FECHAR</button>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+</div><script>
+// ================================================================
+//  CONFIGURAÇÃO EXCLUSIVA - COLOQUE SUA URL AQUI ABAIXO
+// ================================================================
+const GS_URL = 'https://script.google.com/macros/s/AKfycbxbK2qzW1zxmoR9Tb3J3UnNK0xkbzn2AATWK35S1R_Av21pKjx-tWnIVO5IJR13DhwFKg/exec';
+// Exemplo: const GS_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
+
+// ── OneSignal: substitua pelo seu App ID (painel OneSignal → Settings → Keys & IDs) ──
+const ONESIGNAL_APP_ID = 'c48bd1a4-00e1-4629-baf3-02a660f35e64';
+
+// Dicionário convertido para Imagens (Resolve o problema do Windows)
+const ISO_MAP = {
+  // Américas
+  'BRA':'br', 'ARG':'ar', 'USA':'us', 'MEX':'mx', 'CAN':'ca', 
+  'URU':'uy', 'COL':'co', 'ECU':'ec', 'PER':'pe', 'CHI':'cl', 
+  'VEN':'ve', 'PAR':'py', 'BOL':'bo', 'CRC':'cr', 'PAN':'pa', 'JAM':'jm',
+  // Europa
+  'FRA':'fr', 'ENG':'gb-eng', 'ESP':'es', 'GER':'de', 'POR':'pt', 
+  'ITA':'it', 'CRO':'hr', 'NED':'nl', 'BEL':'be', 'SUI':'ch', 
+  'POL':'pl', 'DEN':'dk', 'SWE':'se', 'SRB':'rs', 'WAL':'gb-wls', 
+  'SCO':'gb-sct', 'UKR':'ua', 'AUT':'at', 'TUR':'tr', 'CZE':'cz', 'HUN':'hu',
+  // África
+  'SEN':'sn', 'MAR':'ma', 'CMR':'cm', 'GHA':'gh', 'TUN':'tn', 
+  'NGA':'ng', 'ALG':'dz', 'EGY':'eg', 'CIV':'ci', 'MLI':'ml', 'COD':'cd', 'RSA':'za',
+  // Ásia/Oceania
+  'JPN':'jp', 'KOR':'kr', 'KSA':'sa', 'AUS':'au', 'IRN':'ir', 
+  'QAT':'qa', 'NZL':'nz', 'IRQ':'iq', 'UAE':'ae', 'JOR':'jo', 
+  'UZB':'uz', 'OMA':'om', 'BHR':'bh',
+  // Bandeiras adicionadas
+  'BIH':'ba', 'HAI':'ht', 'CUW':'cw', 'CPV':'cv', 'URY':'uy', 'NOR':'no'
+};
+
+function getFlag(code) { 
+  const iso = ISO_MAP[code];
+  if (iso) {
+    return `<img src="https://flagcdn.com/w40/${iso}.png" srcset="https://flagcdn.com/w80/${iso}.png 2x" alt="${code}" style="width: 1em; height: auto; border-radius: 3px; vertical-align: middle; box-shadow: 0 1px 3px rgba(0,0,0,0.4);">`;
+  }
+  return '🏳️'; 
+}
+
+const IMGBB_API_KEY = '5c74c4e1ebba127ec7d8480464ae3cce';
+  
+// ================================================================
+//  FALLBACK GAMES DATA
+// ================================================================
+const GROUP_KEYS     = 'ABCDEFGHIJKL'.split('');
+const GROUP_PAIRINGS = [['1','2'], ['3','4'], ['1','3'], ['2','4'], ['4','1'], ['2','3']];
+let DATA_META = { source:'fallback', updatedAt:null, error:'Aguardando carregamento da tabela oficial.' };
+let STANDINGS = [];
+let GAMES = buildFallbackGames();
+
+function buildFallbackGames() {
+  const games = [];
+  const groupStart = new Date('2026-06-11T19:00:00Z');
+  GROUP_KEYS.forEach((group, gi) => {
+    GROUP_PAIRINGS.forEach((pairing, pi) => {
+      const kickoff = new Date(groupStart.getTime() + ((gi * 6 + pi) * 5 * 60 * 60 * 1000));
+      games.push(makeFallbackGame({ id: games.length+1, phase:'Fase de Grupos', stage:'GROUP_STAGE', group:`Grupo ${group}`, hCode:`${group}${pairing[0]}`, aCode:`${group}${pairing[1]}`, date:kickoff.toISOString() }));
+    });
+  });
+  [
+    { phase:'16 avos de Final',  stage:'LAST_32',       count:16, code:'R32',  start:'2026-06-28T19:00:00Z' },
+    { phase:'Oitavas de Final',  stage:'LAST_16',       count:8,  code:'R16',  start:'2026-07-04T19:00:00Z' },
+    { phase:'Quartas de Final',  stage:'QUARTER_FINALS',count:4,  code:'QF',   start:'2026-07-09T19:00:00Z' },
+    { phase:'Semifinal',         stage:'SEMI_FINALS',   count:2,  code:'SF',   start:'2026-07-14T19:00:00Z' },
+    { phase:'Terceiro Lugar',    stage:'THIRD_PLACE',   count:1,  code:'3P',   start:'2026-07-18T19:00:00Z' },
+    { phase:'Final',             stage:'FINAL',         count:1,  code:'FIN',  start:'2026-07-19T19:00:00Z' },
+  ].forEach(block => {
+    const start = new Date(block.start);
+    for (let i = 0; i < block.count; i++) {
+      games.push(makeFallbackGame({ id:games.length+1, phase:block.phase, stage:block.stage, group:null, hCode:`${block.code}${i+1}A`, aCode:`${block.code}${i+1}B`, date:new Date(start.getTime()+(i*24*60*60*1000)).toISOString() }));
+    }
+  });
+  return games;
+}
+
+function makeFallbackGame(data) {
+  return { ...data, hFlag:getFlag(data.hCode), hName:`Equipe ${data.hCode}`, hLogo:'', aFlag:getFlag(data.aCode), aName:`Equipe ${data.aCode}`, aLogo:'', venue:'A confirmar', status:'upcoming', result:{h:null,a:null,status:'upcoming'}, source:'fallback' };
+}
+
+// ================================================================
+//  STATE
+// ================================================================
+let S = {
+  users: {}, me: null, results: {},
+  settings: { exact:10, result:5, streak:5, semi:15, final:25, lockMinsBet:10, lockMinsVote:1, sceneBg:false, notifMinsPre:30, notifMinsLockBet:15 },
+  viewingUser: null, apostas: {}, pibets: [], testMode: false
+};
+let saveTimers = {}; let adminUsers = []; let adminEditTarget = null;
+
+// ================================================================
+//  PERSIST SETTINGS (only settings in localStorage, not users)
+// ================================================================
+function persistSettings() {
+  const localSettings = { sceneBg: S.settings.sceneBg };
+  localStorage.setItem('bolao26_settings', JSON.stringify({ version:1, results:S.results, settings:localSettings }));
+}
+function hydrateSettings() {
+  const raw = localStorage.getItem('bolao26_settings');
+  if (raw) {
+    const d = JSON.parse(raw);
+    S.results  = d.results  || {};
+    if (d.settings && d.settings.sceneBg !== undefined) {
+      S.settings.sceneBg = d.settings.sceneBg;
+    }
+  }
+  applySceneBackground();
+
+  const session = localStorage.getItem('bolao26_session');
+  if (session) {
+    try {
+      const sess = JSON.parse(session);
+      if (sess.email && sess.userData) {
+        S.me = sess.email;
+        S.users[sess.email] = sess.userData;
+      }
+    } catch(e) {}
+  }
+}
+function saveSession(userData) {
+  localStorage.setItem('bolao26_session', JSON.stringify({ email: userData.email, userData }));
+}
+function clearSession() {
+  localStorage.removeItem('bolao26_session');
+}
+
+async function syncGlobalSettings() {
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) return;
+  try {
+    const res = await gsGet('loadGlobalSettings');
+    if (res.ok && res.settings && Object.keys(res.settings).length > 0) {
+      S.settings = { ...S.settings, ...res.settings };
+    }
+  } catch(e) {}
+}
+
+// ================================================================
+//  BOOT
+// ================================================================
+async function boot() {
+  hydrateSettings();
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) {
+    hideLoading(); showAuth();
+    authMsg('Aviso: O administrador ainda não configurou a URL.', false); return;
+  }
+  if (S.me) {
+    try {
+      await loadTournamentData(false);
+      await syncGlobalSettings();
+      const data = await gsLoadAll();
+      if (data && data.users) mergeRemoteData(data);
+    } catch(e) {}
+    hideLoading(); enterApp();
+  } else {
+    hideLoading(); showAuth();
+  }
+}
+
+function hideLoading() {
+  document.getElementById('loading-overlay').style.display = 'none';
+}
+function showAuth() {
+  document.getElementById('screen-auth').classList.remove('hidden');
+}
+
+// ================================================================
+//  AUTH TAB
+// ================================================================
+function authTab(t) {
+  ['login','reg'].forEach(x => {
+    document.getElementById('form-'+x).classList.toggle('hidden', x!==t);
+    document.getElementById('tab-btn-'+x).classList.toggle('active', x===t);
+  });
+  document.getElementById('auth-msg').innerHTML = '';
+}
+function authMsg(msg, ok) {
+  document.getElementById('auth-msg').innerHTML = `<div class="${ok?'ok-msg':'err-msg'}">${msg}</div>`;
+}
+
+let tempAvatar = null;
+async function previewAvatar(inp) {
+  const f = inp.files[0];
+  if (!f || f.size > 2e6) { toast('Foto muito grande (máx 2MB)','err'); return; }
+
+  document.getElementById('av-preview').innerHTML = `<div class="save-spin" style="margin: 0 auto 10px;"></div><div class="avatar-area-text">Enviando foto para a nuvem...</div>`;
+
+  const formData = new FormData();
+  formData.append('image', f);
+
+  try {
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.success) {
+      tempAvatar = data.data.url;
+      document.getElementById('av-preview').innerHTML = `<img src="${tempAvatar}" class="avatar-preview-img"><div class="avatar-area-text">✅ Foto enviada!</div>`;
+    } else {
+      toast('Erro ao enviar foto','err');
+      document.getElementById('av-preview').innerHTML = `<div class="avatar-area-icon">📸</div><div class="avatar-area-text">Clique para tentar novamente</div>`;
+    }
+  } catch(e) {
+    toast('Erro de conexão com servidor de imagens','err');
+  }
+}
+// ================================================================
+//  LOGIN — via Google Sheets
+// ================================================================
+async function doLogin() {
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) { authMsg('Erro: URL do servidor não configurada no código-fonte (index.html).'); return; }
+  const em = document.getElementById('l-email').value.trim().toLowerCase();
+  const pw = document.getElementById('l-pass').value;
+  if (!em || !pw) { authMsg('Preencha e-mail e senha.'); return; }
+
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true; btn.textContent = 'Verificando...';
+
+  try {
+    const res = await gsCall({ action:'login', email:em, pass:pw });
+    if (!res.ok) { authMsg(res.error || 'Credenciais inválidas.'); return; }
+
+    const user = res.user;
+    user.bets = {};
+    S.me = em;
+    S.users[em] = user;
+    saveSession(user);
+
+    const data = await gsLoadAll();
+    if (data && data.users) mergeRemoteData(data);
+
+    await loadTournamentData(false);
+
+    if (user.mustChangePass) {
+      enterApp();
+      initOneSignalForUser();
+      document.getElementById('change-pass-modal').classList.remove('hidden');
+    } else {
+      enterApp();
+      initOneSignalForUser();
+    }
+  } catch(e) {
+    authMsg('Erro de conexão. Verifique a URL do Apps Script no código.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'ENTRAR →';
+  }
+}
+
+// ================================================================
+//  REGISTER — via Google Sheets
+// ================================================================
+async function doRegister() {
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) { authMsg('Erro: URL do servidor não configurada no código-fonte (index.html).'); return; }
+  const name  = document.getElementById('r-name').value.trim();
+  const em    = document.getElementById('r-email').value.trim().toLowerCase();
+  const pw    = document.getElementById('r-pass').value;
+  const team  = document.getElementById('r-team').value.trim();
+  if (!name || !em || !pw) { authMsg('Preencha nome, e-mail e senha.'); return; }
+  if (pw.length < 6) { authMsg('Senha deve ter ao menos 6 caracteres.'); return; }
+
+  const btn = document.getElementById('btn-reg');
+  btn.disabled = true; btn.textContent = 'Criando conta...';
+
+  try {
+    const res = await gsCall({ action:'register', email:em, name:name, pass:pw, team:team });
+    if (!res.ok) { authMsg(res.error || 'Erro ao criar conta.'); return; }
+
+    const user = { ...res.user, bets:{}, avatar: tempAvatar || '' };
+    S.me = em;
+    S.users[em] = user;
+    saveSession(user);
+
+    await loadTournamentData(false);
+    enterApp();
+    initOneSignalForUser();
+    toast('Conta criada com sucesso! ✅','ok');
+  } catch(e) {
+    authMsg('Erro de conexão. Verifique a URL do Apps Script no código.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'CRIAR CONTA ✓';
+  }
+}
+
+// ================================================================
+//  CHANGE PASSWORD
+// ================================================================
+async function submitChangePass() {
+  const newPass = document.getElementById('cp-new').value;
+  const confirm = document.getElementById('cp-confirm').value;
+  const msgEl   = document.getElementById('change-pass-msg');
+  if (!newPass || newPass.length < 6) { msgEl.innerHTML='<div class="err-msg">Senha deve ter ao menos 6 caracteres.</div>'; return; }
+  if (newPass !== confirm) { msgEl.innerHTML='<div class="err-msg">As senhas não conferem.</div>'; return; }
+
+  try {
+    const res = await gsCall({ action:'changePass', email:S.me, newPass:newPass });
+    if (!res.ok) { msgEl.innerHTML=`<div class="err-msg">${res.error}</div>`; return; }
+    S.users[S.me].mustChangePass = false;
+    saveSession(S.users[S.me]);
+    document.getElementById('change-pass-modal').classList.add('hidden');
+    toast('Senha alterada com sucesso! 🔒','ok');
+  } catch(e) {
+    msgEl.innerHTML='<div class="err-msg">Erro de conexão.</div>';
+  }
+}
+
+async function doChangePass() {
+  const oldPass = document.getElementById('pp-old').value;
+  const newPass = document.getElementById('pp-new').value;
+  const msgEl   = document.getElementById('pass-msg');
+  if (!oldPass || !newPass) { msgEl.innerHTML='<div class="err-msg">Preencha todos os campos.</div>'; return; }
+  if (newPass.length < 6)   { msgEl.innerHTML='<div class="err-msg">Nova senha deve ter ao menos 6 caracteres.</div>'; return; }
+  try {
+    const res = await gsCall({ action:'changePass', email:S.me, oldPass:oldPass, newPass:newPass });
+    if (!res.ok) { msgEl.innerHTML=`<div class="err-msg">${res.error}</div>`; return; }
+    S.users[S.me].mustChangePass = false;
+    saveSession(S.users[S.me]);
+    msgEl.innerHTML='<div class="ok-msg">✅ Senha alterada com sucesso!</div>';
+    document.getElementById('pp-old').value = '';
+    document.getElementById('pp-new').value = '';
+  } catch(e) {
+    msgEl.innerHTML='<div class="err-msg">Erro de conexão.</div>';
+  }
+}
+
+function doLogout() {
+  S.me = null; S.viewingUser = null; S.users = {};
+  clearSession();
+  document.getElementById('screen-main').classList.add('hidden');
+  document.getElementById('screen-auth').classList.remove('hidden');
+  toast('Até logo! 👋','info');
+}
+
+function enterApp() {
+  document.getElementById('screen-auth').classList.add('hidden');
+  document.getElementById('screen-main').classList.remove('hidden');
+  S.viewingUser = S.me;
+  refreshNavUser();
+  
+  const isAdm = isAdmin();
+  document.getElementById('nt-admin').classList.toggle('hidden', !isAdm);
+  
+  const syncBtn = document.getElementById('btn-main-sync');
+  if (syncBtn) syncBtn.classList.toggle('hidden', !isAdm);
+  
+  navTo('games');
+  
+  const countdownEl = document.getElementById('sync-countdown');
+  if (isAdm) {
+    forceSyncAll();
+    startSyncTimer();
+  } else {
+    if (countdownEl) countdownEl.textContent = 'Gerenciado pelo Admin 🔒';
+  }
+}
+
+// ================================================================
+//  NAVIGATION
+// ================================================================
+const pages = ['games','groups','ranking','highlights','pibet','help','settings','profile','admin'];
+let currentPage = 'games';
+function navTo(p) {
+  currentPage = p;
+  pages.forEach(x => {
+    document.getElementById('page-'+x).classList.toggle('hidden', x!==p);
+    const n = document.getElementById('nt-'+x); if(n) n.classList.toggle('active', x===p);
+  });
+  if(p==='games')      { renderGames(); renderStats(); }
+  if(p==='groups')     renderGroupsPage();
+  if(p==='ranking')    renderRanking();
+  if(p==='highlights') renderHighlights();
+  if(p==='pibet')      renderPibets();
+  if(p==='settings')   renderSettingsPage();
+  if(p==='profile')    renderProfile();
+  if(p==='admin')      loadAdminUsers();
+}
+function rerenderCurrentPage() { navTo(currentPage || 'games'); }
+
+// ================================================================
+//  GS HTTP HELPERS
+// ================================================================
+function gsActionUrl(action) {
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) return '';
+  const sep = GS_URL.includes('?') ? '&' : '?';
+  return `${GS_URL}${sep}action=${encodeURIComponent(action)}`;
+}
+
+async function gsCall(params) {
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) throw new Error('GS_URL nao configurada no index.html');
+  const sep = GS_URL.includes('?') ? '&' : '?';
+  const qs  = Object.entries(params)
+    .filter(([,v]) => v !== undefined && v !== null && v !== '')
+    .map(([k,v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v))
+    .join('&');
+  const url = GS_URL + sep + qs;
+  const res = await fetch(url, { mode:'cors' });
+  return res.json();
+}
+async function gsGet(action, extraParams) {
+  extraParams = extraParams || {};
+  return gsCall(Object.assign({ action }, extraParams));
+}
+
+// ================================================================
+//  TOURNAMENT DATA
+// ================================================================
+async function loadTournamentData(force=false) {
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) {
+    DATA_META = { source:'fallback', updatedAt:null, error:'URL do Apps Script não configurada.' };
+    updateDataSourceLabel(); return false;
+  }
+  try {
+    const action = force ? 'refreshTournament' : 'loadTournament';
+    const data = await gsGet(action);
+    if (data && data.ok && Array.isArray(data.games) && data.games.length) {
+      applyTournamentPayload(data); return true;
+    }
+    DATA_META = { source:'fallback', updatedAt:null, error:(data&&data.error)||'Não foi possível carregar a tabela.' };
+    updateDataSourceLabel(); return false;
+  } catch(e) {
+    DATA_META = { source:'fallback', updatedAt:null, error:'Falha ao buscar jogos no Apps Script.' };
+    updateDataSourceLabel(); return false;
+  }
+}
+
+function applyTournamentPayload(data) {
+  GAMES = data.games.map(normalizeClientGame).sort((a,b)=>a.id-b.id);
+  STANDINGS = Array.isArray(data.standings) ? data.standings : [];
+  DATA_META = { source:data.source||'API', updatedAt:data.updatedAt||new Date().toISOString(), error:null };
+  S.testMode = data.testMode === true;
+  applyOfficialResults();
+  if (S.testMode && data.testResults && typeof data.testResults === 'object') {
+    Object.entries(data.testResults).forEach(([id, r]) => {
+      const gid = parseInt(id);
+      if (r && r.status) S.results[gid] = { h: r.h, a: r.a, status: r.status, source: 'test' };
+    });
+  }
+  updateDataSourceLabel();
+}
+
+function normalizeClientGame(g) {
+  const result = g.result || {};
+  return {
+    id:parseInt(g.id), apiId:g.apiId||null, phase:g.phase||'A definir', stage:g.stage||'', group:g.group||null,
+    hFlag: getFlag(g.hCode || g.hName), hCode:g.hCode||'CASA', hName:g.hName||g.hCode||'Casa', hLogo:g.hLogo||'',
+    aFlag: getFlag(g.aCode || g.aName), aCode:g.aCode||'FORA', aName:g.aName||g.aCode||'Fora', aLogo:g.aLogo||'',
+    date:g.date||'', venue:g.venue||'A confirmar',
+    status:result.status||g.status||'upcoming',
+    result:{ h:result.h!=null?result.h:null, a:result.a!=null?result.a:null, status:result.status||g.status||'upcoming' }
+  };
+}
+
+function applyOfficialResults() {
+  const next = {};
+  GAMES.forEach(g => {
+    const r = g.result || {};
+    next[g.id] = { h:r.h!=null?r.h:null, a:r.a!=null?r.a:null, status:r.status||g.status||'upcoming', source:DATA_META.source };
+  });
+  S.results = next; persistSettings();
+}
+
+async function refreshTournamentData() {
+  showSaving(true);
+  const ok = await loadTournamentData(true);
+  showSaving(false); rerenderCurrentPage();
+  toast(ok ? 'Tabela oficial atualizada!' : DATA_META.error, ok ? 'ok' : 'warn');
+}
+
+function updateDataSourceLabel() {
+  const source  = DATA_META.source==='fallback' ? 'Fallback sem confrontos inventados' : 'Football-Data.org API';
+  const updated = DATA_META.updatedAt ? `Atualizado em ${formatDateTime(DATA_META.updatedAt)}` : 'Ainda não atualizado';
+  const testBadge = S.testMode ? ' 🧪 [MODO TESTE ATIVO]' : '';
+  const text    = DATA_META.error ? `Tabela oficial: ${DATA_META.error}${testBadge}` : `Tabela oficial: ${source}${testBadge}`;
+  const label = document.getElementById('data-source-label'); if(label) label.textContent = text;
+  if (label && S.testMode) label.style.color = '#F0C040';
+  else if (label) label.style.color = '';
+  const gSource = document.getElementById('groups-source');   if(gSource) gSource.textContent = source + testBadge;
+  const gUpd    = document.getElementById('groups-updated');  if(gUpd) gUpd.textContent = DATA_META.error ? `${DATA_META.error} ${updated}.` : `${updated}. Jogos e classificação por grupo.`;
+  const box     = document.getElementById('api-status-box');
+  if(box) box.innerHTML = DATA_META.error
+    ? `<strong style="color:var(--gold)">Aguardando configuração</strong><br>${esc(DATA_META.error)}`
+    : `<strong style="color:var(--green)">Conectado</strong><br>${esc(source)} • ${esc(updated)}${S.testMode?'<br><strong style="color:#F0C040">🧪 Modo de Teste Ativo</strong>':''}`;
+}
+
+// ================================================================
+//  GS INTEGRATION
+// ================================================================
+async function gsSave(email, gameId, h, a) {
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) return;
+  try { await gsCall({ action:'saveBet', email:email, gameId:gameId, h:h, a:a }); } catch(e) { console.warn('GS save failed:', e); }
+}
+
+async function gsSaveUser(user) {
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) return;
+  try { 
+    await gsCall({ 
+      action:'saveUser', 
+      email:user.email, 
+      name:user.name, 
+      team:user.team, 
+      motto:user.motto, 
+      avatar:user.avatar
+    }); 
+  } catch(e) {}
+}
+
+async function gsLoadAll() {
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) return null;
+  try {
+    const data = await gsGet('loadAll');
+    if (data && data.ok) return data;
+  } catch(e) { console.warn('GS loadAll failed:', e); }
+  return null;
+}
+
+function mergeRemoteData(data) {
+  if (data.users) {
+    data.users.forEach(row => {
+      const email = row.email; if (!email) return;
+      const existing = S.users[email] || {}; const bets = {};
+      GAMES.forEach(g => {
+        const h = row[`g${g.id}_h`]; const a = row[`g${g.id}_a`];
+        if (h !== '' && h != null && a !== '' && a != null) bets[g.id] = { h:parseInt(h), a:parseInt(a) };
+      });
+      S.users[email] = {
+        email, name: row.name || existing.name || email, team: row.team || existing.team || '',
+        motto: row.motto || existing.motto || '', avatar: row.avatar || existing.avatar || '',
+        isAdmin: row.isAdmin || existing.isAdmin || false, mustChangePass: row.mustChangePass || false,
+        since: row.since || existing.since || '', bets: { ...existing.bets, ...bets }
+      };
+      if (email === S.me) saveSession(S.users[email]);
+    });
+  }
+  S.apostas = data.apostas || {}; 
+  S.pibets = data.pibets || [];
+}
+
+async function forceSyncAll() {
+  showSaving(true);
+  await loadTournamentData(true);
+  const data = await gsLoadAll();
+  if (data && data.users) {
+    mergeRemoteData(data);
+    persistSettings();
+    toast('Sincronizado com Google Sheets! ✅','ok');
+    rerenderCurrentPage();
+  } else {
+    toast(DATA_META.error || 'Google Sheets não configurado no código.','info');
+  }
+  rerenderCurrentPage(); showSaving(false); resetSyncTimer();
+}
+
+function showSaving(v) { document.getElementById('saving-indicator').classList.toggle('hidden', !v); }
+
+// ================================================================
+//  SYNC TIMER
+// ================================================================
+let syncTimer, syncSecs = 300;
+function startSyncTimer() {
+  if (syncTimer) clearInterval(syncTimer);
+  syncSecs = 300;
+  syncTimer = setInterval(() => {
+    const el = document.getElementById('sync-countdown');
+    if (S.testMode) {
+      if (el) el.textContent = '⏸ TESTE';
+      return;
+    }
+    syncSecs--;
+    if (el) { const m=Math.floor(syncSecs/60).toString().padStart(2,'0'); const s=(syncSecs%60).toString().padStart(2,'0'); el.textContent = m+':'+s; }
+    if (syncSecs <= 0) { forceSyncAll(); syncSecs = 300; }
+  }, 1000);
+}
+function resetSyncTimer() {
+  if (!S.testMode) syncSecs = 300;
+}
+
+// ================================================================
+//  GAME LOCK
+// ================================================================
+function isLocked(game) {
+  if (DATA_META.source==='fallback' && game.source==='fallback') return true;
+  const r = S.results[game.id];
+  if (r && (r.status==='finished'||r.status==='live')) return true;
+  const kickoff = new Date(game.date).getTime();
+  if (!Number.isFinite(kickoff)) return false;
+  const mins = (S.settings.lockMinsBet ?? 10);
+  return (kickoff - Date.now()) < mins*60*1000;
+}
+
+function isVoteLocked(game) {
+  if (DATA_META.source==='fallback' && game.source==='fallback') return true;
+  const r = S.results[game.id];
+  if (r && (r.status==='finished'||r.status==='live')) return true;
+  const kickoff = new Date(game.date).getTime();
+  if (!Number.isFinite(kickoff)) return false;
+  const mins = (S.settings.lockMinsVote ?? 10);
+  return (kickoff - Date.now()) < mins*60*1000;
+}
+
+function normEmail(e) { return String(e).replace(/[@.]/g, '_').substring(0, 50); }
+
+function countVotesInGame(voterEmail, gameId, type) {
+  let count = 0;
+  Object.keys(S.apostas || {}).forEach(key => {
+    const parts = key.split('_');
+    if (parts[0] !== 'aposta') return;
+    const gId = parseInt(parts[1]);
+    if (gId !== gameId) return;
+    const votersObj = S.apostas[key];
+    if (votersObj && votersObj[voterEmail] === type) count++;
+  });
+  return count;
+}
+
+function countVotesInRodada(voterEmail, rodada, type, excludeGameId) {
+  let count = 0;
+  Object.keys(S.apostas || {}).forEach(key => {
+    const parts = key.split('_');
+    if (parts[0] !== 'aposta') return;
+    const gId = parseInt(parts[1]);
+    if (excludeGameId != null && gId === excludeGameId) return;
+    if (getRodada(gId) !== rodada) return;
+    const votersObj = S.apostas[key];
+    if (votersObj && votersObj[voterEmail] === type) count++;
+  });
+  return count;
+}
+function minsUntil(game) {
+  const kickoff = new Date(game.date).getTime();
+  if (!Number.isFinite(kickoff)) return Infinity;
+  return Math.round((kickoff - Date.now()) / 60000);
+}
+function getGameStatus(game) {
+  const r = S.results[game.id]; if(r) return r.status || 'upcoming';
+  const mins = minsUntil(game);
+  if (mins<=0 && mins>-120) return 'live'; return 'upcoming';
+}
+
+// ================================================================
+//  POINTS E PIRATECAS
+// ================================================================
+function getWDL(h,a) { if(h>a)return'H'; if(a>h)return'A'; return'D'; }
+
+function getRodada(id) {
+  if (id <= 24) return 1; if (id <= 48) return 2; if (id <= 72) return 3;
+  if (id <= 88) return 4; if (id <= 96) return 5; if (id <= 100) return 6;
+  if (id <= 102) return 7; return 8;
+}
+
+function calcGamePoints(user, gameId) {
+  if (!user) return 0;
+  const s = S.settings; const r = S.results[gameId]; const b = (user.bets||{})[gameId];
+  if (!r || (r.status !== 'finished' && r.status !== 'live') || !b || r.h === null) return 0;
+  let pts = 0;
+  if (b.h === r.h && b.a === r.a) {
+    pts += s.exact;
+    const game = GAMES.find(g=>g.id===gameId);
+    if (game && game.phase === 'Semifinal') pts += s.semi;
+    if (game && game.phase === 'Final') pts += s.final;
+  } else if (getWDL(b.h,b.a) === getWDL(r.h,r.a)) { pts += s.result; }
+  return pts;
+}
+
+function calcUserPiratecas(email) {
+  let balance = 100;
+  const u = S.users[email];
+  if(!u) return balance;
+
+  const rodadas = {};
+  GAMES.forEach(g => {
+    const r = S.results[g.id];
+    if(r && (r.status === 'finished' || r.status === 'live') && r.h !== null) {
+       const rodada = getRodada(g.id);
+       if(!rodadas[rodada]) rodadas[rodada] = { users: {} };
+       Object.values(S.users).forEach(user => {
+         if(!rodadas[rodada].users[user.email]) rodadas[rodada].users[user.email] = 0;
+         rodadas[rodada].users[user.email] += calcGamePoints(user, g.id);
+       });
+    }
+  });
+
+  Object.keys(rodadas).forEach(rodada => {
+     const rData = rodadas[rodada];
+     const ptsArray = Object.values(rData.users).sort((a,b)=>a-b);
+     const maxPts = ptsArray[ptsArray.length-1];
+     const minPts = ptsArray[0];
+     let medPts = (ptsArray.length % 2 === 0) ? (ptsArray[ptsArray.length/2 - 1] + ptsArray[ptsArray.length/2]) / 2 : ptsArray[Math.floor(ptsArray.length/2)];
+
+     if (maxPts !== minPts) { 
+       const myPts = rData.users[email];
+       if (myPts === maxPts) balance += 5; 
+       else if (myPts === minPts) balance -= 5; 
+       else if (myPts === medPts) balance -= 1; 
+       else if (myPts < medPts && myPts > minPts) balance -= 1; 
+     }
+  });
+
+  Object.keys(S.apostas || {}).forEach(key => {
+     const parts = key.split('_'); const gId = parseInt(parts[1]); const targetNorm = parts.slice(2).join('_');
+     const votersObj = S.apostas[key];
+     if (votersObj[email]) {
+        const type = votersObj[email]; 
+        const r = S.results[gId];
+        if (r && (r.status === 'finished' || r.status === 'live') && r.h !== null) {
+           const realTargetEmail = Object.keys(S.users).find(usr => normEmail(usr) === targetNorm) || targetNorm;
+           const targetPts = calcGamePoints(S.users[realTargetEmail], gId);
+           const targetHit = targetPts > 0;
+           
+           if (type === 'bosta') { if (!targetHit) balance += 2; else balance -= 2; } 
+           else if (type === 'mestre') { if (targetHit) balance += 2; else balance -= 2; }
+        }
+     }
+  });
+  (S.pibets || []).forEach(pbt => {
+    if (pbt.status === 'creator_won' || pbt.status === 'target_won') {
+       const W = pbt.wager;
+       const isTargeted = pbt.target && pbt.target !== '';
+       
+       if (isTargeted) {
+         if (pbt.doubters.includes(pbt.target)) {
+           if (pbt.status === 'creator_won') {
+             if (email === pbt.creator) balance += W;
+             if (email === pbt.target) balance -= W;
+           } else {
+             if (email === pbt.creator) balance -= W;
+             if (email === pbt.target) balance += W;
+           }
+         }
+       } else {
+         const N = pbt.doubters.length;
+         if (N > 0) {
+           const share = Math.round(W / N);
+           if (pbt.status === 'creator_won') {
+             if (email === pbt.creator) balance += W;
+             if (pbt.doubters.includes(email)) balance -= share;
+           } else {
+             if (email === pbt.creator) balance -= W;
+             if (pbt.doubters.includes(email)) balance += share;
+           }
+         }
+       }
+    }
+  });
+
+  return Math.round(balance);
+}
+
+function calcPoints(user) {
+  const s = S.settings; let total=0, exact=0, res=0, streak=0, maxStreak=0;
+  GAMES.forEach(g => {
+    const r = S.results[g.id]; const b = (user.bets||{})[g.id];
+    if (!r || (r.status !== 'finished' && r.status !== 'live') || !b || r.h === null) return;
+    
+    if (b.h===r.h && b.a===r.a) { 
+      total+=s.exact; exact++; streak++; 
+      if(streak>maxStreak)maxStreak=streak; 
+      if(g.phase==='Semifinal')total+=s.semi; 
+      if(g.phase==='Final')total+=s.final; 
+    }
+    else if (getWDL(b.h,b.a)===getWDL(r.h,r.a)) { total+=s.result; res++; streak=0; }
+    else { streak=0; }
+  });
+  if (maxStreak>=3) total+=s.streak;
+  return { total, exact, res, piratecas: calcUserPiratecas(user.email) }; 
+}
+
+// ================================================================
+//  RENDER STATS
+// ================================================================
+function renderStats() {
+  const me = S.users[S.me]; if(!me) return;
+  const pts = calcPoints(me);
+  const all = calcRankAll(); const pos = all.findIndex(u=>u.email===S.me)+1;
+  const finished = Object.values(S.results).filter(r=>r.status==='finished').length;
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-box"><div class="sv gold">${pts.total}</div><div class="sl">Meus Pontos</div></div>
+    <div class="stat-box"><div class="sv" style="color:#C9A84C;">${pts.piratecas}</div><div class="sl">Piratecas 🏴‍☠️</div></div>
+    <div class="stat-box"><div class="sv">${pos||'-'}º</div><div class="sl">Posição</div></div>
+    <div class="stat-box"><div class="sv green">${pts.exact}</div><div class="sl">Placares Exatos</div></div>
+    <div class="stat-box"><div class="sv blue">${pts.res}</div><div class="sl">Resultados</div></div>
+    <div class="stat-box"><div class="sv red">${finished}</div><div class="sl">Jogos Encerrados</div></div>
+  `;
+}
+
+// ================================================================
+//  USER CHIPS (com filtro para evitar usuários fantasmas)
+// ================================================================
+function renderUserChips() {
+  const chips = Object.values(S.users)
+    .filter(u => u.name && u.name.trim().length > 0) // Ignora usuários sem nome
+    .map(u => {
+      const isMe = u.email === S.me;
+      const isFiltered = !isMe && S.viewingUser === u.email;
+      const chipClass = isMe ? 'active' : (isFiltered ? 'filter-active' : '');
+      const classeAnimacao = u.avatar ? 'chip-com-foto' : '';
+      const av = u.avatar ? `<div class="user-chip-avatar"><img src="${u.avatar}"></div>` : `<div class="user-chip-avatar">🧑</div>`;
+      const you = isMe ? ' (você)' : '';
+      return `<div class="user-chip ${chipClass} ${classeAnimacao}" onclick="setViewUser('${u.email}')">${av}${esc(u.name)}${you}</div>`;
+    }).join('');
+  document.getElementById('user-chips').innerHTML = chips;
+}
+  
+function setViewUser(email) {
+  if (S.viewingUser === email && email !== S.me) {
+    S.viewingUser = null;
+  } else {
+    S.viewingUser = email;
+  }
+  renderGames(); renderUserChips();
+}
+
+// ================================================================
+//  RENDER GAMES (agora com seções colapsáveis)
+// ================================================================
+function renderGames() {
+  renderUserChips();
+  
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const finished = [];
+  const todayGames = [];
+  const upcoming = [];
+
+  GAMES.forEach(game => {
+    const r = S.results[game.id] || {};
+    const isFinishedStrict = r.status === 'finished';
+    const gameDate = new Date(game.date);
+    gameDate.setHours(0,0,0,0);
+    const isToday = gameDate.getTime() === today.getTime();
+
+    if (isFinishedStrict) {
+      finished.push(game);
+    } else if (isToday) {
+      todayGames.push(game);
+    } else if (gameDate.getTime() > today.getTime()) {
+      upcoming.push(game);
+    } else {
+      upcoming.push(game);
+    }
+  });
+
+  const sortByDate = (a,b) => new Date(a.date) - new Date(b.date);
+  finished.sort(sortByDate);
+  todayGames.sort(sortByDate);
+  upcoming.sort(sortByDate);
+
+  const sections = [
+    { id: 'finalizados', label: 'Jogos Finalizados', games: finished, defaultCollapsed: true },
+    { id: 'hoje', label: 'Jogos de Hoje', games: todayGames, defaultCollapsed: false },
+    { id: 'proximos', label: 'Próximos Jogos', games: upcoming, defaultCollapsed: true }
+  ];
+
+  let html = '';
+  sections.forEach(section => {
+    const collapsedClass = section.defaultCollapsed ? ' is-collapsed' : '';
+    const gamesHtml = section.games.map(game => renderGameCard(game)).join('');
+    html += `
+      <div class="games-section${collapsedClass}" id="games-section-${section.id}">
+        <div class="games-section-header" onclick="toggleGamesSection('${section.id}')">
+          <span>${section.label} (${section.games.length})</span>
+          <span class="toggle-arrow">▲</span>
+        </div>
+        <div class="games-section-body">
+          ${gamesHtml || '<div class="group-empty">Nenhum jogo nesta categoria.</div>'}
+        </div>
+      </div>
+    `;
+  });
+
+  document.getElementById('games-content').innerHTML = html;
+}
+
+function toggleGamesSection(id) {
+  const section = document.getElementById('games-section-' + id);
+  if (!section) return;
+  section.classList.toggle('is-collapsed');
+}
+
+function toggleAllGamesSections() {
+  const sections = document.querySelectorAll('#page-games .games-section');
+  const allCollapsed = Array.from(sections).every(el => el.classList.contains('is-collapsed'));
+  sections.forEach(el => {
+    if (allCollapsed) {
+      el.classList.remove('is-collapsed');
+    } else {
+      el.classList.add('is-collapsed');
+    }
+  });
+}
+
+// ================================================================
+//  RENDER GAME CARD (mesma função original)
+// ================================================================
+function renderGameCard(game) {
+  const r = S.results[game.id]||game.result||{h:null,a:null,status:'upcoming'};
+  const meUser   = S.users[S.me];
+  const myBet    = (meUser&&meUser.bets||{})[game.id];
+  const locked   = isLocked(game);
+  const lockedByFallback = DATA_META.source==='fallback' && game.source==='fallback';
+  const status   = getGameStatus(game);
+
+  let outcome='', cardClass='';
+  if (r.status==='finished' && myBet && r.h!==null) {
+    if (myBet.h===r.h && myBet.a===r.a)                          { outcome='exact';     cardClass='exact'; }
+    else if (getWDL(myBet.h,myBet.a)===getWDL(r.h,r.a))         { outcome='result-ok'; cardClass='result-ok'; }
+    else                                                           { outcome='wrong';    cardClass='wrong'; }
+  }
+
+  const isFinished = status === 'finished';
+  const collapsedClass = isFinished ? ' is-collapsed' : '';
+
+  const statusPill = status==='live'
+    ? `<span class="status-pill live">🔴 AO VIVO</span>`
+    : status==='finished'
+      ? `<span class="status-pill finished">✅ Encerrado</span>`
+      : locked&&status==='upcoming'
+        ? `<span class="status-pill soon">⏰ Em breve</span>`
+        : `<span class="status-pill upcoming">📅 Agendado</span>`;
+
+  let headerActions = statusPill;
+  if (isFinished) {
+    headerActions = `<div style="display:flex; gap:8px; align-items:center;">
+      ${statusPill}
+      <button class="toggle-details-btn" onclick="toggleGameDetails(${game.id})">
+        <span class="toggle-text">${collapsedClass ? 'Ver Palpites' : 'Ocultar Palpites'}</span><span class="toggle-arrow">▲</span>
+      </button>
+    </div>`;
+  }
+
+  const realScore = r.h!==null ? `<div class="real-score">${r.h}–${r.a}</div>` : `<div class="vs-label">VS</div>`;
+
+  let betSection = '';
+  if (!locked) {
+    betSection = `<div class="bet-owner-label">Seu palpite <span class="you-tag">você</span></div>
+    <div class="score-inputs">
+      <input type="number" class="score-inp" id="bi-h-${game.id}" value="${myBet?myBet.h:''}" placeholder="?" min="0" max="20" oninput="onBetInput(${game.id})" onfocus="checkLock(${game.id},this)">
+      <span class="score-dash">–</span>
+      <input type="number" class="score-inp" id="bi-a-${game.id}" value="${myBet?myBet.a:''}" placeholder="?" min="0" max="20" oninput="onBetInput(${game.id})" onfocus="checkLock(${game.id},this)">
+    </div>
+    <div class="saving-indicator hidden" id="si-${game.id}"><span class="save-spin"></span> Salvando no Sheets...</div>`;
+  } else {
+    betSection = `<div class="bet-owner-label">Seu palpite <span class="you-tag">você</span></div>
+    <div class="score-inputs">
+      <input type="number" class="score-inp readonly" value="${myBet?myBet.h:''}" placeholder="–" disabled>
+      <span class="score-dash">–</span>
+      <input type="number" class="score-inp readonly" value="${myBet?myBet.a:''}" placeholder="–" disabled>
+    </div>
+    <div class="locked-msg">🔒 ${lockedByFallback?'Configure a tabela oficial antes dos palpites':r.status==='finished'?'Jogo encerrado':r.status==='live'?'Jogo em andamento':`Prazo encerrado (${S.settings.lockMinsBet??10}min)`}</div>`;
+  }
+
+  let badge = '';
+  if      (outcome==='exact')     badge = `<div class="bet-result-badge exact">⭐ PLACAR EXATO +${S.settings.exact}pts</div>`;
+  else if (outcome==='result-ok') badge = `<div class="bet-result-badge result-ok">✅ RESULTADO CERTO +${S.settings.result}pts</div>`;
+  else if (outcome==='wrong')     badge = `<div class="bet-result-badge wrong">❌ ERROU 0 pts</div>`;
+  else if (myBet)                 badge = `<div class="bet-result-badge pending">⏳ AGUARDANDO RESULTADO</div>`;
+
+  const filterEmail = (S.viewingUser && S.viewingUser !== S.me) ? S.viewingUser : null;
+  const othersWithBet = Object.values(S.users).filter(u => {
+    if (filterEmail && u.email !== filterEmail) return false;
+    return (u.bets||{})[game.id] != null;
+  });
+
+  let palpiteListHtml = '';
+  if (othersWithBet.length > 0) {
+    const myBostaCount  = countVotesInGame(S.me, game.id, 'bosta');
+    const myMestreCount = countVotesInGame(S.me, game.id, 'mestre');
+    const voteLocked = isVoteLocked(game);
+
+    const rows = othersWithBet.map(u => {
+      const ub   = (u.bets||{})[game.id];
+      const apostaKey = `aposta_${game.id}_${normEmail(u.email)}`;
+      const votersObj = (S.apostas||{})[apostaKey]||{};
+      const myVote    = votersObj[S.me];
+      const isMeRow   = u.email === S.me;
+
+      let scoreClass = '';
+      if (r.status==='finished' && ub && r.h!==null) {
+        if (ub.h===r.h && ub.a===r.a)                       scoreClass='exact-sc';
+        else if (getWDL(ub.h,ub.a)===getWDL(r.h,r.a))       scoreClass='result-sc';
+        else                                                  scoreClass='wrong-sc';
+      }
+
+      let voteHtml = '';
+      if (r.status==='finished' && r.h!==null) {
+        if (isMeRow) {
+          voteHtml = `<span style="font-size:11px;color:var(--muted)">Você</span>`;
+        } else if (myVote) {
+          const tPts = calcGamePoints(u, game.id);
+          const win  = myVote==='bosta' ? (tPts===0) : (tPts>0);
+          const label = myVote==='bosta' ? '💩' : `<span style="color:var(--green)">✅ Mestre</span>`;
+          voteHtml = `<span class="pr-result-badge ${win?'win':'lose'}">${label} ${win?'+2 🏴‍☠️':'−2 🏴‍☠️'}</span>`;
+        }
+      } else if (isMeRow) {
+        voteHtml = `<span style="font-size:11px;color:var(--muted)">Você</span>`;
+      } else if (!voteLocked) {
+        const bTitle = myVote==='bosta' ? 'Clique para remover seu voto Bosta' : 'Votar Bosta 💩 (Máx 2 por jogo)';
+        const mTitle = myVote==='mestre' ? 'Clique para remover seu voto Mestre' : 'Votar Mestre ✅ (Máx 2 por jogo)';
+        voteHtml = `<button class="pr-vote-btn ${myVote==='bosta'?'bosta-on':''}" onclick="voteExtra(${game.id},'${u.email}','bosta')" title="${bTitle}">💩</button>`
+                 + `<button class="pr-vote-btn ${myVote==='mestre'?'mestre-on':''}" onclick="voteExtra(${game.id},'${u.email}','mestre')" title="${mTitle}">✅</button>`;
+      } else if (myVote) {
+        voteHtml = `<span style="font-size:11px;color:var(--muted)">${myVote==='bosta'?'💩':'✅'} bloq.</span>`;
+      }
+
+      const av = u.avatar ? `<img src="${u.avatar}">` : '🧑';
+      const apostaKey2 = `aposta_${game.id}_${normEmail(u.email)}`;
+      const allVoters = (S.apostas||{})[apostaKey2] || {};
+      let bostaFaces = '', mestreFaces = '';
+      Object.entries(allVoters).forEach(([ve, vtype]) => {
+        const voter = S.users[ve];
+        const faceAv = voter && voter.avatar ? `<img src="${voter.avatar}">` : '🧑';
+        if (vtype === 'bosta') bostaFaces += `<div class="voter-face bosta-face" title="${voter?voter.name:ve}">${faceAv}</div>`;
+        else if (vtype === 'mestre') mestreFaces += `<div class="voter-face mestre-face" title="${voter?voter.name:ve}">${faceAv}</div>`;
+      });
+      const bostaGroup = bostaFaces ? `<div class="voter-group"><span class="voter-type-icon">💩</span>${bostaFaces}</div>` : `<span style="color:var(--dark4);font-size:11px;">—</span>`;
+      const mestreGroup = mestreFaces ? `<div class="voter-group"><span class="voter-type-icon" style="color:var(--green)">✅</span>${mestreFaces}</div>` : `<span style="color:var(--dark4);font-size:11px;">—</span>`;
+
+      return `<div class="palpite-row">
+        <div class="pr-col-av"><div class="pr-avatar">${av}</div></div>
+        <div class="pr-col-name pr-name">${esc(u.name)}</div>
+        <div class="pr-col-score pr-score ${scoreClass}">${ub?`${ub.h}–${ub.a}`:'?–?'}</div>
+        <div class="pr-col-bosta">${bostaGroup}</div>
+        <div class="pr-col-mestre">${mestreGroup}</div>
+        <div class="pr-col-vote" style="white-space:nowrap;">${voteHtml}</div>
+      </div>`;
+    }).join('');
+
+    const bLeft = Math.max(0,2-myBostaCount);
+    const mLeft = Math.max(0,2-myMestreCount);
+    const limitBar = (!voteLocked && r.status!=='finished')
+      ? `<div class="vote-limit-info">Votos restantes neste jogo: 💩 ${bLeft} | ✅ ${mLeft} · Bloqueia ${S.settings.lockMinsVote??10}min antes</div>`
+      : '';
+
+    palpiteListHtml = `<div class="palpite-list">
+      <div class="palpite-list-header">🎯 Palpites dos jogadores${filterEmail?' · filtrado':''}</div>
+      <div class="palpite-table">${rows}</div>${limitBar}
+    </div>`;
+  }
+
+  return `<div class="game-card ${cardClass}${locked?' locked':''}${collapsedClass}" id="gc-${game.id}">
+    <div class="gcard-top"><span class="gcard-round">${game.group||game.phase}</span>${headerActions}</div>
+    <div class="gcard-top" style="margin-top:-8px;margin-bottom:10px"><span class="gcard-date">📅 ${formatDate(game.date)}</span><span class="gcard-date" style="font-size:10px">🏟 ${esc(game.venue)}</span></div>
+    <div class="teams-section">
+      <div class="team-col">${renderTeamMark(game,'h','team-flag')}<div class="team-code" title="${esc(game.hName||game.hCode)}">${esc(game.hCode)}</div></div>
+      <div class="center-col">${realScore}<div class="venue-text">${r.h!==null?'Resultado oficial':''}</div></div>
+      <div class="team-col">${renderTeamMark(game,'a','team-flag')}<div class="team-code" title="${esc(game.aName||game.aCode)}">${esc(game.aCode)}</div></div>
+    </div>
+    <div class="game-details">
+      <div class="bet-row">${betSection}${badge}</div>
+      ${palpiteListHtml}
+    </div>
+  </div>`;
+}
+
+function showBetsInfoModal(gameId, targetEmail) {
+  const apostaKey = `aposta_${gameId}_${normEmail(targetEmail)}`;
+  const votersObj = (S.apostas || {})[apostaKey] || {};
+  const targetUser = S.users[targetEmail];
+  
+  document.getElementById('bim-subtitle').innerHTML = `Apostas no palpite de <strong>${targetUser ? esc(targetUser.name) : targetEmail}</strong>`;
+  
+  let html = '';
+  for (const [voterEmail, type] of Object.entries(votersObj)) {
+    const voter = S.users[voterEmail];
+    const voterName = voter ? esc(voter.name) : voterEmail;
+    const ic = type === 'bosta' ? '💩 Bosta' : '✅ Mestre';
+    const color = type === 'bosta' ? '#ff7b7b' : 'var(--green)';
+    
+    html += `<div style="padding:8px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div style="width:24px; height:24px; border-radius:50%; background:var(--dark4); overflow:hidden; display:flex; justify-content:center; align-items:center; font-size:12px;">
+          ${voter && voter.avatar ? `<img src="${voter.avatar}" style="width:100%;height:100%;object-fit:cover;">` : '🧑'}
+        </div>
+        <span style="font-size:14px;">${voterName}</span>
+      </div>
+      <span style="color:${color}; font-weight:bold; font-size:12px;">${ic}</span>
+    </div>`;
+  }
+  
+  if(!html) html = '<div style="color:var(--muted);text-align:center;padding:20px;">Nenhuma aposta registrada.</div>';
+  document.getElementById('bim-content').innerHTML = html;
+  document.getElementById('bets-info-modal').classList.remove('hidden');
+}
+
+function showHistoryModal(email, type) {
+  const u = S.users[email];
+  if (!u) return;
+  
+  const isPiratecas = type === 'piratecas';
+  document.getElementById('hm-icon').textContent = isPiratecas ? '🏴‍☠️' : '🏆';
+  document.getElementById('hm-title').innerHTML = isPiratecas ? 'Histórico de Piratecas' : 'Histórico de Pontos';
+  document.getElementById('hm-subtitle').innerHTML = `<strong>${esc(u.name)}</strong>${u.team?`<br><span style="font-size:12px;color:var(--muted)">⚽ ${esc(u.team)}</span>`:''}`;
+  const hmAv = document.getElementById('hm-avatar');
+  if (u.avatar) {
+    hmAv.innerHTML = `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
+    hmAv.style.border = `3px solid ${isPiratecas ? 'var(--red)' : 'var(--gold)'}`;
+  } else {
+    hmAv.innerHTML = '🧑';
+    hmAv.style.border = `3px solid ${isPiratecas ? 'var(--red)' : 'var(--gold)'}`;
+  }
+  
+  let html = '';
+
+  if (!isPiratecas) {
+    const sortedGames = GAMES.filter(g => {
+      const rs = (S.results[g.id]||{}).status;
+      return (rs === 'finished' || rs === 'live') && (u.bets||{})[g.id];
+    }).sort((a,b) => a.id - b.id);
+    sortedGames.forEach(g => {
+      const r = S.results[g.id];
+      const b = u.bets[g.id];
+      const s = S.settings;
+      let pts = 0, msg = '';
+      if (b.h===r.h && b.a===r.a) {
+        pts += s.exact;
+        msg = `⭐ Exato (${b.h}-${b.a})`;
+        if(g.phase==='Semifinal') { pts+=s.semi; msg+=' + Semi'; }
+        if(g.phase==='Final')     { pts+=s.final; msg+=' + Final'; }
+      } else if (getWDL(b.h,b.a)===getWDL(r.h,r.a)) {
+        pts += s.result;
+        msg = `✅ Resultado (${b.h}-${b.a})`;
+      } else {
+        msg = `❌ Errou (${b.h}-${b.a})`;
+      }
+      if (pts > 0) {
+        const hFlag = g.hFlag || '🏳️';
+        const aFlag = g.aFlag || '🏳️';
+        html += `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <span>
+            <span style="font-size:14px;">${hFlag} ${esc(g.hCode)} <span style="color:var(--muted);font-size:11px">vs</span> ${esc(g.aCode)} ${aFlag}</span>
+            <br><span style="font-size:12px;color:var(--muted)">${msg}</span>
+          </span>
+          <span style="color:var(--gold);font-weight:bold;white-space:nowrap;">+${pts}</span>
+        </div>`;
+      }
+    });
+    const ptsObj = calcPoints(u);
+    html += `<div style="padding:8px;text-align:right;font-weight:bold;color:var(--gold);">Total: ${ptsObj.total} pts</div>`;
+
+  } else {
+    let balance = 100;
+    html += `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
+      <span>Saldo Inicial</span><span style="color:var(--gold);font-weight:bold;">100</span>
+    </div>`;
+
+    const rodadas = {};
+    GAMES.forEach(g => {
+      const r = S.results[g.id];
+      if(r && (r.status==='finished'||r.status==='live') && r.h!==null) {
+        const rodada = getRodada(g.id);
+        if(!rodadas[rodada]) rodadas[rodada] = { users:{} };
+        Object.values(S.users).forEach(user => {
+          if(!rodadas[rodada].users[user.email]) rodadas[rodada].users[user.email] = 0;
+          rodadas[rodada].users[user.email] += calcGamePoints(user, g.id);
+        });
+      }
+    });
+
+    Object.keys(rodadas).forEach(rodada => {
+      const rData = rodadas[rodada];
+      const ptsArray = Object.values(rData.users).sort((a,b)=>a-b);
+      const maxPts = ptsArray[ptsArray.length-1];
+      const minPts = ptsArray[0];
+      let medPts = (ptsArray.length % 2===0)
+        ? (ptsArray[ptsArray.length/2-1]+ptsArray[ptsArray.length/2])/2
+        : ptsArray[Math.floor(ptsArray.length/2)];
+      if (maxPts !== minPts) {
+        const myPts = rData.users[email];
+        let diff=0, desc='';
+        if (myPts===maxPts)                              { diff=5;  desc='🔥 Pé Quente'; }
+        else if (myPts===minPts)                          { diff=-5; desc='🥶 Pé Frio'; }
+        else if (myPts===medPts||(myPts<medPts&&myPts>minPts)) { diff=-1; desc='😐 Nem fede nem cheira'; }
+        if (diff!==0) {
+          balance += diff;
+          const color = diff>0?'var(--green)':'#ff7b7b';
+          html += `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
+            <span><span style="font-size:11px;color:var(--muted)">Rodada ${rodada}</span><br>${desc} (${myPts}pts)</span>
+            <span style="color:${color};font-weight:bold;">${diff>0?'+':''}${diff}</span>
+          </div>`;
+        }
+      }
+    });
+
+    const apostasForUser = [];
+    Object.keys(S.apostas || {}).forEach(key => {
+      const parts = key.split('_');
+      const gId = parseInt(parts[1]);
+      const target = parts.slice(2).join('_');
+      const votersObj = S.apostas[key];
+      if (!votersObj[email]) return;
+      const r = S.results[gId];
+      if (!r || (r.status!=='finished' && r.status!=='live') || r.h===null) return;
+      apostasForUser.push({ gId, target, tipo: votersObj[email] });
+    });
+
+    if (apostasForUser.length > 0) {
+      const byGame = {};
+      apostasForUser.forEach(a => { if(!byGame[a.gId]) byGame[a.gId]=[]; byGame[a.gId].push(a); });
+      const sortedGIds = Object.keys(byGame).map(Number).sort((a,b)=>a-b);
+
+      html += `<div style="padding:6px 0 2px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Apostas Bosta/Mestre</div>`;
+
+      sortedGIds.forEach(gId => {
+        const gObj = GAMES.find(g=>g.id===gId);
+        const r    = S.results[gId];
+        const gameLabel = gObj
+          ? `${gObj.hFlag||'🏳️'} ${esc(gObj.hCode)} ${r.h}–${r.a} ${esc(gObj.aCode)} ${gObj.aFlag||'🏳️'}`
+          : `Jogo #${gId}`;
+
+        html += `<div style="padding:6px 8px 4px;background:rgba(255,255,255,0.03);border-radius:6px;margin:4px 0;font-size:12px;font-weight:700;color:var(--muted);">${gameLabel}</div>`;
+
+      byGame[gId].forEach(({ target, tipo }) => {
+          const realTargetEmail = Object.keys(S.users).find(usr => normEmail(usr) === target) || target;
+          const tUser   = S.users[realTargetEmail];
+          const targetPts = calcGamePoints(tUser, gId);
+          const targetHit = targetPts > 0;
+  
+          let diff = tipo==='bosta' ? (!targetHit?2:-2) : (targetHit?2:-2);
+          balance += diff;
+          const color    = diff>0?'var(--green)':'#ff7b7b';
+          const tName    = tUser?.name || target;
+          const tipoLabel = tipo==='mestre'
+            ? `<span style="color:var(--green);font-weight:bold;">Mestre ✅</span>`
+            : `💩`;
+
+          const tBet = (tUser && tUser.bets) ? tUser.bets[gId] : null;
+          const palpiteAmigo = tBet ? ` (Palpite: ${tBet.h}–${tBet.a})` : ' (Sem palpite)';
+
+          html += `<div style="padding:7px 8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <span style="font-size:13px;flex:1;min-width:0;">
+              <strong style="color:var(--text)">${esc(tName)}</strong> 
+              <span style="color:var(--muted)">• Voto:</span> ${tipoLabel}
+              <span style="color:var(--muted); font-size:12px;">${palpiteAmigo}</span>
+            </span>
+            <span style="color:${color};font-weight:bold;white-space:nowrap;">${diff>0?'+':''}${diff} 🏴‍☠️</span>
+          </div>`;
+        });
+      });
+    }
+
+    html += `<div style="padding:8px;text-align:right;font-weight:bold;color:#ff7b7b;">Total: ${balance} 🏴‍☠️</div>`;
+  }
+
+  if(!html) html = '<div style="color:var(--muted);text-align:center;padding:20px;">Nenhum histórico disponível.</div>';
+  document.getElementById('hm-content').innerHTML = html;
+  document.getElementById('history-modal').classList.remove('hidden');
+}
+  
+// ================================================================
+//  RENDER GROUPS (restaurado ao original)
+// ================================================================
+function renderGroupsPage() {
+  updateDataSourceLabel();
+  const groups = [...new Set(GAMES.filter(g=>g.group).map(g=>g.group))].sort((a,b)=>String(a).localeCompare(String(b),'pt-BR',{numeric:true}));
+  const pill = document.getElementById('groups-count-pill'); if(pill) pill.textContent = `${groups.length} grupos`;
+  document.getElementById('groups-content').innerHTML = groups.map(renderGroupCard).join('') || '<div class="group-empty">Nenhum grupo carregado.</div>';
+}
+
+function renderGroupCard(group) {
+  const rows  = getGroupRows(group);
+  const games = GAMES.filter(g=>g.group===group).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const table = rows.length ? `<table class="standings-table"><thead><tr><th>#</th><th class="team-td">Seleção</th><th>J</th><th>V</th><th>E</th><th>D</th><th>SG</th><th>Pts</th></tr></thead><tbody>${rows.map(renderStandingRow).join('')}</tbody></table>` : '<div class="group-empty">Classificação ainda não disponível.</div>';
+  const gamesHtml = games.length ? games.map(renderGroupGameRow).join('') : '<div class="group-empty">Jogos ainda não disponíveis.</div>';
+  return `<section class="group-card"><div class="group-card-head"><div class="group-title">${esc(group)}</div><div class="group-meta">${games.length} jogos</div></div>${table}<div class="group-games">${gamesHtml}</div></section>`;
+}
+
+function getGroupRows(group) {
+  if (!S.testMode) {
+    const standing = STANDINGS.find(s=>s.group===group);
+    if (standing&&standing.table&&standing.table.length) return standing.table;
+  }
+  const teams = new Map();
+  GAMES.filter(g=>g.group===group).forEach(g => {
+    ['h','a'].forEach(side => {
+      const code = g[side+'Code'];
+      if (!code||teams.has(code)) return;
+      teams.set(code, { position:teams.size+1, team:{code, name:g[side+'Name']||code, logo:g[side+'Logo']||'', flag:g[side+'Flag']||'🏳️'}, played:0,won:0,draw:0,lost:0,gf:0,ga:0,gd:0,points:0 });
+    });
+  });
+  GAMES.filter(g=>g.group===group).forEach(g => {
+    const r = S.results[g.id];
+    if (!r || r.status !== 'finished' || r.h === null) return;
+    const home = teams.get(g.hCode); const away = teams.get(g.aCode);
+    if (!home || !away) return;
+    home.played++; away.played++;
+    home.gf += r.h; home.ga += r.a; home.gd = home.gf - home.ga;
+    away.gf += r.a; away.ga += r.h; away.gd = away.gf - away.ga;
+    if (r.h > r.a) { home.won++; home.points+=3; away.lost++; }
+    else if (r.a > r.h) { away.won++; away.points+=3; home.lost++; }
+    else { home.draw++; away.draw++; home.points++; away.points++; }
+  });
+  const sorted = [...teams.values()].sort((a,b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.gd !== a.gd) return b.gd - a.gd;
+    return b.gf - a.gf;
+  });
+  sorted.forEach((row, i) => row.position = i+1);
+  return sorted;
+}
+
+function renderStandingRow(row) {
+  const team = row.team||{};
+  return `<tr><td>${row.position||''}</td><td class="team-td"><div class="team-line">${renderTeamLogo(team.logo,team.flag)}<span class="team-name" title="${esc(team.name||team.code)}">${esc(team.code||team.name||'A definir')}</span></div></td><td>${row.played||0}</td><td>${row.won||0}</td><td>${row.draw||0}</td><td>${row.lost||0}</td><td>${row.gd||0}</td><td class="points-cell">${row.points||0}</td></tr>`;
+}
+
+function renderGroupGameRow(game) {
+  const r = S.results[game.id]||game.result||{h:null,a:null,status:'upcoming'};
+  const isFinished = r.status === 'finished';
+  const finishedCls = isFinished ? ' finished' : '';
+  const tipLabel = isFinished
+    ? `Encerrado ${r.h}–${r.a} · clique para ver palpites · ${esc(game.venue||'A confirmar')}`
+    : `Clique para ir ao jogo · ${esc(game.venue||'A confirmar')}`;
+  return `<div class="group-game-row${finishedCls}" onclick="goToGameFromGroup(${game.id})" title="${tipLabel}"><div class="group-game-date">${game.date?formatShortDate(game.date):'A definir'}</div><div class="group-game-team">${renderTeamMark(game,'h','team-mini-logo')}<span class="team-code-small">${esc(game.hCode)}</span></div><div class="group-game-score">${r.h!==null?`${r.h}–${r.a}`:'vs'}</div><div class="group-game-team away"><span class="team-code-small">${esc(game.aCode)}</span>${renderTeamMark(game,'a','team-mini-logo')}</div></div>`;
+}
+
+function renderTeamLogo(logo, flag) { return logo ? `<img class="team-logo" src="${esc(logo)}" alt="">` : `<span class="team-logo placeholder">${flag||'🏳️'}</span>`; }
+function renderTeamMark(game, side, className) {
+  const logo = game[side+'Logo']; const flag = game[side+'Flag']||'🏳️';
+  if (logo) return `<img class="${className==='team-flag'?'team-crest':className}" src="${esc(logo)}" alt="">`;
+  return `<span class="${className}">${flag}</span>`;
+}
+
+// ================================================================
+//  TOGGLE GAME DETAILS — oculta/expande palpites do card encerrado
+// ================================================================
+function toggleGameDetails(gameId) {
+  const card = document.getElementById('gc-' + gameId);
+  if (!card) return;
+  const nowCollapsed = card.classList.toggle('is-collapsed');
+  const textEl = card.querySelector('.toggle-text');
+  if (textEl) textEl.textContent = nowCollapsed ? 'Ver Palpites' : 'Ocultar Palpites';
+}
+
+// ================================================================
+//  NAVEGAR PARA JOGO A PARTIR DA PÁGINA GRUPOS
+// ================================================================
+function goToGameFromGroup(gameId) {
+  navTo('games');
+  setTimeout(() => {
+    const card = document.getElementById('gc-' + gameId);
+    if (!card) return;
+    if (card.classList.contains('is-collapsed')) toggleGameDetails(gameId);
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.style.transition = 'box-shadow .3s ease, border-color .3s ease';
+    card.style.boxShadow  = '0 0 0 3px rgba(42,57,141,0.55)';
+    card.style.borderColor = 'var(--blue)';
+    setTimeout(() => { card.style.boxShadow = ''; card.style.borderColor = ''; }, 2000);
+  }, 180);
+}
+
+// ================================================================
+//  BET INPUT
+// ================================================================
+function checkLock(gameId, el) {
+  const game = GAMES.find(g=>g.id===gameId);
+  if (game && isLocked(game)) {
+    el.blur();
+    const mins = minsUntil(game);
+    document.getElementById('modal-msg').textContent = mins<=0
+      ? 'Este jogo já começou. Palpites encerrados.'
+      : `Este jogo começa em ${mins} minuto(s). Prazo encerrado.`;
+    document.getElementById('modal').classList.remove('hidden');
+  }
+}
+function onBetInput(gameId) {
+  const game = GAMES.find(g=>g.id===gameId); if(game&&isLocked(game)) return;
+  const hEl = document.getElementById(`bi-h-${gameId}`);
+  const aEl = document.getElementById(`bi-a-${gameId}`);
+  if (!hEl||!aEl) return;
+  const h = hEl.value; const a = aEl.value;
+  if (h===''||a==='') return;
+  const user = S.users[S.me]; if(!user.bets) user.bets={};
+  user.bets[gameId] = { h:parseInt(h), a:parseInt(a) };
+  persistSettings();
+  if (saveTimers[gameId]) clearTimeout(saveTimers[gameId]);
+  const si = document.getElementById(`si-${gameId}`); if(si) si.classList.remove('hidden');
+  saveTimers[gameId] = setTimeout(async () => {
+    await gsSave(S.me, gameId, parseInt(h), parseInt(a));
+    if(si) si.classList.add('hidden'); updateNavPts(); renderStats();
+  }, 800);
+}
+
+// ================================================================
+//  RANKING (DUPLO: PONTOS + PIRATECAS)
+// ================================================================
+function calcRankAll() {
+  return Object.values(S.users).map(u=>({...u,pts:calcPoints(u)}))
+    .sort((a,b) => { 
+      if (b.pts.total !== a.pts.total) return b.pts.total - a.pts.total; 
+      if (b.pts.exact !== a.pts.exact) return b.pts.exact - a.pts.exact; 
+      if (b.pts.res !== a.pts.res) return b.pts.res - a.pts.res; 
+      return b.pts.piratecas - a.pts.piratecas; 
+    });
+}
+function calcRankPiratecas() {
+  return Object.values(S.users).map(u=>({...u,pts:calcPoints(u)}))
+    .sort((a,b) => b.pts.piratecas - a.pts.piratecas);
+}
+function renderRankRow(u, pos) {
+  const nc = pos===1?'n1':pos===2?'n2':pos===3?'n3':'';
+  const rc = u.email===S.me?'me':pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
+  const medal = pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
+  const youTag = u.email===S.me ? '<span style="font-size:9px;background:rgba(201,168,76,0.2);color:var(--gold);padding:1px 5px;border-radius:8px;margin-left:3px">você</span>' : '';
+  return `<div class="rank-row-mini ${rc}" style="cursor:pointer;" onclick="showHistoryModal('${u.email}', 'pontos')">
+    <div class="rank-mini-num ${nc}">${medal}</div>
+    <div class="rank-mini-av">${u.avatar?`<img src="${u.avatar}">`:'🧑'}</div>
+    <div class="rank-mini-info">
+      <div class="rank-mini-name">${esc(u.name)}${youTag}</div>
+      <div class="rank-mini-sub">⚽ ${esc(u.team||'—')}</div>
+    </div>
+    <div class="rank-mini-pts">
+      <div class="rank-mini-pts-val gold">${u.pts.total}</div>
+      <div class="rank-mini-pts-lbl">pontos</div>
+    </div>
+  </div>`;
+}
+
+function renderRankRowPiratecas(u, pos) {
+  const nc = pos===1?'n1':pos===2?'n2':pos===3?'n3':'';
+  const rc = u.email===S.me?'me':pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
+  const medal = pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
+  const youTag = u.email===S.me ? '<span style="font-size:9px;background:rgba(201,168,76,0.2);color:var(--gold);padding:1px 5px;border-radius:8px;margin-left:3px">você</span>' : '';
+  return `<div class="rank-row-mini ${rc}" style="cursor:pointer;" onclick="showHistoryModal('${u.email}', 'piratecas')">
+    <div class="rank-mini-num ${nc}">${medal}</div>
+    <div class="rank-mini-av">${u.avatar?`<img src="${u.avatar}">`:'🧑'}</div>
+    <div class="rank-mini-info">
+      <div class="rank-mini-name">${esc(u.name)}${youTag}</div>
+      <div class="rank-mini-sub">⚽ ${esc(u.team||'—')}</div>
+    </div>
+    <div class="rank-mini-pts">
+      <div class="rank-mini-pts-val red">${u.pts.piratecas}</div>
+      <div class="rank-mini-pts-lbl">piratecas 🏴‍☠️</div>
+    </div>
+  </div>`;
+}
+function renderRanking() {
+  const ranked = calcRankAll();
+  const rankedP = calcRankPiratecas();
+  document.getElementById('rank-count-pill').textContent = `${ranked.length} participantes`;
+  const htmlPontos = ranked.map((u,i) => renderRankRow(u, i+1)).join('') || '<div class="hl-empty">Nenhum participante ainda.</div>';
+  const htmlPiratecas = rankedP.map((u,i) => renderRankRowPiratecas(u, i+1)).join('') || '<div class="hl-empty">Nenhum participante ainda.</div>';
+  document.getElementById('rank-table-pontos').innerHTML = htmlPontos;
+  document.getElementById('rank-table-piratecas').innerHTML = htmlPiratecas;
+}
+
+// ================================================================
+//  HIGHLIGHTS (idêntico ao original, mantido)
+// ================================================================
+let hlCurrentTab = 'rodadas';
+function hlTab(tab) {
+  hlCurrentTab = tab;
+  ['rodadas','jogos'].forEach(t => {
+    document.getElementById('hlt-'+t).classList.toggle('active', t===tab);
+  });
+  renderHighlights();
+}
+
+const HL_IMG_BASE = './';
+const FACE_CIRCLE = { x: 250, y: 215, r: 60 };
+
+function isRodadaClosed(rodada) {
+  const allGames = GAMES.filter(g => getRodada(g.id) === rodada);
+  if (!allGames.length) return false;
+  return allGames.every(g => (S.results[g.id]||{}).status === 'finished' && S.results[g.id].h !== null);
+}
+
+function calcRodadaHighlights(rodada) {
+  const jogos = GAMES.filter(g => getRodada(g.id) === rodada && (S.results[g.id]||{}).status === 'finished' && S.results[g.id].h !== null);
+  if (!jogos.length) return null;
+  const allRodadaGames = GAMES.filter(g => getRodada(g.id) === rodada);
+  const closed = allRodadaGames.every(g => (S.results[g.id]||{}).status === 'finished' && S.results[g.id].h !== null);
+
+  const users = Object.values(S.users);
+  const scores = users.map(u => {
+    let rodadaPts = 0;
+    jogos.forEach(g => { rodadaPts += calcGamePoints(u, g.id); });
+    const piratecas = calcUserPiratecas(u.email);
+    const total = rodadaPts + piratecas;
+    return { ...u, rodadaPts, piratecas, total };
+  });
+
+  const maxTotal = Math.max(...scores.map(s => s.total));
+  const minTotal = Math.min(...scores.map(s => s.total));
+  if (maxTotal === minTotal) return null;
+
+  const hot  = scores.filter(s => s.total === maxTotal);
+  const cold = scores.filter(s => s.total === minTotal);
+  const sorted = [...scores].sort((a,b) => a.total - b.total);
+  const medIdx = Math.floor(sorted.length / 2);
+  const medTotal = sorted[medIdx].total;
+  const mid = scores.filter(s => s.total === medTotal && s.total !== maxTotal && s.total !== minTotal);
+
+  return { rodada, hot, cold, mid, maxTotal, minTotal, jogos: jogos.length, closed };
+}
+
+function calcGameHighlights(gameId) {
+  const game = GAMES.find(g => g.id === gameId);
+  const r = S.results[gameId];
+  if (!game || !r || r.status !== 'finished' || r.h === null) return null;
+  const users = Object.values(S.users);
+  const scores = users.map(u => ({
+    ...u,
+    gamePts: calcGamePoints(u, gameId),
+    piratecas: calcUserPiratecas(u.email)
+  }));
+  const maxPts = Math.max(...scores.map(s => s.gamePts));
+  const minPts = Math.min(...scores.map(s => s.gamePts));
+  if (maxPts === minPts) return null;
+  const hot  = scores.filter(s => s.gamePts === maxPts);
+  const cold = scores.filter(s => s.gamePts === minPts);
+  const sorted = [...scores].sort((a,b)=>a.gamePts-b.gamePts);
+  const medIdx = Math.floor(sorted.length/2);
+  const medPts = sorted[medIdx].gamePts;
+  const mid = scores.filter(s => s.gamePts === medPts && s.gamePts !== maxPts && s.gamePts !== minPts);
+  return { game, hot, cold, mid, maxPts, minPts };
+}
+
+function renderHighlights() {
+  const content = document.getElementById('highlights-content');
+  if (!content) return;
+  if (hlCurrentTab === 'rodadas') renderHighlightsRodadas(content);
+  else renderHighlightsJogos(content);
+}
+
+function renderHighlightsRodadas(container) {
+  const rodadas = [...new Set(GAMES.map(g => getRodada(g.id)))].sort((a,b)=>a-b);
+  let html = '';
+  rodadas.forEach(r => {
+    const data = calcRodadaHighlights(r);
+    if (!data) return;
+    const label = `Rodada ${r}`;
+    data.hot.forEach(u => {
+      html += buildHighlightCardNew(u, 'quente', label, '🔥 PÉ QUENTE', 'eusofodam.mp4', 'rodada', r, data.closed);
+    });
+    data.cold.forEach(u => {
+      html += buildHighlightCardNew(u, 'frio', label, '🥶 PÉ FRIO', 'fudeusm.mp4', 'rodada', r, data.closed);
+    });
+    data.mid.forEach(u => {
+      html += buildHighlightCardNew(u, 'meio', label, '😐 NEM FEDE NEM CHEIRA', 'nunfedem.mp4', 'rodada', r, data.closed);
+    });
+  });
+  container.innerHTML = html ? `<div class="highlights-grid">${html}</div>` : '<div class="hl-empty">Aguardando jogos encerrados para gerar highlights! ⏳</div>';
+}
+
+function renderHighlightsJogos(container) {
+  const finished = GAMES.filter(g => (S.results[g.id]||{}).status === 'finished' && S.results[g.id].h !== null);
+  let html = '';
+  finished.forEach(game => {
+    const data = calcGameHighlights(game.id);
+    if (!data) return;
+    const label = `${game.hCode} ${S.results[game.id].h}–${S.results[game.id].a} ${game.aCode}`;
+    data.hot.forEach(u => {
+      html += buildHighlightCardNew(u, 'quente', label, '🔥 PÉ QUENTE', 'eusofodam.mp4', 'jogo', game.id, true);
+    });
+    data.cold.forEach(u => {
+      html += buildHighlightCardNew(u, 'frio', label, '🥶 PÉ FRIO', 'fudeusm.mp4', 'jogo', game.id, true);
+    });
+    data.mid.forEach(u => {
+      html += buildHighlightCardNew(u, 'meio', label, '😐 NEM FEDE NEM CHEIRA', 'nunfedem.mp4', 'jogo', game.id, true);
+    });
+  });
+  container.innerHTML = html ? `<div class="highlights-grid">${html}</div>` : '<div class="hl-empty">Nenhum jogo encerrado ainda! ⏳</div>';
+}
+
+function fitHighlightVideoPanel(video) {
+  if (!video || !video.videoWidth || !video.videoHeight) return;
+  const panel = video.closest('.hl-gif-panel');
+  if (!panel) return;
+  panel.style.setProperty('--hl-video-ratio', `${video.videoWidth} / ${video.videoHeight}`);
+}
+
+function hasHighlightScore(score) {
+  return score && score.h !== null && score.h !== undefined && score.a !== null && score.a !== undefined;
+}
+
+function buildHighlightMatchLine(label, game, score, emptyText) {
+  if (!hasHighlightScore(score)) {
+    return `<div class="hl-match-line">
+      <span class="hl-match-label">${label}</span>
+      <div class="hl-match-empty">${emptyText}</div>
+    </div>`;
+  }
+  return `<div class="hl-match-line">
+    <span class="hl-match-label">${label}</span>
+    <div class="hl-match-score">
+      <span class="hl-match-team">${renderTeamMark(game,'h','hl-team-flag')}<span class="hl-match-team-code">${esc(game.hCode)}</span></span>
+      <strong>${score.h}–${score.a}</strong>
+      <span class="hl-match-team away"><span class="hl-match-team-code">${esc(game.aCode)}</span>${renderTeamMark(game,'a','hl-team-flag')}</span>
+    </div>
+  </div>`;
+}
+
+function buildHighlightMatchInfo(user, scope, scopeId) {
+  if (scope !== 'jogo') return '';
+  const game = GAMES.find(g => String(g.id) === String(scopeId));
+  if (!game) return '';
+  const result = S.results[game.id] || {};
+  const bet = (user.bets || {})[game.id];
+  return `<div class="hl-match-info">
+    ${buildHighlightMatchLine('Palpite', game, bet, 'Sem palpite')}
+    ${buildHighlightMatchLine('Resultado', game, result, 'Sem resultado')}
+  </div>`;
+}
+
+function buildHighlightCardNew(user, tipo, label, title, gifFile, scope, scopeId, closed) {
+  const uid = `hl_${tipo}_${scope}_${scopeId}_${user.email.replace(/[@.]/g,'_')}`;
+  const scopeBadge = scope === 'rodada' ? `<span class="hl-badge rodada">Rodada ${scopeId}</span>` : `<span class="hl-badge jogo">Jogo</span>`;
+  const statusBadge = scope === 'rodada'
+    ? (closed ? `<span class="hl-badge fechada">✅ Rodada Fechada</span>` : `<span class="hl-badge parcial">⏳ Resultado Parcial</span>`)
+    : `<span class="hl-badge fechada">✅ Jogo Fechado</span>`;
+  const av = user.avatar ? `<img src="${user.avatar}">` : '🧑';
+  const gifSrc = HL_IMG_BASE + gifFile;
+  const rodadaPts = user.rodadaPts !== undefined ? user.rodadaPts : (user.gamePts !== undefined ? user.gamePts : 0);
+  const piratecas = user.piratecas !== undefined ? user.piratecas : 0;
+  const total = rodadaPts + piratecas;
+  const matchInfo = buildHighlightMatchInfo(user, scope, scopeId);
+
+  return `<div class="hl-card-new tipo-${tipo}" id="card-${uid}">
+    <div class="hl-gif-panel" style="background-color: #000;">
+      <video class="hl-video" src="${gifSrc}" autoplay loop muted playsinline preload="metadata" onloadedmetadata="fitHighlightVideoPanel(this)" style="pointer-events: none;"></video>
+      <div class="hl-gif-fallback" style="display:none">${tipo==='quente'?'🔥':tipo==='frio'?'🥶':'😐'}</div>
+    </div>
+    <div class="hl-info-panel">
+      <div>
+        <div class="hl-badge-row" style="margin-bottom:6px">
+          ${scopeBadge}
+          <span class="hl-badge ${tipo}">${title}</span>
+          ${statusBadge}
+        </div>
+        <div class="hl-tipo-title">${title.replace(/^[^ ]+ /,'')}</div>
+      </div>
+      <div class="hl-user-section" style="margin:4px 0">
+        <div class="hl-user-av">${av}</div>
+        <span class="hl-user-name">${esc(user.name)}</span>
+      </div>
+      ${matchInfo}
+      <div class="hl-card-footer">
+        <div class="hl-scores-row">
+          <div class="hl-score-box">
+            <div class="hl-score-val gold">${rodadaPts}</div>
+            <div class="hl-score-lbl">Pontos</div>
+          </div>
+          <div class="hl-score-box">
+            <div class="hl-score-val red">${piratecas}</div>
+            <div class="hl-score-lbl">Piratecas</div>
+          </div>
+          <div class="hl-total-box">
+            <div class="hl-score-val blue">${total}</div>
+            <div class="hl-score-lbl">Total</div>
+          </div>
+        </div>
+        <button class="hl-share-btn" onclick="shareHighlightNew('${uid}','${tipo}','${esc(user.name)}','${esc(label)}','${esc(title)}',${rodadaPts},${piratecas},'${user.avatar||''}','${gifSrc}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17 2a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-1.89-.68l-6.41 3.7A3 3 0 0 1 9 12a3 3 0 0 1-.3 1.3l6.41 3.38A3 3 0 0 1 17 16a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 .3-1.3L7.89 14.3A3 3 0 0 1 6 15a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 1.89.68l6.41-3.7A3 3 0 0 1 14 5a3 3 0 0 1 3-3z"/></svg>
+          WhatsApp
+        </button>
+      </div>
+      <canvas id="${uid}" class="hl-export-canvas" width="500" height="280"
+        data-tipo="${tipo}" data-name="${esc(user.name)}" data-label="${esc(label)}"
+        data-title="${esc(title)}" data-pts="${rodadaPts}" data-piratecas="${piratecas}"
+        data-avatar="${user.avatar||''}" data-gif="${gifSrc}"></canvas>
+    </div>
+  </div>`;
+}
+
+function buildHighlightCard(user, tipo, label, pts, title, imgFile, scope, scopeId) {
+  return buildHighlightCardNew(user, tipo, label, title, imgFile.replace('.png','.gif'), scope, scopeId, true);
+}
+
+const _hlImgCache = {};
+function loadImgCached(src) {
+  if (_hlImgCache[src]) return Promise.resolve(_hlImgCache[src]);
+  return new Promise(resolve => {
+    const img = new Image(); 
+    if (src.startsWith('http')) {
+      img.crossOrigin = 'anonymous';
+    }
+    img.onload = () => { _hlImgCache[src] = img; resolve(img); };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+async function drawHighlightCanvas(cv) {
+  const ctx = cv.getContext('2d');
+  const W = 500, H = 500;
+  ctx.clearRect(0, 0, W, H);
+
+  const tipo = cv.dataset.tipo;
+  const grad = ctx.createLinearGradient(0,0,W,H);
+  if (tipo==='quente') { grad.addColorStop(0,'#0d1a0d'); grad.addColorStop(1,'#112611'); }
+  else if (tipo==='frio') { grad.addColorStop(0,'#1a0d0d'); grad.addColorStop(1,'#260d11'); }
+  else { grad.addColorStop(0,'#1a160a'); grad.addColorStop(1,'#231e0d'); }
+  ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
+
+  const bgSrc = HL_IMG_BASE + cv.dataset.img;
+  const bgImg = await loadImgCached(bgSrc);
+  if (bgImg) { ctx.drawImage(bgImg, 0, 0, W, H); }
+  else {
+    ctx.fillStyle = tipo==='quente'?'#3CAC3B':tipo==='frio'?'#E61D25':'#C9A84C';
+    ctx.beginPath(); ctx.arc(FACE_CIRCLE.x, FACE_CIRCLE.y, FACE_CIRCLE.r, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='bold 64px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(tipo==='quente'?'🔥':tipo==='frio'?'🥶':'😐', FACE_CIRCLE.x, FACE_CIRCLE.y);
+  }
+
+  const avatarSrc = cv.dataset.avatar;
+  if (avatarSrc) {
+    const avImg = await loadImgCached(avatarSrc);
+    if (avImg) {
+      const { x, y, r } = FACE_CIRCLE;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.clip();
+      ctx.drawImage(avImg, x-r, y-r, r*2, r*2);
+      ctx.restore();
+      ctx.beginPath(); ctx.arc(x, y, r+2, 0, Math.PI*2);
+      ctx.strokeStyle = tipo==='quente'?'#3CAC3B':tipo==='frio'?'#E61D25':'#C9A84C';
+      ctx.lineWidth = 4; ctx.stroke();
+    }
+  }
+
+  const name  = cv.dataset.name;
+  const label = cv.dataset.label;
+  const pts   = cv.dataset.pts;
+  const title = cv.dataset.title;
+
+  ctx.fillStyle = 'rgba(0,0,0,0.72)';
+  roundRect(ctx, 18, H-110, W-36, 92, 14);
+  ctx.fill();
+
+  ctx.fillStyle = tipo==='quente'?'#7de87c':tipo==='frio'?'#ff7b7b':'#F0C040';
+  ctx.font = 'bold 18px "Barlow Condensed", sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.fillText(title, W/2, H-102);
+
+  ctx.fillStyle = '#F0F0F0';
+  ctx.font = 'bold 26px "Barlow Condensed", sans-serif';
+  ctx.fillText(name, W/2, H-78);
+
+  ctx.fillStyle = '#888888';
+  ctx.font = '14px "Barlow", sans-serif';
+  ctx.fillText(label + ' • ' + pts, W/2, H-48);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.font = 'bold 13px "Barlow Condensed", sans-serif';
+  ctx.fillText('BOLÃO COPA 26 🏴‍☠️', W/2, H-26);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y); ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w, y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r, y+h); ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x, y+r); ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+}
+
+async function shareHighlight(canvasId) {
+  const cv = document.getElementById(canvasId);
+  if (!cv) return;
+  await drawHighlightCanvas(cv);
+  try {
+    const blob = await new Promise(resolve => cv.toBlob(resolve, 'image/png'));
+    if (!blob) { toast('Não foi possível gerar a imagem','err'); return; }
+    if (navigator.canShare && navigator.canShare({ files: [new File([blob],'highlight.png',{type:'image/png'})] })) {
+      await navigator.share({
+        files: [new File([blob], 'highlight-bolao.png', { type: 'image/png' })],
+        title: 'Bolão Copa 26 — Highlight',
+        text: '🏴‍☠️ Olha o highlight do nosso bolão!'
+      });
+      return;
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'highlight-bolao.png'; a.click();
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+      const text = encodeURIComponent('🏴‍☠️ Olha o highlight do Bolão Copa 26! Baixe a imagem acima e envie no grupo!');
+      window.open(`https://wa.me/?text=${text}`, '_blank');
+    }, 600);
+  } catch(e) {
+    if (e.name !== 'AbortError') toast('Compartilhamento cancelado ou não suportado','warn');
+  }
+}
+
+async function shareHighlightNew(uid, tipo, name, label, title, pts, piratecas, avatarSrc, gifSrc) {
+  const cv = document.getElementById(uid);
+  if (!cv) { toast('Canvas não encontrado','err'); return; }
+  toast('Gerando imagem...','info');
+
+  const ctx = cv.getContext('2d');
+  const W = 500, H = 280;
+  ctx.clearRect(0, 0, W, H);
+
+  const grad = ctx.createLinearGradient(0,0,W,H);
+  if (tipo==='quente') { grad.addColorStop(0,'#0a180a'); grad.addColorStop(1,'#0f2010'); }
+  else if (tipo==='frio') { grad.addColorStop(0,'#1a0808'); grad.addColorStop(1,'#200d0d'); }
+  else { grad.addColorStop(0,'#1a160a'); grad.addColorStop(1,'#1e1a08'); }
+  ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
+
+  const leftW = 150;
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(0, 0, leftW, H);
+
+  const videoEl = document.querySelector(`#card-${uid} video`);
+  if (videoEl && videoEl.readyState >= 2) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, 0, leftW, H); ctx.clip();
+    const scale = Math.min(leftW / videoEl.videoWidth, H / videoEl.videoHeight);
+    const dw = videoEl.videoWidth * scale, dh = videoEl.videoHeight * scale;
+    ctx.drawImage(videoEl, (leftW - dw)/2, (H - dh)/2, dw, dh);
+    ctx.restore();
+  } else {
+    ctx.font = '60px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(tipo==='quente'?'🔥':tipo==='frio'?'🥶':'😐', leftW/2, H/2);
+  }
+  const accentColor = tipo==='quente'?'#3CAC3B':tipo==='frio'?'#E61D25':'#C9A84C';
+  ctx.fillStyle = accentColor; ctx.fillRect(leftW, 0, 3, H);
+
+  const rx = leftW + 16;
+  let ry = 20;
+
+  ctx.fillStyle = accentColor;
+  ctx.font = 'bold 13px "Barlow Condensed", sans-serif';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  ctx.fillText(label.toUpperCase(), rx, ry); ry += 18;
+
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 22px "Barlow Condensed", sans-serif';
+  ctx.fillText(title, rx, ry); ry += 28;
+
+  if (avatarSrc) {
+    const avImg = await loadImgCached(avatarSrc);
+    if (avImg) {
+      const ar = 20;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(rx+ar, ry+ar, ar, 0, Math.PI*2); ctx.clip();
+      ctx.drawImage(avImg, rx, ry, ar*2, ar*2);
+      ctx.restore();
+      ctx.beginPath(); ctx.arc(rx+ar, ry+ar, ar+1, 0, Math.PI*2);
+      ctx.strokeStyle = accentColor; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#F0F0F0';
+      ctx.font = 'bold 16px "Barlow", sans-serif';
+      ctx.textAlign='left'; ctx.textBaseline='middle';
+      ctx.fillText(name, rx + ar*2 + 10, ry + ar);
+      ry += ar*2 + 14;
+    } else {
+      ctx.fillStyle = '#F0F0F0'; ctx.font = 'bold 16px "Barlow", sans-serif';
+      ctx.textAlign='left'; ctx.textBaseline='top';
+      ctx.fillText(name, rx, ry); ry += 26;
+    }
+  } else {
+    ctx.fillStyle = '#F0F0F0'; ctx.font = 'bold 16px "Barlow", sans-serif';
+    ctx.textAlign='left'; ctx.textBaseline='top';
+    ctx.fillText(name, rx, ry); ry += 26;
+  }
+
+  const total = parseInt(pts) + parseInt(piratecas);
+  const boxes = [
+    { label:'Pontos', val: pts,       color:'#C9A84C' },
+    { label:'Piratecas', val: piratecas, color:'#ff7b7b' },
+    { label:'Total', val: total,      color:'#7b8fe8' }
+  ];
+  const bw = 74, bh = 50, bpad = 6;
+  boxes.forEach((b, i) => {
+    const bx = rx + i*(bw+bpad);
+    ctx.fillStyle = 'rgba(255,255,255,0.07)';
+    roundRect(ctx, bx, ry, bw, bh, 8); ctx.fill();
+    ctx.strokeStyle = i===2 ? accentColor : 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 1; roundRect(ctx, bx, ry, bw, bh, 8); ctx.stroke();
+
+    ctx.fillStyle = b.color;
+    ctx.font = 'bold 24px "Barlow Condensed", sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(b.val, bx + bw/2, ry + bh/2 - 6);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = '10px "Barlow", sans-serif';
+    ctx.fillText(b.label.toUpperCase(), bx + bw/2, ry + bh - 9);
+  });
+
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = 'bold 11px "Barlow Condensed", sans-serif';
+  ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+  ctx.fillText('BOLÃO COPA 26 🏴‍☠️', W - 10, H - 6);
+
+  try {
+    const blob = await new Promise(resolve => cv.toBlob(resolve, 'image/png'));
+    if (!blob) { toast('Não foi possível gerar a imagem','err'); return; }
+    if (navigator.canShare && navigator.canShare({ files: [new File([blob],'highlight.png',{type:'image/png'})] })) {
+      await navigator.share({
+        files: [new File([blob], 'highlight-bolao.png', { type: 'image/png' })],
+        title: 'Bolão Copa 26 — Highlight',
+        text: `🏴‍☠️ ${title} — ${name} (${label})`
+      });
+      return;
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `highlight-${uid}.png`; a.click();
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+      const text = encodeURIComponent(`🏴‍☠️ Olha o highlight do Bolão Copa 26!\n${title} — ${name}\n${label} · ${pts}pts + ${piratecas}🏴‍☠️ = ${total} total\nBaixe a imagem e envie no grupo!`);
+      window.open(`https://wa.me/?text=${text}`, '_blank');
+    }, 700);
+  } catch(e) {
+    if (e.name !== 'AbortError') toast('Compartilhamento cancelado ou não suportado','warn');
+  }
+}
+
+function isAdmin() { const u = S.users[S.me]; return !!(u&&u.isAdmin); }
+
+// ================================================================
+//  SETTINGS (mantido)
+// ================================================================
+function renderSettingsPage() {
+  updateDataSourceLabel();
+  const admin = isAdmin();
+  document.getElementById('s-exact').value  = S.settings.exact;
+  document.getElementById('s-result').value = S.settings.result;
+  document.getElementById('s-streak').value = S.settings.streak;
+  document.getElementById('s-semi').value   = S.settings.semi;
+  document.getElementById('s-final').value  = S.settings.final;
+  document.getElementById('s-lock-bet').value  = S.settings.lockMinsBet ?? 10;
+  document.getElementById('s-lock-vote').value = S.settings.lockMinsVote ?? 10;
+  const notifX = document.getElementById('s-notif-x');
+  const notifY = document.getElementById('s-notif-y');
+  if (notifX) notifX.value = S.settings.notifMinsPre     ?? 30;
+  if (notifY) notifY.value = S.settings.notifMinsLockBet ?? 15;
+  const sceneBgToggle = document.getElementById('s-scene-bg');
+  if (sceneBgToggle) sceneBgToggle.checked = !!S.settings.sceneBg;
+  
+  ['s-exact','s-result','s-streak','s-semi','s-final','s-lock-bet','s-lock-vote','s-scene-bg','adm-game','adm-a','adm-b','adm-status','s-notif-x','s-notif-y','s-notif-msg'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.disabled = !admin;
+  });
+  document.querySelectorAll('#page-settings button').forEach(btn => { btn.disabled=!admin; btn.style.opacity=admin?'1':'0.5'; });
+  let ex = document.getElementById('readonly-warning');
+  if (!admin && !ex) {
+    const div = document.createElement('div'); div.id='readonly-warning';
+    div.innerHTML = `<div style="background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);padding:14px;margin-bottom:15px;border-radius:10px;color:var(--gold)">🔒 Modo somente leitura. Apenas administradores podem alterar configurações.</div>`;
+    document.querySelector('#page-settings').prepend(div);
+  }
+  const sel = document.getElementById('adm-game');
+  if (sel) { sel.innerHTML = GAMES.map(g=>`<option value="${g.id}">#${g.id} ${g.hCode} vs ${g.aCode}</option>`).join(''); }
+
+  const tmStatus = document.getElementById('test-mode-status');
+  if (tmStatus) {
+    if (S.testMode) {
+      tmStatus.textContent = '🔴 LIGADO';
+      tmStatus.style.color = '#ff7b7b';
+    } else {
+      tmStatus.textContent = '⚫ DESLIGADO';
+      tmStatus.style.color = 'var(--muted)';
+    }
+  }
+}
+
+async function saveSettings() {
+  if (!isAdmin()) { toast('Acesso negado','warn'); return; }
+  
+  toast('Enviando para o Google Sheets...', 'info');
+
+  const exact = parseInt(document.getElementById('s-exact').value)||10;
+  const result = parseInt(document.getElementById('s-result').value)||5;
+  const streak = parseInt(document.getElementById('s-streak').value)||5;
+  const semi = parseInt(document.getElementById('s-semi').value)||15;
+  const final = parseInt(document.getElementById('s-final').value)||25;
+  const lockMinsBet = parseInt(document.getElementById('s-lock-bet').value) ?? 10;
+  const lockMinsVote = parseInt(document.getElementById('s-lock-vote').value) ?? 10;
+  
+  S.settings.sceneBg = !!document.getElementById('s-scene-bg')?.checked;
+  applySceneBackground();
+  persistSettings();
+
+  try {
+    const res = await gsCall({
+      action: 'adminSaveSettings', callerEmail: S.me,
+      exact, result, streak, semi, final, lockMinsBet, lockMinsVote
+    });
+    
+    if (!res.ok) { toast(res.error || 'Erro ao salvar na nuvem', 'err'); return; }
+    
+    S.settings = { ...S.settings, exact, result, streak, semi, final, lockMinsBet, lockMinsVote };
+    
+    renderGames(); renderRanking(); renderStats();
+    toast('✅ Regras salvas no Google Sheets!', 'ok');
+  } catch(e) {
+    toast('Erro de conexão ao salvar na nuvem.', 'err');
+  }
+}
+
+function adminSetResult() {
+  if (!isAdmin()) { toast('Acesso negado','err'); return; }
+  if (S.testMode) { adminSetTestResult(); return; }
+  const id = parseInt(document.getElementById('adm-game').value);
+  const h  = parseInt(document.getElementById('adm-a').value);
+  const a  = parseInt(document.getElementById('adm-b').value);
+  const st = document.getElementById('adm-status').value;
+  S.results[id] = { h, a, status:st }; persistSettings();
+  toast(`Resultado do jogo ${id} atualizado! ⚽`,'ok');
+}
+
+// ================================================================
+//  PROFILE (mantido)
+// ================================================================
+function renderProfile() {
+  const u = S.users[S.me]; if(!u) return;
+  const pts = calcPoints(u);
+  const ranked = calcRankAll(); const pos = ranked.findIndex(r=>r.email===S.me)+1;
+  const pav = document.getElementById('pav-display');
+  pav.innerHTML = u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '🧑';
+  document.getElementById('p-name').textContent = u.name;
+  document.getElementById('p-team').textContent = (u.team||'')+(u.motto?' • "'+u.motto+'"':'');
+  document.getElementById('p-stats').innerHTML = `
+    <div class="profile-stat"><div class="profile-stat-v">${pts.total}</div><div class="profile-stat-l">Pontos</div></div>
+    <div class="profile-stat"><div class="profile-stat-v">${pos||'-'}º</div><div class="profile-stat-l">Posição</div></div>
+    <div class="profile-stat"><div class="profile-stat-v">${pts.exact}</div><div class="profile-stat-l">Exatos</div></div>
+    <div class="profile-stat"><div class="profile-stat-v">${pts.res}</div><div class="profile-stat-l">Resultados</div></div>
+  `;
+  document.getElementById('pe-name').value  = u.name;
+  document.getElementById('pe-team').value  = u.team||'';
+  document.getElementById('pe-motto').value = u.motto||'';
+  const history = GAMES.filter(g=>(S.results[g.id]||{}).status==='finished'&&(u.bets||{})[g.id]).map(g => {
+    const r=S.results[g.id]; const b=u.bets[g.id];
+    let label='❌ Errou', cls='var(--red)', p=0;
+    if (b.h===r.h&&b.a===r.a) { label=`⭐ Exato`; cls='var(--green)'; p=S.settings.exact; }
+    else if (getWDL(b.h,b.a)===getWDL(r.h,r.a)) { label='✅ Resultado'; cls='#7b8fe8'; p=S.settings.result; }
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--dark3);border-radius:8px;margin-bottom:6px;border-left:3px solid ${cls}"><span style="font-size:13px">${g.hCode} ${b.h}–${b.a} ${g.aCode}</span><span style="font-size:12px;color:var(--muted)">Real: ${r.h}–${r.a}</span><span style="font-size:13px;font-weight:600;color:${cls}">${label} +${p}pts</span></div>`;
+  }).join('') || '<div style="color:var(--muted);font-size:13px;padding:16px 0">Nenhum jogo encerrado ainda.</div>';
+  document.getElementById('p-history').innerHTML = history;
+}
+
+async function handleProfileAvatar(inp) {
+  const f = inp.files[0]; 
+  if (!f||f.size>2e6) { toast('Foto muito grande (máx 2MB)','err'); return; }
+
+  const pav = document.getElementById('pav-display');
+  const htmlAntigo = pav.innerHTML;
+  pav.innerHTML = `<span class="save-spin" style="margin-top:35px"></span>`;
+
+  const formData = new FormData();
+  formData.append('image', f);
+
+  try {
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.success) {
+      S.users[S.me].avatar = data.data.url;
+      saveSession(S.users[S.me]);
+      persistSettings();
+      pav.innerHTML = `<img src="${data.data.url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+      refreshNavUser(); 
+      gsSaveUser(S.users[S.me]);
+      toast('Foto atualizada com sucesso! 📸','ok');
+    } else {
+      pav.innerHTML = htmlAntigo;
+      toast('Erro ao enviar foto','err');
+    }
+  } catch(e) {
+    pav.innerHTML = htmlAntigo;
+    toast('Erro de conexão com servidor de imagens','err');
+  }
+}
+
+function saveProfileEdits() {
+  const u = S.users[S.me];
+  u.name  = document.getElementById('pe-name').value.trim()  || u.name;
+  u.team  = document.getElementById('pe-team').value.trim();
+  u.motto = document.getElementById('pe-motto').value.trim();
+  saveSession(u); persistSettings(); refreshNavUser(); gsSaveUser(u); toast('Perfil salvo! ✅','ok'); renderProfile();
+}
+
+// ================================================================
+//  ADMIN PANEL (mantido)
+// ================================================================
+async function loadAdminUsers() {
+  if (!isAdmin()) { toast('Acesso negado','err'); navTo('games'); return; }
+  if (!GS_URL || GS_URL.includes('COLE_AQUI')) { toast('Configure a URL do Apps Script no index.html','warn'); return; }
+  try {
+    const data = await gsGet('adminListUsers', { callerEmail: S.me });
+    if (!data.ok) { toast(data.error || 'Erro ao carregar usuários','err'); return; }
+    adminUsers = data.users || [];
+    document.getElementById('adm-total-users').textContent = adminUsers.length;
+    document.getElementById('adm-reset-count').textContent = adminUsers.filter(u=>u.mustChangePass).length;
+    document.getElementById('adm-admin-count').textContent = adminUsers.filter(u=>u.isAdmin).length;
+    renderAdminTable();
+  } catch(e) {
+    toast('Erro de conexão ao carregar usuários','err');
+  }
+}
+
+function renderAdminTable() {
+  const filter = (document.getElementById('adm-filter')||{}).value?.toLowerCase() || '';
+  const filtered = adminUsers.filter(u =>
+    !filter || u.email.toLowerCase().includes(filter) || u.name.toLowerCase().includes(filter)
+  );
+  const tbody = document.getElementById('admin-tbody');
+  const empty = document.getElementById('admin-empty');
+  if (!filtered.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = filtered.map(u => `
+    <tr>
+      <td><strong>${esc(u.name)}</strong>${u.isAdmin?` <span class="admin-badge is-admin">👑 Admin</span>`:''}</td>
+      <td style="color:var(--muted);font-size:12px">${esc(u.email)}</td>
+      <td style="font-size:12px">${esc(u.team||'—')}</td>
+      <td style="font-size:11px;color:var(--muted)">${esc(u.since||'—')}</td>
+      <td>${u.mustChangePass?'<span class="admin-badge reset-needed">🔑 Reset pendente</span>':'<span style="color:var(--green);font-size:12px">✅ OK</span>'}</td>
+      <td class="admin-actions">
+        <button class="btn-sm" onclick="openAdminEdit('${esc(u.email)}')">✏️ Editar</button>
+        ${!u.isAdmin ? `<button class="btn-sm" style="border-color:var(--red);color:#ff7b7b;" onclick="adminDeleteUser('${esc(u.email)}')">🗑 Deletar</button>` : ''}
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openAdminEdit(email) {
+  const u = adminUsers.find(x=>x.email===email);
+  if (!u) return;
+  adminEditTarget = email;
+  document.getElementById('admin-edit-email').textContent = email;
+  document.getElementById('ae-name').value  = u.name  || '';
+  document.getElementById('ae-team').value  = u.team  || '';
+  document.getElementById('ae-motto').value = u.motto || '';
+  document.getElementById('ae-admin').value = u.isAdmin ? 'true' : 'false';
+  const card = document.getElementById('admin-edit-card');
+  card.style.display = 'block';
+  card.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+function closeAdminEdit() {
+  adminEditTarget = null;
+  document.getElementById('admin-edit-card').style.display = 'none';
+}
+
+async function submitAdminEdit() {
+  if (!adminEditTarget) return;
+  const name    = document.getElementById('ae-name').value.trim();
+  const team    = document.getElementById('ae-team').value.trim();
+  const motto   = document.getElementById('ae-motto').value.trim();
+  const isAdm   = document.getElementById('ae-admin').value === 'true';
+  try {
+    const res = await gsCall({ action:'adminUpdateUser', callerEmail:S.me, targetEmail:adminEditTarget, name, team, motto, isAdmin:isAdm });
+    if (!res.ok) { toast(res.error||'Erro ao salvar','err'); return; }
+    toast('Usuário atualizado! ✅','ok');
+    closeAdminEdit();
+    loadAdminUsers();
+  } catch(e) { toast('Erro de conexão','err'); }
+}
+
+async function submitAdminResetPass() {
+  if (!adminEditTarget) return;
+  if (!confirm(`Resetar a senha de "${adminEditTarget}" para "adminpirata"? O usuário precisará criar uma nova senha no próximo login.`)) return;
+  try {
+    const res = await gsCall({ action:'adminResetPass', callerEmail:S.me, targetEmail:adminEditTarget });
+    if (!res.ok) { toast(res.error||'Erro ao resetar senha','err'); return; }
+    toast(`🔑 Senha de ${adminEditTarget} resetada! Ele usará "adminpirata" e criará uma nova senha.`,'ok');
+    closeAdminEdit();
+    loadAdminUsers();
+  } catch(e) { toast('Erro de conexão','err'); }
+}
+
+async function adminDeleteUser(email) {
+  if (!isAdmin()) { toast('Acesso negado','err'); return; }
+  const u = adminUsers.find(x=>x.email===email);
+  if (!u) return;
+  if (u.isAdmin) { toast('Não é possível deletar um administrador.','warn'); return; }
+  if (!confirm(`⚠️ Deletar permanentemente "${u.name}" (${email})?\n\nIsso irá:\n• Remover o usuário e todos os palpites\n• Apagar votos Bosta/Mestre dados e recebidos por ele\n• Mover dados para aba de auditoria no Sheets\n\nEsta ação não pode ser desfeita.`)) return;
+  try {
+    const res = await gsCall({ action:'adminDeleteUser', callerEmail:S.me, targetEmail:email });
+    if (!res.ok) { toast(res.error||'Erro ao deletar usuário','err'); return; }
+    delete S.users[email];
+    if (S.apostas) {
+      Object.keys(S.apostas).forEach(key => {
+        if (key.includes(email.replace(/[@.]/g,'_'))) {
+          delete S.apostas[key];
+        } else if (S.apostas[key] && typeof S.apostas[key] === 'object') {
+          delete S.apostas[key][email];
+        }
+      });
+    }
+    toast(`🗑 Usuário ${u.name} deletado. Histórico limpo.`,'ok');
+    closeAdminEdit();
+    loadAdminUsers();
+    rerenderCurrentPage();
+  } catch(e) { toast('Erro de conexão','err'); }
+}
+
+// ================================================================
+//  UTILS
+// ================================================================
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light-mode');
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) btn.textContent = isLight ? '☀️' : '🌙';
+  try { localStorage.setItem('bolao_theme', isLight ? 'light' : 'dark'); } catch(e) {}
+}
+
+function applyStoredTheme() {
+  try {
+    const t = localStorage.getItem('bolao_theme');
+    if (t === 'light') {
+      document.body.classList.add('light-mode');
+      const btn = document.getElementById('theme-toggle-btn');
+      if (btn) btn.textContent = '☀️';
+    }
+  } catch(e) {}
+}
+
+function applySceneBackground() {
+  document.body.classList.toggle('scene-bg', !!S.settings.sceneBg);
+}
+
+function refreshNavUser() {
+  const u = S.users[S.me]; if(!u) return;
+  document.getElementById('nav-name').textContent = u.name;
+  updateNavPts();
+  const av = document.getElementById('nav-av');
+  av.innerHTML = u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '🧑';
+}
+function updateNavPts() {
+  const u = S.users[S.me]; if(!u) return;
+  document.getElementById('nav-pts').innerHTML = `${calcPoints(u).total} pts <span style="color:#C9A84C; font-size:12px; margin-left:6px; border-left:1px solid #333; padding-left:6px;">${calcPoints(u).piratecas} 🏴‍☠️</span>`;
+}
+function formatDate(d) {
+  const dt = new Date(d);
+  if (!Number.isFinite(dt.getTime())) return 'A definir';
+  return dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})+' '+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+function formatShortDate(d) {
+  const dt = new Date(d);
+  if (!Number.isFinite(dt.getTime())) return 'A definir';
+  return dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+}
+function formatDateTime(d) {
+  const dt = new Date(d);
+  if (!Number.isFinite(dt.getTime())) return 'A definir';
+  return dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+function esc(v) { return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch])); }
+function toast(msg, type='info') {
+  const w = document.getElementById('toast-wrap');
+  const el = document.createElement('div'); el.className=`toast ${type}`;
+  const ic = {ok:'✅',err:'❌',info:'ℹ️',warn:'⚠️'}[type]||'ℹ️';
+  el.innerHTML = `<span>${ic}</span><span>${msg}</span>`;
+  w.appendChild(el);
+  setTimeout(()=>{ el.style.animation='toastOut .3s ease forwards'; setTimeout(()=>el.remove(),300); }, 3000);
+}
+
+async function shareHelpCard(btn) {
+  const card = btn.closest('.help-card, .set-card, .help-tip');
+  if (!card) { toast('Card de ajuda não encontrado','err'); return; }
+  toast('Gerando imagem do card...','info');
+  const { blob, title } = await renderHelpCardImage(card);
+  if (!blob) { toast('Não foi possível gerar a imagem','err'); return; }
+  const file = new File([blob], `ajuda-${slugifyFileName(title)}.png`, { type:'image/png' });
+  const shareText = `📌 ${title}\nBolão Copa 2026`;
+
+  if (navigator.canShare && navigator.canShare({ files:[file] })) {
+    try {
+      await navigator.share({ files:[file], title:`Bolão Copa 26 - ${title}`, text:shareText });
+      return;
+    } catch(e) {
+      if (e.name === 'AbortError') return;
+    }
+  }
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = file.name;
+  a.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+    window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText}\n\nBaixe a imagem gerada e envie no grupo.`)}`, '_blank');
+  }, 700);
+  toast('Imagem baixada. Abrindo WhatsApp...','ok');
+}
+
+async function renderHelpCardImage(card) {
+  const title = (card.querySelector('h3,h4')?.innerText || 'Ajuda do Bolão').trim();
+  const icon = (card.querySelector('.help-card-icon')?.innerText || '📌').trim();
+  const rows = [...card.querySelectorAll('p,li,tr')]
+    .filter(el => !el.closest('.help-card-actions'))
+    .map(el => {
+      if (el.tagName === 'TR') {
+        return [...el.children].map(td => td.innerText.replace(/\s+/g, ' ').trim()).filter(Boolean).join(' — ');
+      }
+      const text = el.innerText.replace(/\s+/g, ' ').trim();
+      return el.tagName === 'LI' ? `• ${text}` : text;
+    })
+    .filter(Boolean);
+
+  if (document.fonts && document.fonts.ready) {
+    try { await document.fonts.ready; } catch(e) {}
+  }
+
+  const W = 1080;
+  const pad = 72;
+  const lineGap = 16;
+  const bodySize = 34;
+  const titleSize = 58;
+  const labelSize = 28;
+  const footerSize = 24;
+  const maxTextW = W - pad * 2;
+  const measure = document.createElement('canvas').getContext('2d');
+  measure.font = `900 ${titleSize}px "Barlow Condensed", Barlow, sans-serif`;
+  const titleLineCount = wrapCanvasText(measure, title.toUpperCase(), maxTextW - 96).length;
+  const titleHeight = Math.max(86, titleLineCount * 58 + 8);
+  measure.font = `500 ${bodySize}px Barlow, sans-serif`;
+
+  const wrappedBlocks = rows.map(row => ({
+    text: row,
+    lines: wrapCanvasText(measure, row, maxTextW),
+    bullet: row.startsWith('• ')
+  }));
+  const textLines = wrappedBlocks.reduce((sum, b) => sum + b.lines.length, 0);
+  const H = Math.max(760, pad + titleHeight + 36 + 76 + (textLines * (bodySize + 12)) + (wrappedBlocks.length * lineGap) + 88);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  const grad = ctx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0, '#141414');
+  grad.addColorStop(0.55, '#1b1b1b');
+  grad.addColorStop(1, '#0d0d0d');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = 'rgba(201,168,76,0.08)';
+  ctx.beginPath(); ctx.arc(W - 110, 110, 190, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(42,57,141,0.14)';
+  ctx.beginPath(); ctx.arc(70, H - 120, 210, 0, Math.PI * 2); ctx.fill();
+
+  ctx.strokeStyle = 'rgba(201,168,76,0.35)';
+  ctx.lineWidth = 3;
+  roundRect(ctx, 28, 28, W - 56, H - 56, 28);
+  ctx.stroke();
+
+  let y = pad;
+  ctx.font = `900 66px "Barlow Condensed", Barlow, sans-serif`;
+  ctx.fillStyle = '#F0C040';
+  ctx.textBaseline = 'top';
+  ctx.fillText(icon, pad, y - 4);
+
+  ctx.font = `900 ${titleSize}px "Barlow Condensed", Barlow, sans-serif`;
+  ctx.fillStyle = '#F0F0F0';
+  const titleLines = wrapCanvasText(ctx, title.toUpperCase(), maxTextW - 96);
+  titleLines.forEach((line, i) => ctx.fillText(line, pad + 92, y + i * 58));
+  y += titleHeight;
+
+  ctx.fillStyle = '#C9A84C';
+  roundRect(ctx, pad, y, 170, 32, 16); ctx.fill();
+  ctx.fillStyle = '#0D0D0D';
+  ctx.font = `800 ${labelSize}px "Barlow Condensed", Barlow, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('AJUDA', pad + 85, y + 1);
+  ctx.textAlign = 'left';
+  y += 64;
+
+  ctx.font = `500 ${bodySize}px Barlow, sans-serif`;
+  ctx.fillStyle = '#F0F0F0';
+  wrappedBlocks.forEach(block => {
+    const x = block.bullet ? pad + 18 : pad;
+    block.lines.forEach((line, idx) => {
+      ctx.fillStyle = line.includes('Exemplo') || line.includes('Importante') ? '#F0C040' : '#F0F0F0';
+      ctx.fillText(line, x, y);
+      y += bodySize + 12;
+      if (idx === block.lines.length - 1) y += lineGap;
+    });
+  });
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad, H - 74); ctx.lineTo(W - pad, H - 74); ctx.stroke();
+  ctx.font = `800 ${footerSize}px "Barlow Condensed", Barlow, sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.62)';
+  ctx.textAlign = 'left';
+  ctx.fillText('BOLÃO COPA 2026', pad, H - 54);
+  ctx.textAlign = 'right';
+  ctx.fillText('Compartilhado da página de ajuda', W - pad, H - 54);
+
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 0.95));
+  return { blob, title };
+}
+
+function wrapCanvasText(ctx, text, maxWidth) {
+  const words = String(text || '').split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = '';
+  words.forEach(word => {
+    const test = line ? `${line} ${word}` : word;
+    if (ctx.measureText(test).width <= maxWidth || !line) {
+      line = test;
+    } else {
+      lines.push(line);
+      line = word;
+    }
+  });
+  if (line) lines.push(line);
+  return lines.length ? lines : [''];
+}
+
+function slugifyFileName(value) {
+  return String(value || 'card-ajuda')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48) || 'card-ajuda';
+}
+
+// ================================================================
+//  VOTO EXTRA
+// ================================================================
+async function voteExtra(gameId, target, type) {
+  if (!S.apostas) S.apostas = {};
+  const key = `aposta_${gameId}_${normEmail(target)}`;
+  if (!S.apostas[key]) S.apostas[key] = {};
+
+  const existingVote = S.apostas[key][S.me];
+
+  if (existingVote === type) {
+    delete S.apostas[key][S.me];
+    renderGames();
+    try {
+      await gsCall({ action:'voteExtra', gameId: gameId, targetEmail: target, voterEmail: S.me, type: 'remove' });
+      toast(`Voto ${type==='bosta'?'💩 Bosta':'✅ Mestre'} removido!`, 'info');
+    } catch(e) {
+      toast('Erro ao remover voto.', 'err');
+    }
+    return;
+  }
+
+  if (existingVote !== type) {
+    const count = countVotesInGame(S.me, gameId, type);
+    if (count >= 2) {
+      toast(`Limite atingido! Máximo de 2 votos "${type==='bosta'?'Bosta 💩':'Mestre ✅'}" por jogo.`, 'warn');
+      return;
+    }
+  }
+
+  const isChanging = existingVote !== undefined;
+  S.apostas[key][S.me] = type;
+  renderGames();
+
+  try {
+    await gsCall({ action:'voteExtra', gameId: gameId, targetEmail: target, voterEmail: S.me, type: type });
+    toast(`Aposta ${isChanging?'atualizada':'registrada'}! ${type === 'bosta' ? '💩' : '✅'}`, 'ok');
+  } catch(e) {
+    toast('Erro ao registrar aposta.', 'err');
+  }
+}
+
+async function setTestMode(mode) {
+  if (!isAdmin()) { toast('Acesso negado','err'); return; }
+  const turningOn = mode === 'true';
+  
+  if (turningOn) {
+    toast('Ligando modo de teste...', 'info');
+    try {
+      const res = await gsCall({ action:'adminSetTestMode', callerEmail:S.me, testMode:'true' });
+      if (!res.ok) { toast(res.error||'Erro ao ligar modo teste','err'); return; }
+      S.testMode = true;
+      toast('🧪 Modo de TESTE LIGADO! Sincronização pausada. Insira placares e clique em ✅ DEFINIR para todos verem.', 'warn');
+      renderSettingsPage();
+      rerenderCurrentPage();
+    } catch(e) { toast('Erro de conexão', 'err'); }
+  } else {
+    toast('Desligando modo de teste...', 'info');
+    try {
+      const res = await gsCall({ action:'adminSetTestMode', callerEmail:S.me, testMode:'false' });
+      if (!res.ok) { toast(res.error||'Erro ao desligar modo teste','err'); return; }
+      S.testMode = false;
+      toast('✅ Modo de teste DESLIGADO! Restaurando placares reais...', 'ok');
+      await forceSyncAll();
+    } catch(e) { toast('Erro de conexão', 'err'); }
+  }
+}
+
+async function adminSetTestResult() {
+  if (!isAdmin()) { toast('Acesso negado','err'); return; }
+  if (!S.testMode) { toast('Ligue o modo de teste antes de inserir resultados.','warn'); return; }
+  const id = parseInt(document.getElementById('adm-game').value);
+  const h  = parseInt(document.getElementById('adm-a').value);
+  const a  = parseInt(document.getElementById('adm-b').value);
+  const st = document.getElementById('adm-status').value;
+  
+  try {
+    const res = await gsCall({ action:'adminSetTestResult', callerEmail:S.me, gameId:id, h:h, a:a, status:st });
+    if (!res.ok) { toast(res.error||'Erro ao salvar resultado de teste','err'); return; }
+  } catch(e) { toast('Erro de conexão ao salvar no Sheets','err'); return; }
+  
+  S.results[id] = { h, a, status:st, source:'test' };
+  persistSettings();
+  toast(`🧪 Resultado de teste do jogo #${id} salvo no Sheets e aplicado! ⚽`,'ok');
+  rerenderCurrentPage();
+}
+
+// ================================================================
+//  PIBET (mantido)
+// ================================================================
+function renderPibets() {
+  const content = document.getElementById('pibet-content');
+  if (!S.pibets || S.pibets.length === 0) {
+    content.innerHTML = '<div class="hl-empty">Nenhuma aposta criada ainda.</div>';
+    return;
+  }
+  
+  const sorted = [...S.pibets].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  
+  let html = '';
+  sorted.forEach(pbt => {
+    const creator = S.users[pbt.creator] || { name: pbt.creator };
+    const target = pbt.target ? (S.users[pbt.target] || { name: pbt.target }) : null;
+    
+    let statusBadge = '';
+    if (pbt.status === 'pending') statusBadge = '<span class="status-pill upcoming">⏳ Pendente (Adm)</span>';
+    else if (pbt.status === 'active') statusBadge = '<span class="status-pill live" style="animation:none;background:rgba(42,57,141,0.2);color:#7b8fe8">🔥 Valendo</span>';
+    else if (pbt.status === 'creator_won') statusBadge = '<span class="status-pill finished">🏆 Criador Venceu</span>';
+    else if (pbt.status === 'target_won') statusBadge = '<span class="status-pill finished">🎯 Desafiados Venceram</span>';
+    else if (pbt.status === 'rejected') statusBadge = '<span class="status-pill" style="background:rgba(230,29,37,0.1);color:#ff7b7b">❌ Rejeitada</span>';
+
+    let typeLabel = target ? `Desafiado: <strong>${esc(target.name)}</strong>` : 'Aposta Livre (Qualquer um pode entrar)';
+    
+    let actionHtml = '';
+    const isAdm = isAdmin();
+    
+    if (pbt.status === 'pending' && isAdm) {
+      actionHtml = `<div style="margin-top:12px;border-top:1px dashed var(--border);padding-top:10px;display:flex;gap:8px">
+        <button class="btn-gold" style="padding:8px 12px;font-size:12px;flex:1" onclick="adminResolvePibet('${pbt.id}', 'active')">✔️ Aprovar (Valendo)</button>
+        <button class="btn-red" style="padding:8px 12px;font-size:12px;flex:1" onclick="adminResolvePibet('${pbt.id}', 'rejected')">✖️ Rejeitar</button>
+      </div>`;
+    } else if (pbt.status === 'active') {
+      if (isAdm) {
+        actionHtml = `<div style="margin-top:12px;border-top:1px dashed var(--border);padding-top:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Ações do Adm (Resolver Aposta):</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn-gold" style="padding:8px 12px;font-size:12px;flex:1" onclick="adminResolvePibet('${pbt.id}', 'creator_won')">🏆 Criador Ganhou</button>
+            <button class="btn-red" style="padding:8px 12px;font-size:12px;flex:1" onclick="adminResolvePibet('${pbt.id}', 'target_won')">🎯 Duvidadores Ganharam</button>
+          </div>
+        </div>`;
+      }
+      
+      if (!target && S.me !== pbt.creator) {
+        if (pbt.doubters.includes(S.me)) {
+          actionHtml = `<div style="margin-top:10px;color:var(--green);font-size:12px;font-weight:bold;text-align:center;">✅ Você entrou nesta aposta!</div>` + actionHtml;
+        } else {
+          actionHtml = `<button class="btn-red" style="margin-top:10px;width:100%" onclick="joinPibet('${pbt.id}')">DUVIDO! (Entrar na Aposta)</button>` + actionHtml;
+        }
+      } else if (target && S.me === pbt.target) {
+        if (pbt.doubters.includes(S.me)) {
+          actionHtml = `<div style="margin-top:10px;color:var(--green);font-size:12px;font-weight:bold;text-align:center;">✅ Você aceitou o desafio!</div>` + actionHtml;
+        } else {
+          actionHtml = `<button class="btn-red" style="margin-top:10px;width:100%" onclick="joinPibet('${pbt.id}')">ACEITAR DESAFIO</button>` + actionHtml;
+        }
+      } else if (target && !pbt.doubters.includes(pbt.target)) {
+         actionHtml = `<div style="margin-top:10px;color:var(--muted);font-size:12px;text-align:center">Aguardando ${esc(target.name)} aceitar...</div>` + actionHtml;
+      }
+    }
+
+    let doubtersHtml = '';
+    if (pbt.doubters && pbt.doubters.length > 0) {
+      const names = pbt.doubters.map(d => (S.users[d]||{}).name || d).join(', ');
+      doubtersHtml = `<div style="margin-top:12px;font-size:12px;color:var(--muted)"><strong>Entraram na Aposta:</strong> ${esc(names)}</div>`;
+    }
+
+    html += `<div class="game-card" style="margin-bottom:14px; padding:20px;">
+      <div class="gcard-top" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="rank-mini-av" style="width:34px;height:34px;font-size:16px">${creator.avatar?`<img src="${creator.avatar}">`:'🧑'}</div>
+          <div>
+            <div style="font-size:15px;font-weight:bold;color:var(--text)">${esc(creator.name)}</div>
+            <div style="font-size:11px;color:var(--muted)">${formatDateTime(pbt.createdAt)}</div>
+          </div>
+        </div>
+        ${statusBadge}
+      </div>
+      <div style="margin:16px 0;font-size:16px;line-height:1.5;color:var(--text);">"${esc(pbt.desc)}"</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;background:var(--dark3);padding:10px 14px;border-radius:10px;border:1px solid var(--border)">
+        <div style="font-size:13px;color:var(--muted)">${typeLabel}</div>
+        <div style="font-size:16px;font-weight:bold;color:#ff7b7b">🏴‍☠️ ${pbt.wager} Piratecas</div>
+      </div>
+      ${doubtersHtml}
+      ${actionHtml}
+    </div>`;
+  });
+  content.innerHTML = html;
+}
+
+function openCreatePibet() {
+  const sel = document.getElementById('pbt-target');
+  let opts = '<option value="">Aposta Livre (Qualquer um pode duvidar)</option>';
+  Object.values(S.users).forEach(u => {
+    if (u.email !== S.me) {
+      opts += `<option value="${esc(u.email)}">${esc(u.name)}</option>`;
+    }
+  });
+  sel.innerHTML = opts;
+  document.getElementById('pbt-desc').value = '';
+  document.getElementById('pbt-wager').value = '50';
+  document.getElementById('pibet-create-modal').classList.remove('hidden');
+}
+
+async function submitPibet() {
+  const desc = document.getElementById('pbt-desc').value.trim();
+  const wager = parseInt(document.getElementById('pbt-wager').value) || 0;
+  const target = document.getElementById('pbt-target').value;
+  
+  if (!desc) { toast('Descreva a aposta!','warn'); return; }
+  if (wager <= 0) { toast('Valor inválido!','warn'); return; }
+
+  document.getElementById('pibet-create-modal').classList.add('hidden');
+  toast('Lançando aposta...','info');
+
+  try {
+    const res = await gsCall({ action:'createPibet', email:S.me, target, wager, desc });
+    if (res.ok) {
+      await forceSyncAll();
+      navTo('pibet');
+      
+      const typeLabel = target ? `desafiou *( ${S.users[target]?.name || target} )*` : 'lançou uma *APOSTA LIVRE*';
+      const wText = `*PIRATABET: ${esc(S.users[S.me].name)}* ${typeLabel} valendo *${wager} Piratecas* 🏴‍☠️\n\n📌 _"${esc(desc)}"_\n\n⚠️ Adm, aprova lá no site para começar a valer!`;
+      const wpUrl = `https://wa.me/?text=${encodeURIComponent(wText)}`;
+      
+      document.getElementById('btn-pibet-whatsapp').onclick = () => window.open(wpUrl, '_blank');
+      document.getElementById('pibet-share-modal').classList.remove('hidden');
+    } else {
+      toast(res.error || 'Erro ao criar aposta','err');
+    }
+  } catch(e) { toast('Erro de conexão','err'); }
+}
+
+function closePibetShareModal() {
+  document.getElementById('pibet-share-modal').classList.add('hidden');
+}
+
+async function joinPibet(id) {
+  toast('Entrando na aposta...','info');
+  try {
+    const res = await gsCall({ action:'joinPibet', email:S.me, id });
+    if (res.ok) {
+      toast('Você aceitou a aposta! ⚔️','ok');
+      await forceSyncAll();
+      navTo('pibet');
+    } else {
+      toast(res.error || 'Erro ao entrar na aposta','err');
+    }
+  } catch(e) { toast('Erro de conexão','err'); }
+}
+
+async function adminResolvePibet(id, status) {
+  const text = status==='active' ? 'APROVAR aposta?' : status==='rejected' ? 'REJEITAR aposta?' : status==='creator_won' ? 'Dar a vitória para o CRIADOR da aposta?' : 'Dar a vitória para os DUVIDADORES/DESAFIADO?';
+  if (!confirm(`Confirma: ${text}`)) return;
+  toast('Atualizando aposta...','info');
+  try {
+    const res = await gsCall({ action:'adminResolvePibet', callerEmail:S.me, id, status });
+    if (res.ok) {
+      toast('Aposta resolvida/atualizada! ✅','ok');
+      await forceSyncAll();
+      navTo('pibet');
+      renderRanking(); 
+      renderStats();
+    } else {
+      toast(res.error || 'Erro ao atualizar','err');
+    }
+  } catch(e) { toast('Erro de conexão','err'); }
+}
+  
+// ================================================================
+//  ONESIGNAL (mantido)
+// ================================================================
+function initOneSignal() {
+  if (typeof ONESIGNAL_APP_ID === 'undefined' || ONESIGNAL_APP_ID.includes('COLE_SEU')) return;
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  const isIOS        = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true;
+
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: ONESIGNAL_APP_ID,
+      notifyButton: isIOS ? { enable: false } : { enable: true, size: 'small', position: 'bottom-right' },
+      serviceWorkerParam: { scope: '/' }
+    });
+
+    if (isIOS && isStandalone) {
+      const hasPermission = OneSignal.Notifications.permission;
+      if (!hasPermission) {
+        setTimeout(async () => {
+          try { await OneSignal.Notifications.requestPermission(); } catch(e) {}
+        }, 2000);
+      }
+    }
+  });
+
+  if (isIOS && !isStandalone) {
+    setTimeout(showIOSInstallBanner, 0);
+  }
+}
+
+function showIOSInstallBanner() {
+  if (localStorage.getItem('ios_banner_dismissed')) return;
+  const banner = document.getElementById('ios-install-banner');
+  if (banner) banner.style.display = 'flex';
+}
+function dismissIOSBanner() {
+  const banner = document.getElementById('ios-install-banner');
+  if (banner) banner.style.display = 'none';
+  localStorage.setItem('ios_banner_dismissed', '1');
+}
+
+async function initOneSignalForUser() {
+  if (!S.me) return;
+  if (typeof ONESIGNAL_APP_ID === 'undefined' || ONESIGNAL_APP_ID.includes('COLE_SEU')) return;
+  try {
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.login(S.me);
+      await new Promise(r => setTimeout(r, 1500));
+      const subId = OneSignal.User.PushSubscription.id;
+      if (subId) {
+        await gsCall({ action: 'saveOneSignalId', email: S.me, playerId: subId });
+      }
+    });
+  } catch(e) {
+    console.warn('[OneSignal] Registro de usuário falhou:', e);
+  }
+}
+
+async function saveNotifConfig() {
+  if (!isAdmin()) { toast('Apenas administradores podem alterar isso','warn'); return; }
+  const x = parseInt(document.getElementById('s-notif-x')?.value) || 30;
+  const y = parseInt(document.getElementById('s-notif-y')?.value) || 15;
+  if (y > x) { toast('⚠️ O valor de "Y" deve ser menor ou igual ao de "X".','warn'); return; }
+  S.settings.notifMinsPre     = x;
+  S.settings.notifMinsLockBet = y;
+  persistSettings();
+  const btn = document.getElementById('btn-save-notif');
+  if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
+  try {
+    const res = await gsCall({ action: 'saveNotifConfig', callerEmail: S.me, notifX: x, notifY: y });
+    toast(res.ok ? `✅ Configuração salva! X=${x}min | Y=${y}min` : (res.error || 'Erro ao salvar'), res.ok ? 'ok' : 'err');
+  } catch(e) {
+    toast('Erro de conexão: ' + e.message, 'err');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '💾 SALVAR CONFIGURAÇÕES NO SERVIDOR'; }
+  }
+}
+
+async function sendTestBroadcast() {
+  if (!isAdmin()) { toast('Acesso negado','err'); return; }
+  const msg = (document.getElementById('s-notif-msg')?.value || '').trim();
+  if (!msg) { toast('Digite uma mensagem antes de enviar.','warn'); return; }
+  const btn = document.getElementById('btn-send-broadcast');
+  if (btn) { btn.disabled = true; btn.textContent = 'Enviando…'; }
+  try {
+    const res = await gsCall({ action: 'sendBroadcast', callerEmail: S.me, message: encodeURIComponent(msg) });
+    if (res.ok) {
+      toast('📤 Notificação enviada para todos os usuários!','ok');
+      const inp = document.getElementById('s-notif-msg');
+      if (inp) inp.value = '';
+    } else {
+      toast(res.error || 'Erro ao enviar broadcast.','err');
+    }
+  } catch(e) {
+    toast('Erro de conexão: ' + e.message,'err');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '📤 ENVIAR PARA TODOS AGORA'; }
+  }
+}
+
+// ================================================================
+//  BOOT
+// ================================================================
+applyStoredTheme();
+initOneSignal();
+boot();
+</script>
+<!-- ── iOS Install Banner (só aparece no Safari iOS fora do PWA) ── -->
+<div id="ios-install-banner" style="display:none">
+  <div class="ios-icon">⚽</div>
+  <div class="ios-text">
+    <strong class="ios-title">Ative as notificações no iPhone!</strong>
+    <span>Toque em <strong style="color:var(--text)">Compartilhar ⬆️</strong> no Safari e depois em <strong style="color:var(--text)">"Adicionar à Tela de Início"</strong> para receber alertas de jogos.</span>
+  </div>
+  <button class="ios-close" onclick="dismissIOSBanner()">✕</button>
+</div>
+
+</body>
+</html>
