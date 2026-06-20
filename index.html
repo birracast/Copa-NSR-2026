@@ -459,6 +459,7 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
 .data-panel-sub { font-size: 13px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
 
 /* ---- NOVOS ESTILOS PARA SEÇÕES DE JOGOS NA PÁGINA GRUPOS ---- */
+/* ===== SEÇÕES DE JOGOS NA PÁGINA "JOGOS" ===== */
 .games-section {
   background: var(--dark2);
   border: 1px solid var(--border);
@@ -501,7 +502,7 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
   display: none;
 }
 
-/* Botão flutuante "Retrair Tudo" */
+/* Botão flutuante "Retrair Tudo" na página Jogos */
 .collapse-all-btn {
   position: sticky;
   top: 80px; /* altura aproximada do header */
@@ -521,7 +522,7 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
   box-shadow: 0 4px 12px rgba(0,0,0,0.4);
   transition: .2s;
   border: none;
-  margin-top: -10px; /* ajuste fino */
+  margin-top: -10px;
   margin-bottom: 10px;
 }
 .collapse-all-btn:hover {
@@ -2537,22 +2538,89 @@ function setViewUser(email) {
 }
 
 // ================================================================
-//  RENDER GAMES
+//  RENDER GAMES (com seções colapsáveis)
 // ================================================================
 function renderGames() {
   renderUserChips();
-  const phases = [...new Set(GAMES.map(g=>g.phase))];
-  let html = '';
-  phases.forEach(ph => {
-    const gs = GAMES.filter(g=>g.phase===ph);
-    const pillClass = ph==='Fase de Grupos'?'groups':ph==='Final'||ph==='Terceiro Lugar'?'final':'knockout';
-    html += `<div class="phase-hdr"><span class="phase-hdr-text">${ph}</span><span class="phase-pill ${pillClass}">${gs.length} jogos</span></div><div class="games-grid">`;
-    gs.forEach(g => { html += renderGameCard(g); });
-    html += '</div>';
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const finished = [];
+  const todayGames = [];
+  const upcoming = [];
+
+  GAMES.forEach(game => {
+    const r = S.results[game.id] || {};
+    const isFinishedStrict = r.status === 'finished';
+    const gameDate = new Date(game.date);
+    gameDate.setHours(0,0,0,0);
+    const isToday = gameDate.getTime() === today.getTime();
+
+    if (isFinishedStrict) {
+      finished.push(game);
+    } else if (isToday) {
+      todayGames.push(game);
+    } else if (gameDate.getTime() >= today.getTime()) {
+      upcoming.push(game);
+    } else {
+      // jogos antigos não finalizados (ex: data passada mas status não finalizado) - colocar em próximos
+      upcoming.push(game);
+    }
   });
+
+  // ordenar por data
+  const sortByDate = (a,b) => new Date(a.date) - new Date(b.date);
+  finished.sort(sortByDate);
+  todayGames.sort(sortByDate);
+  upcoming.sort(sortByDate);
+
+  const sections = [
+    { id: 'finalizados', label: 'Jogos Finalizados', games: finished, defaultCollapsed: true },
+    { id: 'hoje', label: 'Jogos de Hoje', games: todayGames, defaultCollapsed: false },
+    { id: 'proximos', label: 'Próximos Jogos', games: upcoming, defaultCollapsed: true }
+  ];
+
+  let html = '';
+  // Botão flutuante (será renderizado dentro do container, mas com position sticky)
+  html += `<button class="collapse-all-btn" onclick="toggleAllGameSections()" title="Retrair/Expandir todas as seções">▲</button>`;
+  
+  sections.forEach(section => {
+    const collapsedClass = section.defaultCollapsed ? ' is-collapsed' : '';
+    const gamesHtml = section.games.map(game => renderGameCard(game)).join('');
+    html += `
+      <div class="games-section${collapsedClass}" id="games-section-${section.id}">
+        <div class="games-section-header" onclick="toggleGameSection('${section.id}')">
+          <span>${section.label} (${section.games.length})</span>
+          <span class="toggle-arrow">▲</span>
+        </div>
+        <div class="games-section-body">
+          ${gamesHtml || '<div class="group-empty">Nenhum jogo nesta categoria.</div>'}
+        </div>
+      </div>
+    `;
+  });
+
   document.getElementById('games-content').innerHTML = html;
 }
 
+// Funções para toggle das seções na página Jogos
+function toggleGameSection(id) {
+  const section = document.getElementById('games-section-' + id);
+  if (!section) return;
+  section.classList.toggle('is-collapsed');
+}
+
+function toggleAllGameSections() {
+  const sections = document.querySelectorAll('#games-content .games-section');
+  const allCollapsed = Array.from(sections).every(el => el.classList.contains('is-collapsed'));
+  sections.forEach(el => {
+    if (allCollapsed) {
+      el.classList.remove('is-collapsed');
+    } else {
+      el.classList.add('is-collapsed');
+    }
+  });
+}
 function renderGameCard(game) {
   const r = S.results[game.id]||game.result||{h:null,a:null,status:'upcoming'};
   const meUser   = S.users[S.me];
@@ -2915,72 +2983,14 @@ function showHistoryModal(email, type) {
 }
   
 // ================================================================
-//  RENDER GROUPS / STANDINGS
+//  RENDER GROUPS / STANDINGS (ORIGINAL)
 // ================================================================
 function renderGroupsPage() {
   updateDataSourceLabel();
-  const today = new Date();
-  today.setHours(0,0,0,0);
-
-  const finished = [];
-  const todayGames = [];
-  const upcoming = [];
-
-  GAMES.forEach(game => {
-    const r = S.results[game.id] || {};
-    const isFinished = r.status === 'finished' || (r.status === 'live' && r.h !== null); // finalizados incluem jogos com resultado final, mas mantemos apenas 'finished' como critério
-    // Para ser mais preciso, usamos status 'finished'
-    const isFinishedStrict = r.status === 'finished';
-    const gameDate = new Date(game.date);
-    gameDate.setHours(0,0,0,0);
-    const isToday = gameDate.getTime() === today.getTime();
-
-    if (isFinishedStrict) {
-      finished.push(game);
-    } else if (isToday) {
-      todayGames.push(game);
-    } else if (gameDate.getTime() > today.getTime()) {
-      upcoming.push(game);
-    } else {
-      // jogos antigos não finalizados (ex: data passada mas status não finalizado) - colocar em próximos? melhor colocar em upcoming.
-      upcoming.push(game);
-    }
-  });
-
-  // ordenar por data
-  const sortByDate = (a,b) => new Date(a.date) - new Date(b.date);
-  finished.sort(sortByDate);
-  todayGames.sort(sortByDate);
-  upcoming.sort(sortByDate);
-
-  const sections = [
-    { id: 'finalizados', label: 'Jogos Finalizados', games: finished, defaultCollapsed: true },
-    { id: 'hoje', label: 'Jogos de Hoje', games: todayGames, defaultCollapsed: false },
-    { id: 'proximos', label: 'Próximos Jogos', games: upcoming, defaultCollapsed: true }
-  ];
-
-  let html = '';
-  sections.forEach(section => {
-    const collapsedClass = section.defaultCollapsed ? ' is-collapsed' : '';
-    const gamesHtml = section.games.map(game => renderGroupGameRow(game)).join('');
-    html += `
-      <div class="games-section${collapsedClass}" id="section-${section.id}">
-        <div class="games-section-header" onclick="toggleGamesSection('${section.id}')">
-          <span>${section.label} (${section.games.length})</span>
-          <span class="toggle-arrow">▲</span>
-        </div>
-        <div class="games-section-body">
-          ${gamesHtml || '<div class="group-empty">Nenhum jogo nesta categoria.</div>'}
-        </div>
-      </div>
-    `;
-  });
-
-  document.getElementById('groups-content').innerHTML = html;
-  // Atualizar pill count
-  document.getElementById('groups-count-pill').textContent = `${GAMES.length} jogos`;
+  const groups = [...new Set(GAMES.filter(g=>g.group).map(g=>g.group))].sort((a,b)=>String(a).localeCompare(String(b),'pt-BR',{numeric:true}));
+  const pill = document.getElementById('groups-count-pill'); if(pill) pill.textContent = `${groups.length} grupos`;
+  document.getElementById('groups-content').innerHTML = groups.map(renderGroupCard).join('') || '<div class="group-empty">Nenhum grupo carregado.</div>';
 }
-
 function toggleGamesSection(id) {
   const section = document.getElementById('section-' + id);
   if (!section) return;
