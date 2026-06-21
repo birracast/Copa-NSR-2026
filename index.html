@@ -1757,6 +1757,41 @@ let S = {
 let saveTimers = {}; let adminUsers = []; let adminEditTarget = null;
 
 // ================================================================
+//  CONTROLE DE USUÁRIOS OCULTOS (apenas visual, não afeta dados)
+// ================================================================
+let HIDDEN_USERS = [];
+
+function loadHiddenUsers() {
+  try {
+    const saved = localStorage.getItem('bolao_hidden_users');
+    if (saved) HIDDEN_USERS = JSON.parse(saved);
+  } catch(e) { HIDDEN_USERS = []; }
+}
+
+function saveHiddenUsers() {
+  localStorage.setItem('bolao_hidden_users', JSON.stringify(HIDDEN_USERS));
+}
+
+function toggleHideUser(email) {
+  const idx = HIDDEN_USERS.indexOf(email);
+  if (idx >= 0) {
+    HIDDEN_USERS.splice(idx, 1);
+  } else {
+    HIDDEN_USERS.push(email);
+  }
+  saveHiddenUsers();
+  rerenderCurrentPage(); // atualiza as telas
+}
+
+function isUserHidden(email) {
+  return HIDDEN_USERS.includes(email);
+}
+
+
+
+
+  
+// ================================================================
 //  PERSIST SETTINGS (only settings in localStorage, not users)
 // ================================================================
 function persistSettings() {
@@ -1784,6 +1819,8 @@ function hydrateSettings() {
       }
     } catch(e) {}
   }
+
+   loadHiddenUsers();
 }
 function saveSession(userData) {
   localStorage.setItem('bolao26_session', JSON.stringify({ email: userData.email, userData }));
@@ -2451,7 +2488,7 @@ function renderStats() {
 // ================================================================
 function renderUserChips() {
   const chips = Object.values(S.users)
-    .filter(u => u.name && u.name.trim().length > 0)
+    .filter(u => u.name && u.name.trim().length > 0 && !isUserHidden(u.email))
     .map(u => {
       const isMe = u.email === S.me;
       const isFiltered = !isMe && S.viewingUser === u.email;
@@ -3048,7 +3085,9 @@ function onBetInput(gameId) {
 //  RANKING (DUPLO: PONTOS + PIRATECAS)
 // ================================================================
 function calcRankAll() {
-  return Object.values(S.users).map(u=>({...u,pts:calcPoints(u)}))
+  return Object.values(S.users)
+    .filter(u => !isUserHidden(u.email))
+    .map(u => ({...u, pts: calcPoints(u)}))
     .sort((a,b) => { 
       if (b.pts.total !== a.pts.total) return b.pts.total - a.pts.total; 
       if (b.pts.exact !== a.pts.exact) return b.pts.exact - a.pts.exact; 
@@ -3057,7 +3096,9 @@ function calcRankAll() {
     });
 }
 function calcRankPiratecas() {
-  return Object.values(S.users).map(u=>({...u,pts:calcPoints(u)}))
+  return Object.values(S.users)
+    .filter(u => !isUserHidden(u.email))
+    .map(u => ({...u, pts: calcPoints(u)}))
     .sort((a,b) => b.pts.piratecas - a.pts.piratecas);
 }
 function renderRankRow(u, pos) {
@@ -3759,7 +3800,9 @@ function renderAdminTable() {
   const empty = document.getElementById('admin-empty');
   if (!filtered.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display = 'none';
-  tbody.innerHTML = filtered.map(u => `
+tbody.innerHTML = filtered.map(u => {
+  const isHidden = isUserHidden(u.email);
+  return `
     <tr>
       <td><strong>${esc(u.name)}</strong>${u.isAdmin?` <span class="admin-badge is-admin">👑 Admin</span>`:''}</td>
       <td style="color:var(--muted);font-size:12px">${esc(u.email)}</td>
@@ -3769,9 +3812,13 @@ function renderAdminTable() {
       <td class="admin-actions">
         <button class="btn-sm" onclick="openAdminEdit('${esc(u.email)}')">✏️ Editar</button>
         ${!u.isAdmin ? `<button class="btn-sm" style="border-color:var(--red);color:#ff7b7b;" onclick="adminDeleteUser('${esc(u.email)}')">🗑 Deletar</button>` : ''}
+        <button class="btn-sm" onclick="toggleHideUser('${esc(u.email)}')" style="border-color:${isHidden?'var(--green)':'var(--gold)'};color:${isHidden?'var(--green)':'var(--gold)'};">
+          ${isHidden ? '👁 Mostrar' : '🙈 Ocultar'}
+        </button>
       </td>
     </tr>
-  `).join('');
+  `;
+}).join('');
 }
 
 function openAdminEdit(email) {
