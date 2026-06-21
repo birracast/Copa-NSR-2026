@@ -2839,6 +2839,7 @@ function showHistoryModal(email, type) {
     html += `<div style="padding:8px;text-align:right;font-weight:bold;color:var(--gold);">Total: ${ptsObj.total} pts</div>`;
 
   } else {
+    // ---- PIRATECAS: same logic as before but grouped by game with flags + new text ----
     let balance = 100;
     html += `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
       <span>Saldo Inicial</span><span style="color:var(--gold);font-weight:bold;">100</span>
@@ -2882,6 +2883,7 @@ function showHistoryModal(email, type) {
       }
     });
 
+// Group apostas by game
     const apostasForUser = [];
     Object.keys(S.apostas || {}).forEach(key => {
       const parts = key.split('_');
@@ -2939,9 +2941,75 @@ function showHistoryModal(email, type) {
       });
     }
 
+    // ============================================================
+    // NOVO BLOCO: APOSTAS PIRATABET
+    // ============================================================
+    if (S.pibets && S.pibets.length > 0) {
+      const resolvedPibets = S.pibets.filter(p => p.status === 'creator_won' || p.status === 'target_won');
+      if (resolvedPibets.length > 0) {
+        html += `<div style="padding:6px 0 2px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Apostas Piratabet</div>`;
+        resolvedPibets.forEach(pbt => {
+          const isCreator = (pbt.creator === email);
+          const isTarget = (pbt.target === email);
+          const isDoubter = pbt.doubters && pbt.doubters.includes(email);
+          let diff = 0;
+          let label = '';
+          const W = pbt.wager;
+          const N = pbt.doubters ? pbt.doubters.length : 0;
+
+          if (pbt.target && pbt.target !== '') {
+            // Aposta direcionada (creator vs target)
+            if (isCreator || isTarget) {
+              if (pbt.status === 'creator_won') {
+                if (isCreator) { diff = W; label = '🏆 Criador venceu'; }
+                else if (isTarget) { diff = -W; label = '🏆 Criador venceu'; }
+              } else if (pbt.status === 'target_won') {
+                if (isCreator) { diff = -W; label = '🎯 Desafiado venceu'; }
+                else if (isTarget) { diff = W; label = '🎯 Desafiado venceu'; }
+              }
+            }
+          } else {
+            // Aposta livre
+            if (isCreator) {
+              if (pbt.status === 'creator_won') {
+                diff = W;
+                label = '🏆 Criador venceu (aposta livre)';
+              } else if (pbt.status === 'target_won') {
+                diff = -W;
+                label = '🎯 Duvidadores venceram (aposta livre)';
+              }
+            } else if (isDoubter) {
+              const share = Math.round(W / N);
+              if (pbt.status === 'creator_won') {
+                diff = -share;
+                label = '🏆 Criador venceu (aposta livre)';
+              } else if (pbt.status === 'target_won') {
+                diff = share;
+                label = '🎯 Duvidadores venceram (aposta livre)';
+              }
+            }
+          }
+          if (diff !== 0) {
+            const color = diff > 0 ? 'var(--green)' : '#ff7b7b';
+            const desc = pbt.desc ? `"${esc(pbt.desc)}"` : '';
+            html += `<div style="padding:7px 8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <span style="font-size:13px;flex:1;min-width:0;">
+                <strong style="color:var(--text)">${label}</strong>
+                <span style="color:var(--muted); font-size:12px;"> ${desc}</span>
+              </span>
+              <span style="color:${color};font-weight:bold;white-space:nowrap;">${diff>0?'+':''}${diff} 🏴‍☠️</span>
+            </div>`;
+            balance += diff;
+          }
+        });
+      }
+    }
+    // FIM DO NOVO BLOCO
+    // ============================================================
+
     html += `<div style="padding:8px;text-align:right;font-weight:bold;color:#ff7b7b;">Total: ${balance} 🏴‍☠️</div>`;
   }
-
+    
   if(!html) html = '<div style="color:var(--muted);text-align:center;padding:20px;">Nenhum histórico disponível.</div>';
   document.getElementById('hm-content').innerHTML = html;
   document.getElementById('history-modal').classList.remove('hidden');
