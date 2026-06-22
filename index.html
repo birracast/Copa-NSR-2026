@@ -1262,8 +1262,6 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
           <li><span><strong>+5</strong> por ser o maior pontuador da rodada.</span></li>
           <li><span><strong>+2</strong> quando sua aposta Bosta acerta e o alvo zera.</span></li>
           <li><span><strong>+2</strong> quando sua aposta Mestre acerta e o alvo pontua.</span></li>
-          <li><span><strong>+2</strong> quando alguém vota Bosta em você e você pontua.</span></li>
-          <li><span><strong>+2</strong> quando alguém vota Mestre em você e você zera.</span></li>
         </ul>
         <span class="help-mini-title">Perder Piratecas</span>
         <ul>
@@ -1271,8 +1269,6 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
           <li><span><strong>-1</strong> por ficar na mediana ou abaixo dela sem ser o pior.</span></li>
           <li><span><strong>-2</strong> quando você apostou Bosta e o alvo pontuou.</span></li>
           <li><span><strong>-2</strong> quando você apostou Mestre e o alvo zerou.</span></li>
-          <li><span><strong>-2</strong> quando alguém vota Bosta em você e você zera.</span></li>
-          <li><span><strong>-2</strong> quando alguém vota Mestre em você e você pontua.</span></li>
         </ul>
         <div class="help-example"><strong>Importante:</strong> errar o seu próprio palpite não tira Piratecas diretamente. Ele só pesa no desempenho da rodada, podendo te colocar na zona de perda.</div>
         <div class="help-card-actions"><button class="help-share-btn" onclick="shareHelpCard(this)">📲 WhatsApp</button></div>
@@ -1286,7 +1282,7 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
           <li><span>Temos dois rankings lado a lado: o <strong>Clássico (Pontos)</strong> e o de <strong>Piratecas</strong>.</span></li>
           <li><span><strong>Clique no card de qualquer usuário</strong> dentro do ranking para abrir o <strong>Modal de Histórico</strong> correspondente.</span></li>
           <li><span><strong>Histórico de Pontos:</strong> mostra jogo a jogo, placar apostado, placar oficial, exatos, resultados e bônus.</span></li>
-          <li><span><strong>Histórico de Piratecas:</strong> mostra saldo inicial, ganhos/perdas por rodada e apostas Bosta/Mestre (votos que você fez E votos que você recebeu).</span></li>
+          <li><span><strong>Histórico de Piratecas:</strong> mostra saldo inicial, ganhos/perdas por rodada e apostas Bosta/Mestre.</span></li>
           <li><span><strong>Critério do ranking de pontos:</strong> primeiro vem o total de pontos; em empate, contam mais placares exatos e depois mais resultados certos.</span></li>
         </ul>
         <div class="help-example"><strong>Dica:</strong> clique no seu rival no ranking de Piratecas para ver se ele está ganhando por mérito na rodada ou só acertando apostas Bosta/Mestre.</div>
@@ -1675,32 +1671,43 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
 //  CONFIGURAÇÃO EXCLUSIVA - COLOQUE SUA URL AQUI ABAIXO
 // ================================================================
 const GS_URL = 'https://script.google.com/macros/s/AKfycbxbK2qzW1zxmoR9Tb3J3UnNK0xkbzn2AATWK35S1R_Av21pKjx-tWnIVO5IJR13DhwFKg/exec';
+// Exemplo: const GS_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
 
+// ── OneSignal: substitua pelo seu App ID (painel OneSignal → Settings → Keys & IDs) ──
 const ONESIGNAL_APP_ID = 'c48bd1a4-00e1-4629-baf3-02a660f35e64';
 
+// Dicionário convertido para Imagens (Resolve o problema do Windows)
 const ISO_MAP = {
-  'BRA':'br','ARG':'ar','USA':'us','MEX':'mx','CAN':'ca','URU':'uy','COL':'co','ECU':'ec','PER':'pe','CHI':'cl',
-  'VEN':'ve','PAR':'py','BOL':'bo','CRC':'cr','PAN':'pa','JAM':'jm',
-  'FRA':'fr','ENG':'gb-eng','ESP':'es','GER':'de','POR':'pt','ITA':'it','CRO':'hr','NED':'nl','BEL':'be',
-  'SUI':'ch','POL':'pl','DEN':'dk','SWE':'se','SRB':'rs','WAL':'gb-wls','SCO':'gb-sct','UKR':'ua','AUT':'at',
-  'TUR':'tr','CZE':'cz','HUN':'hu',
-  'SEN':'sn','MAR':'ma','CMR':'cm','GHA':'gh','TUN':'tn','NGA':'ng','ALG':'dz','EGY':'eg','CIV':'ci','MLI':'ml',
-  'COD':'cd','RSA':'za',
-  'JPN':'jp','KOR':'kr','KSA':'sa','AUS':'au','IRN':'ir','QAT':'qa','NZL':'nz','IRQ':'iq','UAE':'ae','JOR':'jo',
-  'UZB':'uz','OMA':'om','BHR':'bh',
-  'BIH':'ba','HAI':'ht','CUW':'cw','CPV':'cv','URY':'uy','NOR':'no'
+  // Américas
+  'BRA':'br', 'ARG':'ar', 'USA':'us', 'MEX':'mx', 'CAN':'ca', 
+  'URU':'uy', 'COL':'co', 'ECU':'ec', 'PER':'pe', 'CHI':'cl', 
+  'VEN':'ve', 'PAR':'py', 'BOL':'bo', 'CRC':'cr', 'PAN':'pa', 'JAM':'jm',
+  // Europa
+  'FRA':'fr', 'ENG':'gb-eng', 'ESP':'es', 'GER':'de', 'POR':'pt', 
+  'ITA':'it', 'CRO':'hr', 'NED':'nl', 'BEL':'be', 'SUI':'ch', 
+  'POL':'pl', 'DEN':'dk', 'SWE':'se', 'SRB':'rs', 'WAL':'gb-wls', 
+  'SCO':'gb-sct', 'UKR':'ua', 'AUT':'at', 'TUR':'tr', 'CZE':'cz', 'HUN':'hu',
+  // África
+  'SEN':'sn', 'MAR':'ma', 'CMR':'cm', 'GHA':'gh', 'TUN':'tn', 
+  'NGA':'ng', 'ALG':'dz', 'EGY':'eg', 'CIV':'ci', 'MLI':'ml', 'COD':'cd', 'RSA':'za',
+  // Ásia/Oceania
+  'JPN':'jp', 'KOR':'kr', 'KSA':'sa', 'AUS':'au', 'IRN':'ir', 
+  'QAT':'qa', 'NZL':'nz', 'IRQ':'iq', 'UAE':'ae', 'JOR':'jo', 
+  'UZB':'uz', 'OMA':'om', 'BHR':'bh',
+  // Bandeiras adicionadas
+  'BIH':'ba', 'HAI':'ht', 'CUW':'cw', 'CPV':'cv', 'URY':'uy', 'NOR':'no'
 };
 
-function getFlag(code) {
+function getFlag(code) { 
   const iso = ISO_MAP[code];
   if (iso) {
     return `<img src="https://flagcdn.com/w40/${iso}.png" srcset="https://flagcdn.com/w80/${iso}.png 2x" alt="${code}" style="width: 1em; height: auto; border-radius: 3px; vertical-align: middle; box-shadow: 0 1px 3px rgba(0,0,0,0.4);">`;
   }
-  return '🏳️';
+  return '🏳️'; 
 }
 
 const IMGBB_API_KEY = '5c74c4e1ebba127ec7d8480464ae3cce';
-
+  
 // ================================================================
 //  FALLBACK GAMES DATA
 // ================================================================
@@ -1750,7 +1757,7 @@ let S = {
 let saveTimers = {}; let adminUsers = []; let adminEditTarget = null;
 
 // ================================================================
-//  CONTROLE DE USUÁRIOS OCULTOS
+//  CONTROLE DE USUÁRIOS OCULTOS (apenas visual, não afeta dados)
 // ================================================================
 let HIDDEN_USERS = [];
 
@@ -1773,15 +1780,19 @@ function toggleHideUser(email) {
     HIDDEN_USERS.push(email);
   }
   saveHiddenUsers();
-  rerenderCurrentPage();
+  rerenderCurrentPage(); // atualiza as telas
 }
 
 function isUserHidden(email) {
   return HIDDEN_USERS.includes(email);
 }
 
+
+
+
+  
 // ================================================================
-//  PERSIST SETTINGS
+//  PERSIST SETTINGS (only settings in localStorage, not users)
 // ================================================================
 function persistSettings() {
   const localSettings = { sceneBg: S.settings.sceneBg };
@@ -1857,6 +1868,9 @@ function showAuth() {
   document.getElementById('screen-auth').classList.remove('hidden');
 }
 
+// ================================================================
+//  AUTH TAB
+// ================================================================
 function authTab(t) {
   ['login','reg'].forEach(x => {
     document.getElementById('form-'+x).classList.toggle('hidden', x!==t);
@@ -1892,9 +1906,8 @@ async function previewAvatar(inp) {
     toast('Erro de conexão com servidor de imagens','err');
   }
 }
-
 // ================================================================
-//  LOGIN
+//  LOGIN — via Google Sheets
 // ================================================================
 async function doLogin() {
   if (!GS_URL || GS_URL.includes('COLE_AQUI')) { authMsg('Erro: URL do servidor não configurada no código-fonte (index.html).'); return; }
@@ -1936,7 +1949,7 @@ async function doLogin() {
 }
 
 // ================================================================
-//  REGISTER
+//  REGISTER — via Google Sheets
 // ================================================================
 async function doRegister() {
   if (!GS_URL || GS_URL.includes('COLE_AQUI')) { authMsg('Erro: URL do servidor não configurada no código-fonte (index.html).'); return; }
@@ -2024,15 +2037,15 @@ function enterApp() {
   document.getElementById('screen-main').classList.remove('hidden');
   S.viewingUser = S.me;
   refreshNavUser();
-
+  
   const isAdm = isAdmin();
   document.getElementById('nt-admin').classList.toggle('hidden', !isAdm);
-
+  
   const syncBtn = document.getElementById('btn-main-sync');
   if (syncBtn) syncBtn.classList.toggle('hidden', !isAdm);
-
+  
   navTo('games');
-
+  
   const countdownEl = document.getElementById('sync-countdown');
   if (isAdm) {
     forceSyncAll();
@@ -2065,7 +2078,7 @@ function navTo(p) {
 function rerenderCurrentPage() { navTo(currentPage || 'games'); }
 
 // ================================================================
-//  GS HELPERS
+//  GS HTTP HELPERS
 // ================================================================
 function gsActionUrl(action) {
   if (!GS_URL || GS_URL.includes('COLE_AQUI')) return '';
@@ -2180,15 +2193,15 @@ async function gsSave(email, gameId, h, a) {
 
 async function gsSaveUser(user) {
   if (!GS_URL || GS_URL.includes('COLE_AQUI')) return;
-  try {
-    await gsCall({
-      action:'saveUser',
-      email:user.email,
-      name:user.name,
-      team:user.team,
-      motto:user.motto,
+  try { 
+    await gsCall({ 
+      action:'saveUser', 
+      email:user.email, 
+      name:user.name, 
+      team:user.team, 
+      motto:user.motto, 
       avatar:user.avatar
-    });
+    }); 
   } catch(e) {}
 }
 
@@ -2219,7 +2232,7 @@ function mergeRemoteData(data) {
       if (email === S.me) saveSession(S.users[email]);
     });
   }
-  S.apostas = data.apostas || {};
+  S.apostas = data.apostas || {}; 
   S.pibets = data.pibets || [];
 }
 
@@ -2300,6 +2313,19 @@ function countVotesInGame(voterEmail, gameId, type) {
   return count;
 }
 
+function countVotesInRodada(voterEmail, rodada, type, excludeGameId) {
+  let count = 0;
+  Object.keys(S.apostas || {}).forEach(key => {
+    const parts = key.split('_');
+    if (parts[0] !== 'aposta') return;
+    const gId = parseInt(parts[1]);
+    if (excludeGameId != null && gId === excludeGameId) return;
+    if (getRodada(gId) !== rodada) return;
+    const votersObj = S.apostas[key];
+    if (votersObj && votersObj[voterEmail] === type) count++;
+  });
+  return count;
+}
 function minsUntil(game) {
   const kickoff = new Date(game.date).getTime();
   if (!Number.isFinite(kickoff)) return Infinity;
@@ -2312,7 +2338,7 @@ function getGameStatus(game) {
 }
 
 // ================================================================
-//  WDL HELPER
+//  POINTS E PIRATECAS
 // ================================================================
 function getWDL(h,a) { if(h>a)return'H'; if(a>h)return'A'; return'D'; }
 
@@ -2336,15 +2362,11 @@ function calcGamePoints(user, gameId) {
   return pts;
 }
 
-// ================================================================
-//  CALC PIRATECAS (CORRIGIDO com transferência de Bosta/Mestre)
-// ================================================================
 function calcUserPiratecas(email) {
   let balance = 100;
   const u = S.users[email];
   if(!u) return balance;
 
-  // 1. Rodadas
   const rodadas = {};
   GAMES.forEach(g => {
     const r = S.results[g.id];
@@ -2365,75 +2387,38 @@ function calcUserPiratecas(email) {
      const minPts = ptsArray[0];
      let medPts = (ptsArray.length % 2 === 0) ? (ptsArray[ptsArray.length/2 - 1] + ptsArray[ptsArray.length/2]) / 2 : ptsArray[Math.floor(ptsArray.length/2)];
 
-     if (maxPts !== minPts) {
+     if (maxPts !== minPts) { 
        const myPts = rData.users[email];
-       if (myPts === maxPts) balance += 5;
-       else if (myPts === minPts) balance -= 5;
-       else if (myPts === medPts) balance -= 1;
-       else if (myPts < medPts && myPts > minPts) balance -= 1;
+       if (myPts === maxPts) balance += 5; 
+       else if (myPts === minPts) balance -= 5; 
+       else if (myPts === medPts) balance -= 1; 
+       else if (myPts < medPts && myPts > minPts) balance -= 1; 
      }
   });
 
-  // 2. Votos feitos PELO usuário (já existente)
   Object.keys(S.apostas || {}).forEach(key => {
-     const parts = key.split('_');
-     if (parts[0] !== 'aposta') return;
-     const gId = parseInt(parts[1]);
-     const targetNorm = parts.slice(2).join('_');
+     const parts = key.split('_'); const gId = parseInt(parts[1]); const targetNorm = parts.slice(2).join('_');
      const votersObj = S.apostas[key];
-     if (!votersObj[email]) return;
-     const type = votersObj[email];
-     const r = S.results[gId];
-     if (!r || (r.status !== 'finished' && r.status !== 'live') || r.h === null) return;
-     const realTargetEmail = Object.keys(S.users).find(usr => normEmail(usr) === targetNorm) || targetNorm;
-     const targetPts = calcGamePoints(S.users[realTargetEmail], gId);
-     const targetHit = targetPts > 0;
-
-     if (type === 'bosta') {
-       if (!targetHit) balance += 2;
-       else balance -= 2;
-     } else if (type === 'mestre') {
-       if (targetHit) balance += 2;
-       else balance -= 2;
+     if (votersObj[email]) {
+        const type = votersObj[email]; 
+        const r = S.results[gId];
+        if (r && (r.status === 'finished' || r.status === 'live') && r.h !== null) {
+           const realTargetEmail = Object.keys(S.users).find(usr => normEmail(usr) === targetNorm) || targetNorm;
+           const targetPts = calcGamePoints(S.users[realTargetEmail], gId);
+           const targetHit = targetPts > 0;
+           
+           if (type === 'bosta') { if (!targetHit) balance += 2; else balance -= 2; } 
+           else if (type === 'mestre') { if (targetHit) balance += 2; else balance -= 2; }
+        }
      }
   });
-
-  // 3. Votos feitos CONTRA o usuário (NOVO: transferência de Piratecas)
-  Object.keys(S.apostas || {}).forEach(key => {
-     const parts = key.split('_');
-     if (parts[0] !== 'aposta') return;
-     const gId = parseInt(parts[1]);
-     const targetNorm = parts.slice(2).join('_');
-     const votersObj = S.apostas[key];
-     // O usuário é o alvo desta aposta?
-     if (targetNorm !== normEmail(email)) return;
-     const r = S.results[gId];
-     if (!r || (r.status !== 'finished' && r.status !== 'live') || r.h === null) return;
-     const userPts = calcGamePoints(u, gId);
-     const userHit = userPts > 0;
-
-     Object.entries(votersObj).forEach(([voterEmail, type]) => {
-       if (voterEmail === email) return; // pular votos do próprio usuário (já tratado acima)
-       // Bosta: se o usuário pontuou → ganha +2 (voter perdeu), se zerou → perde -2 (voter ganhou)
-       if (type === 'bosta') {
-         if (userHit) balance += 2;
-         else balance -= 2;
-       } else if (type === 'mestre') {
-         // Mestre: se o usuário pontuou → perde -2 (voter ganhou), se zerou → ganha +2 (voter perdeu)
-         if (userHit) balance -= 2;
-         else balance += 2;
-       }
-     });
-  });
-
-  // 4. Pibets
   (S.pibets || []).forEach(pbt => {
     if (pbt.status === 'creator_won' || pbt.status === 'target_won') {
        const W = pbt.wager;
        const isTargeted = pbt.target && pbt.target !== '';
-
+       
        if (isTargeted) {
-         if (pbt.doubters && pbt.doubters.includes(pbt.target)) {
+         if (pbt.doubters.includes(pbt.target)) {
            if (pbt.status === 'creator_won') {
              if (email === pbt.creator) balance += W;
              if (email === pbt.target) balance -= W;
@@ -2443,15 +2428,15 @@ function calcUserPiratecas(email) {
            }
          }
        } else {
-         const N = pbt.doubters ? pbt.doubters.length : 0;
+         const N = pbt.doubters.length;
          if (N > 0) {
            const share = Math.round(W / N);
            if (pbt.status === 'creator_won') {
              if (email === pbt.creator) balance += W;
-             if (pbt.doubters && pbt.doubters.includes(email)) balance -= share;
+             if (pbt.doubters.includes(email)) balance -= share;
            } else {
              if (email === pbt.creator) balance -= W;
-             if (pbt.doubters && pbt.doubters.includes(email)) balance += share;
+             if (pbt.doubters.includes(email)) balance += share;
            }
          }
        }
@@ -2461,26 +2446,23 @@ function calcUserPiratecas(email) {
   return Math.round(balance);
 }
 
-// ================================================================
-//  CALC PONTOS
-// ================================================================
 function calcPoints(user) {
   const s = S.settings; let total=0, exact=0, res=0, streak=0, maxStreak=0;
   GAMES.forEach(g => {
     const r = S.results[g.id]; const b = (user.bets||{})[g.id];
     if (!r || (r.status !== 'finished' && r.status !== 'live') || !b || r.h === null) return;
-
-    if (b.h===r.h && b.a===r.a) {
-      total+=s.exact; exact++; streak++;
-      if(streak>maxStreak)maxStreak=streak;
-      if(g.phase==='Semifinal')total+=s.semi;
-      if(g.phase==='Final')total+=s.final;
+    
+    if (b.h===r.h && b.a===r.a) { 
+      total+=s.exact; exact++; streak++; 
+      if(streak>maxStreak)maxStreak=streak; 
+      if(g.phase==='Semifinal')total+=s.semi; 
+      if(g.phase==='Final')total+=s.final; 
     }
     else if (getWDL(b.h,b.a)===getWDL(r.h,r.a)) { total+=s.result; res++; streak=0; }
     else { streak=0; }
   });
   if (maxStreak>=3) total+=s.streak;
-  return { total, exact, res, piratecas: calcUserPiratecas(user.email) };
+  return { total, exact, res, piratecas: calcUserPiratecas(user.email) }; 
 }
 
 // ================================================================
@@ -2502,7 +2484,7 @@ function renderStats() {
 }
 
 // ================================================================
-//  USER CHIPS
+//  USER CHIPS (com filtro para evitar usuários fantasmas)
 // ================================================================
 function renderUserChips() {
   const chips = Object.values(S.users)
@@ -2518,7 +2500,7 @@ function renderUserChips() {
     }).join('');
   document.getElementById('user-chips').innerHTML = chips;
 }
-
+  
 function setViewUser(email) {
   if (S.viewingUser === email && email !== S.me) {
     S.viewingUser = null;
@@ -2533,7 +2515,7 @@ function setViewUser(email) {
 // ================================================================
 function renderGames() {
   renderUserChips();
-
+  
   const today = new Date();
   today.setHours(0,0,0,0);
 
@@ -2609,7 +2591,7 @@ function toggleAllGamesSections() {
 }
 
 // ================================================================
-//  RENDER GAME CARD
+//  RENDER GAME CARD (mesma função original)
 // ================================================================
 function renderGameCard(game) {
   const r = S.results[game.id]||game.result||{h:null,a:null,status:'upcoming'};
@@ -2775,16 +2757,16 @@ function showBetsInfoModal(gameId, targetEmail) {
   const apostaKey = `aposta_${gameId}_${normEmail(targetEmail)}`;
   const votersObj = (S.apostas || {})[apostaKey] || {};
   const targetUser = S.users[targetEmail];
-
+  
   document.getElementById('bim-subtitle').innerHTML = `Apostas no palpite de <strong>${targetUser ? esc(targetUser.name) : targetEmail}</strong>`;
-
+  
   let html = '';
   for (const [voterEmail, type] of Object.entries(votersObj)) {
     const voter = S.users[voterEmail];
     const voterName = voter ? esc(voter.name) : voterEmail;
     const ic = type === 'bosta' ? '💩 Bosta' : '✅ Mestre';
     const color = type === 'bosta' ? '#ff7b7b' : 'var(--green)';
-
+    
     html += `<div style="padding:8px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
       <div style="display:flex; align-items:center; gap:8px;">
         <div style="width:24px; height:24px; border-radius:50%; background:var(--dark4); overflow:hidden; display:flex; justify-content:center; align-items:center; font-size:12px;">
@@ -2795,19 +2777,16 @@ function showBetsInfoModal(gameId, targetEmail) {
       <span style="color:${color}; font-weight:bold; font-size:12px;">${ic}</span>
     </div>`;
   }
-
+  
   if(!html) html = '<div style="color:var(--muted);text-align:center;padding:20px;">Nenhuma aposta registrada.</div>';
   document.getElementById('bim-content').innerHTML = html;
   document.getElementById('bets-info-modal').classList.remove('hidden');
 }
 
-// ================================================================
-//  SHOW HISTORY MODAL (CORRIGIDO - piratecas com transferência)
-// ================================================================
 function showHistoryModal(email, type) {
   const u = S.users[email];
   if (!u) return;
-
+  
   const isPiratecas = type === 'piratecas';
   document.getElementById('hm-icon').textContent = isPiratecas ? '🏴‍☠️' : '🏆';
   document.getElementById('hm-title').innerHTML = isPiratecas ? 'Histórico de Piratecas' : 'Histórico de Pontos';
@@ -2820,11 +2799,10 @@ function showHistoryModal(email, type) {
     hmAv.innerHTML = '🧑';
     hmAv.style.border = `3px solid ${isPiratecas ? 'var(--red)' : 'var(--gold)'}`;
   }
-
+  
   let html = '';
 
   if (!isPiratecas) {
-    // Histórico de Pontos (mesmo de antes)
     const sortedGames = GAMES.filter(g => {
       const rs = (S.results[g.id]||{}).status;
       return (rs === 'finished' || rs === 'live') && (u.bets||{})[g.id];
@@ -2861,13 +2839,12 @@ function showHistoryModal(email, type) {
     html += `<div style="padding:8px;text-align:right;font-weight:bold;color:var(--gold);">Total: ${ptsObj.total} pts</div>`;
 
   } else {
-    // ========== HISTÓRICO DE PIRATECAS (com transferência) ==========
+    // ---- PIRATECAS: same logic as before but grouped by game with flags + new text ----
     let balance = 100;
     html += `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
       <span>Saldo Inicial</span><span style="color:var(--gold);font-weight:bold;">100</span>
     </div>`;
 
-    // 1) Rodadas
     const rodadas = {};
     GAMES.forEach(g => {
       const r = S.results[g.id];
@@ -2906,40 +2883,22 @@ function showHistoryModal(email, type) {
       }
     });
 
-    // 2) Votos feitos PELO usuário
-    let apostaGroups = [];
+// Group apostas by game
+    const apostasForUser = [];
     Object.keys(S.apostas || {}).forEach(key => {
       const parts = key.split('_');
-      if (parts[0] !== 'aposta') return;
       const gId = parseInt(parts[1]);
       const target = parts.slice(2).join('_');
       const votersObj = S.apostas[key];
       if (!votersObj[email]) return;
       const r = S.results[gId];
       if (!r || (r.status!=='finished' && r.status!=='live') || r.h===null) return;
-      apostaGroups.push({ gId, target, tipo: votersObj[email], isVoter: true });
+      apostasForUser.push({ gId, target, tipo: votersObj[email] });
     });
 
-    // 3) Votos feitos CONTRA o usuário (transferência)
-    Object.keys(S.apostas || {}).forEach(key => {
-      const parts = key.split('_');
-      if (parts[0] !== 'aposta') return;
-      const gId = parseInt(parts[1]);
-      const target = parts.slice(2).join('_');
-      if (target !== normEmail(email)) return;
-      const votersObj = S.apostas[key];
-      const r = S.results[gId];
-      if (!r || (r.status!=='finished' && r.status!=='live') || r.h===null) return;
-      Object.entries(votersObj).forEach(([voterEmail, tipo]) => {
-        if (voterEmail === email) return;
-        apostaGroups.push({ gId, target: voterEmail, tipo, isVoter: false });
-      });
-    });
-
-    // Agrupar por jogo para exibição
-    if (apostaGroups.length > 0) {
+    if (apostasForUser.length > 0) {
       const byGame = {};
-      apostaGroups.forEach(a => { if(!byGame[a.gId]) byGame[a.gId]=[]; byGame[a.gId].push(a); });
+      apostasForUser.forEach(a => { if(!byGame[a.gId]) byGame[a.gId]=[]; byGame[a.gId].push(a); });
       const sortedGIds = Object.keys(byGame).map(Number).sort((a,b)=>a-b);
 
       html += `<div style="padding:6px 0 2px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Apostas Bosta/Mestre</div>`;
@@ -2953,57 +2912,38 @@ function showHistoryModal(email, type) {
 
         html += `<div style="padding:6px 8px 4px;background:rgba(255,255,255,0.03);border-radius:6px;margin:4px 0;font-size:12px;font-weight:700;color:var(--muted);">${gameLabel}</div>`;
 
-        byGame[gId].forEach(({ target, tipo, isVoter }) => {
+      byGame[gId].forEach(({ target, tipo }) => {
           const realTargetEmail = Object.keys(S.users).find(usr => normEmail(usr) === target) || target;
           const tUser   = S.users[realTargetEmail];
           const targetPts = calcGamePoints(tUser, gId);
           const targetHit = targetPts > 0;
+  
+          let diff = tipo==='bosta' ? (!targetHit?2:-2) : (targetHit?2:-2);
+          balance += diff;
+          const color    = diff>0?'var(--green)':'#ff7b7b';
+          const tName    = tUser?.name || target;
+          const tipoLabel = tipo==='mestre'
+            ? `<span style="color:var(--green);font-weight:bold;">Mestre ✅</span>`
+            : `💩`;
 
-          let diff = 0;
-          if (isVoter) {
-            // Voto feito PELO usuário
-            if (tipo === 'bosta') {
-              diff = targetHit ? -2 : 2;
-            } else { // mestre
-              diff = targetHit ? 2 : -2;
-            }
-          } else {
-            // Voto feito CONTRA o usuário (transferência)
-            const userPts = calcGamePoints(u, gId);
-            const userHit = userPts > 0;
-            if (tipo === 'bosta') {
-              diff = userHit ? 2 : -2;
-            } else { // mestre
-              diff = userHit ? -2 : 2;
-            }
-          }
+          const tBet = (tUser && tUser.bets) ? tUser.bets[gId] : null;
+          const palpiteAmigo = tBet ? ` (Palpite: ${tBet.h}–${tBet.a})` : ' (Sem palpite)';
 
-          if (diff !== 0) {
-            balance += diff;
-            const color = diff>0?'var(--green)':'#ff7b7b';
-            const tName = tUser?.name || target;
-            const tipoLabel = tipo === 'mestre'
-              ? `<span style="color:var(--green);font-weight:bold;">Mestre ✅</span>`
-              : `💩`;
-            const direcao = isVoter ? `Você votou` : `${esc(tName)} votou em você`;
-            const tBet = (tUser && tUser.bets) ? tUser.bets[gId] : null;
-            const palpiteAmigo = tBet ? ` (Palpite: ${tBet.h}–${tBet.a})` : '';
-            const seuPalpite = (u.bets && u.bets[gId]) ? ` Seu palpite: ${u.bets[gId].h}–${u.bets[gId].a}` : '';
-
-            html += `<div style="padding:7px 8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;">
-              <span style="font-size:13px;flex:1;min-width:0;">
-                <strong style="color:var(--text)">${direcao}</strong>
-                <span style="color:var(--muted)"> • ${tipoLabel}</span>
-                <span style="color:var(--muted); font-size:12px;">${palpiteAmigo}${seuPalpite}</span>
-              </span>
-              <span style="color:${color};font-weight:bold;white-space:nowrap;">${diff>0?'+':''}${diff} 🏴‍☠️</span>
-            </div>`;
-          }
+          html += `<div style="padding:7px 8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <span style="font-size:13px;flex:1;min-width:0;">
+              <strong style="color:var(--text)">${esc(tName)}</strong> 
+              <span style="color:var(--muted)">• Voto:</span> ${tipoLabel}
+              <span style="color:var(--muted); font-size:12px;">${palpiteAmigo}</span>
+            </span>
+            <span style="color:${color};font-weight:bold;white-space:nowrap;">${diff>0?'+':''}${diff} 🏴‍☠️</span>
+          </div>`;
         });
       });
     }
 
-    // 4) Pibets
+    // ============================================================
+    // NOVO BLOCO: APOSTAS PIRATABET
+    // ============================================================
     if (S.pibets && S.pibets.length > 0) {
       const resolvedPibets = S.pibets.filter(p => p.status === 'creator_won' || p.status === 'target_won');
       if (resolvedPibets.length > 0) {
@@ -3018,6 +2958,7 @@ function showHistoryModal(email, type) {
           const N = pbt.doubters ? pbt.doubters.length : 0;
 
           if (pbt.target && pbt.target !== '') {
+            // Aposta direcionada (creator vs target)
             if (isCreator || isTarget) {
               if (pbt.status === 'creator_won') {
                 if (isCreator) { diff = W; label = '🏆 Criador venceu'; }
@@ -3028,6 +2969,7 @@ function showHistoryModal(email, type) {
               }
             }
           } else {
+            // Aposta livre
             if (isCreator) {
               if (pbt.status === 'creator_won') {
                 diff = W;
@@ -3062,18 +3004,93 @@ function showHistoryModal(email, type) {
         });
       }
     }
+    // FIM DO NOVO BLOCO
+    // ============================================================
 
-    // Total final
     html += `<div style="padding:8px;text-align:right;font-weight:bold;color:#ff7b7b;">Total: ${balance} 🏴‍☠️</div>`;
   }
-
+    
   if(!html) html = '<div style="color:var(--muted);text-align:center;padding:20px;">Nenhum histórico disponível.</div>';
   document.getElementById('hm-content').innerHTML = html;
   document.getElementById('history-modal').classList.remove('hidden');
 }
+  
+// ================================================================
+//  RENDER GROUPS (restaurado ao original)
+// ================================================================
+function renderGroupsPage() {
+  updateDataSourceLabel();
+  const groups = [...new Set(GAMES.filter(g=>g.group).map(g=>g.group))].sort((a,b)=>String(a).localeCompare(String(b),'pt-BR',{numeric:true}));
+  const pill = document.getElementById('groups-count-pill'); if(pill) pill.textContent = `${groups.length} grupos`;
+  document.getElementById('groups-content').innerHTML = groups.map(renderGroupCard).join('') || '<div class="group-empty">Nenhum grupo carregado.</div>';
+}
+
+function renderGroupCard(group) {
+  const rows  = getGroupRows(group);
+  const games = GAMES.filter(g=>g.group===group).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const table = rows.length ? `<table class="standings-table"><thead><tr><th>#</th><th class="team-td">Seleção</th><th>J</th><th>V</th><th>E</th><th>D</th><th>SG</th><th>Pts</th></tr></thead><tbody>${rows.map(renderStandingRow).join('')}</tbody></table>` : '<div class="group-empty">Classificação ainda não disponível.</div>';
+  const gamesHtml = games.length ? games.map(renderGroupGameRow).join('') : '<div class="group-empty">Jogos ainda não disponíveis.</div>';
+  return `<section class="group-card"><div class="group-card-head"><div class="group-title">${esc(group)}</div><div class="group-meta">${games.length} jogos</div></div>${table}<div class="group-games">${gamesHtml}</div></section>`;
+}
+
+function getGroupRows(group) {
+  if (!S.testMode) {
+    const standing = STANDINGS.find(s=>s.group===group);
+    if (standing&&standing.table&&standing.table.length) return standing.table;
+  }
+  const teams = new Map();
+  GAMES.filter(g=>g.group===group).forEach(g => {
+    ['h','a'].forEach(side => {
+      const code = g[side+'Code'];
+      if (!code||teams.has(code)) return;
+      teams.set(code, { position:teams.size+1, team:{code, name:g[side+'Name']||code, logo:g[side+'Logo']||'', flag:g[side+'Flag']||'🏳️'}, played:0,won:0,draw:0,lost:0,gf:0,ga:0,gd:0,points:0 });
+    });
+  });
+  GAMES.filter(g=>g.group===group).forEach(g => {
+    const r = S.results[g.id];
+    if (!r || r.status !== 'finished' || r.h === null) return;
+    const home = teams.get(g.hCode); const away = teams.get(g.aCode);
+    if (!home || !away) return;
+    home.played++; away.played++;
+    home.gf += r.h; home.ga += r.a; home.gd = home.gf - home.ga;
+    away.gf += r.a; away.ga += r.h; away.gd = away.gf - away.ga;
+    if (r.h > r.a) { home.won++; home.points+=3; away.lost++; }
+    else if (r.a > r.h) { away.won++; away.points+=3; home.lost++; }
+    else { home.draw++; away.draw++; home.points++; away.points++; }
+  });
+  const sorted = [...teams.values()].sort((a,b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.gd !== a.gd) return b.gd - a.gd;
+    return b.gf - a.gf;
+  });
+  sorted.forEach((row, i) => row.position = i+1);
+  return sorted;
+}
+
+function renderStandingRow(row) {
+  const team = row.team||{};
+  return `<tr><td>${row.position||''}</td><td class="team-td"><div class="team-line">${renderTeamLogo(team.logo,team.flag)}<span class="team-name" title="${esc(team.name||team.code)}">${esc(team.code||team.name||'A definir')}</span></div></td><td>${row.played||0}</td><td>${row.won||0}</td><td>${row.draw||0}</td><td>${row.lost||0}</td><td>${row.gd||0}</td><td class="points-cell">${row.points||0}</td></tr>`;
+}
+
+function renderGroupGameRow(game) {
+  const r = S.results[game.id]||game.result||{h:null,a:null,status:'upcoming'};
+  const isFinished = r.status === 'finished';
+  const finishedCls = isFinished ? ' finished' : '';
+  const tipLabel = isFinished
+    ? `Encerrado ${r.h}–${r.a} · clique para ver palpites · ${esc(game.venue||'A confirmar')}`
+    : `Clique para ir ao jogo · ${esc(game.venue||'A confirmar')}`;
+  return `<div class="group-game-row${finishedCls}" onclick="goToGameFromGroup(${game.id})" title="${tipLabel}"><div class="group-game-date">${game.date?formatShortDate(game.date):'A definir'}</div><div class="group-game-team">${renderTeamMark(game,'h','team-mini-logo')}<span class="team-code-small">${esc(game.hCode)}</span></div><div class="group-game-score">${r.h!==null?`${r.h}–${r.a}`:'vs'}</div><div class="group-game-team away"><span class="team-code-small">${esc(game.aCode)}</span>${renderTeamMark(game,'a','team-mini-logo')}</div></div>`;
+}
+
+function renderTeamLogo(logo, flag) { return logo ? `<img class="team-logo" src="${esc(logo)}" alt="">` : `<span class="team-logo placeholder">${flag||'🏳️'}</span>`; }
+function renderTeamMark(game, side, className) {
+  const logo = game[side+'Logo']; const flag = game[side+'Flag']||'🏳️';
+  if (logo) return `<img class="${className==='team-flag'?'team-crest':className}" src="${esc(logo)}" alt="">`;
+  return `<span class="${className}">${flag}</span>`;
+}
 
 // ================================================================
-//  TOGGLE GAME DETAILS
+//  TOGGLE GAME DETAILS — oculta/expande palpites do card encerrado
 // ================================================================
 function toggleGameDetails(gameId) {
   const card = document.getElementById('gc-' + gameId);
@@ -3133,17 +3150,17 @@ function onBetInput(gameId) {
 }
 
 // ================================================================
-//  RANKING (DUPLO)
+//  RANKING (DUPLO: PONTOS + PIRATECAS)
 // ================================================================
 function calcRankAll() {
   return Object.values(S.users)
     .filter(u => !isUserHidden(u.email))
     .map(u => ({...u, pts: calcPoints(u)}))
-    .sort((a,b) => {
-      if (b.pts.total !== a.pts.total) return b.pts.total - a.pts.total;
-      if (b.pts.exact !== a.pts.exact) return b.pts.exact - a.pts.exact;
-      if (b.pts.res !== a.pts.res) return b.pts.res - a.pts.res;
-      return b.pts.piratecas - a.pts.piratecas;
+    .sort((a,b) => { 
+      if (b.pts.total !== a.pts.total) return b.pts.total - a.pts.total; 
+      if (b.pts.exact !== a.pts.exact) return b.pts.exact - a.pts.exact; 
+      if (b.pts.res !== a.pts.res) return b.pts.res - a.pts.res; 
+      return b.pts.piratecas - a.pts.piratecas; 
     });
 }
 function calcRankPiratecas() {
@@ -3200,7 +3217,7 @@ function renderRanking() {
 }
 
 // ================================================================
-//  HIGHLIGHTS
+//  HIGHLIGHTS (mantido)
 // ================================================================
 let hlCurrentTab = 'rodadas';
 function hlTab(tab) {
@@ -3418,11 +3435,15 @@ function buildHighlightCardNew(user, tipo, label, title, gifFile, scope, scopeId
   </div>`;
 }
 
+function buildHighlightCard(user, tipo, label, pts, title, imgFile, scope, scopeId) {
+  return buildHighlightCardNew(user, tipo, label, title, imgFile.replace('.png','.gif'), scope, scopeId, true);
+}
+
 const _hlImgCache = {};
 function loadImgCached(src) {
   if (_hlImgCache[src]) return Promise.resolve(_hlImgCache[src]);
   return new Promise(resolve => {
-    const img = new Image();
+    const img = new Image(); 
     if (src.startsWith('http')) {
       img.crossOrigin = 'anonymous';
     }
@@ -3430,6 +3451,70 @@ function loadImgCached(src) {
     img.onerror = () => resolve(null);
     img.src = src;
   });
+}
+
+async function drawHighlightCanvas(cv) {
+  const ctx = cv.getContext('2d');
+  const W = 500, H = 500;
+  ctx.clearRect(0, 0, W, H);
+
+  const tipo = cv.dataset.tipo;
+  const grad = ctx.createLinearGradient(0,0,W,H);
+  if (tipo==='quente') { grad.addColorStop(0,'#0d1a0d'); grad.addColorStop(1,'#112611'); }
+  else if (tipo==='frio') { grad.addColorStop(0,'#1a0d0d'); grad.addColorStop(1,'#260d11'); }
+  else { grad.addColorStop(0,'#1a160a'); grad.addColorStop(1,'#231e0d'); }
+  ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
+
+  const bgSrc = HL_IMG_BASE + cv.dataset.img;
+  const bgImg = await loadImgCached(bgSrc);
+  if (bgImg) { ctx.drawImage(bgImg, 0, 0, W, H); }
+  else {
+    ctx.fillStyle = tipo==='quente'?'#3CAC3B':tipo==='frio'?'#E61D25':'#C9A84C';
+    ctx.beginPath(); ctx.arc(FACE_CIRCLE.x, FACE_CIRCLE.y, FACE_CIRCLE.r, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='bold 64px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(tipo==='quente'?'🔥':tipo==='frio'?'🥶':'😐', FACE_CIRCLE.x, FACE_CIRCLE.y);
+  }
+
+  const avatarSrc = cv.dataset.avatar;
+  if (avatarSrc) {
+    const avImg = await loadImgCached(avatarSrc);
+    if (avImg) {
+      const { x, y, r } = FACE_CIRCLE;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.clip();
+      ctx.drawImage(avImg, x-r, y-r, r*2, r*2);
+      ctx.restore();
+      ctx.beginPath(); ctx.arc(x, y, r+2, 0, Math.PI*2);
+      ctx.strokeStyle = tipo==='quente'?'#3CAC3B':tipo==='frio'?'#E61D25':'#C9A84C';
+      ctx.lineWidth = 4; ctx.stroke();
+    }
+  }
+
+  const name  = cv.dataset.name;
+  const label = cv.dataset.label;
+  const pts   = cv.dataset.pts;
+  const title = cv.dataset.title;
+
+  ctx.fillStyle = 'rgba(0,0,0,0.72)';
+  roundRect(ctx, 18, H-110, W-36, 92, 14);
+  ctx.fill();
+
+  ctx.fillStyle = tipo==='quente'?'#7de87c':tipo==='frio'?'#ff7b7b':'#F0C040';
+  ctx.font = 'bold 18px "Barlow Condensed", sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.fillText(title, W/2, H-102);
+
+  ctx.fillStyle = '#F0F0F0';
+  ctx.font = 'bold 26px "Barlow Condensed", sans-serif';
+  ctx.fillText(name, W/2, H-78);
+
+  ctx.fillStyle = '#888888';
+  ctx.font = '14px "Barlow", sans-serif';
+  ctx.fillText(label + ' • ' + pts, W/2, H-48);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.font = 'bold 13px "Barlow Condensed", sans-serif';
+  ctx.fillText('BOLÃO COPA 26 🏴‍☠️', W/2, H-26);
 }
 
 function roundRect(ctx, x, y, w, h, r) {
@@ -3440,6 +3525,33 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.lineTo(x+r, y+h); ctx.arcTo(x,y+h,x,y+h-r,r);
   ctx.lineTo(x, y+r); ctx.arcTo(x,y,x+r,y,r);
   ctx.closePath();
+}
+
+async function shareHighlight(canvasId) {
+  const cv = document.getElementById(canvasId);
+  if (!cv) return;
+  await drawHighlightCanvas(cv);
+  try {
+    const blob = await new Promise(resolve => cv.toBlob(resolve, 'image/png'));
+    if (!blob) { toast('Não foi possível gerar a imagem','err'); return; }
+    if (navigator.canShare && navigator.canShare({ files: [new File([blob],'highlight.png',{type:'image/png'})] })) {
+      await navigator.share({
+        files: [new File([blob], 'highlight-bolao.png', { type: 'image/png' })],
+        title: 'Bolão Copa 26 — Highlight',
+        text: '🏴‍☠️ Olha o highlight do nosso bolão!'
+      });
+      return;
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'highlight-bolao.png'; a.click();
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+      const text = encodeURIComponent('🏴‍☠️ Olha o highlight do Bolão Copa 26! Baixe a imagem acima e envie no grupo!');
+      window.open(`https://wa.me/?text=${text}`, '_blank');
+    }, 600);
+  } catch(e) {
+    if (e.name !== 'AbortError') toast('Compartilhamento cancelado ou não suportado','warn');
+  }
 }
 
 async function shareHighlightNew(uid, tipo, name, label, title, pts, piratecas, avatarSrc, gifSrc) {
@@ -3559,7 +3671,7 @@ async function shareHighlightNew(uid, tipo, name, label, title, pts, piratecas, 
     setTimeout(() => {
       URL.revokeObjectURL(url);
       const text = encodeURIComponent(`🏴‍☠️ Olha o highlight do Bolão Copa 26!\n${title} — ${name}\n${label} · ${pts}pts + ${piratecas}🏴‍☠️ = ${total} total\nBaixe a imagem e envie no grupo!`);
-      window.open(`https://wa.me/?text=${text}', '_blank');
+      window.open(`https://wa.me/?text=${text}`, '_blank');
     }, 700);
   } catch(e) {
     if (e.name !== 'AbortError') toast('Compartilhamento cancelado ou não suportado','warn');
@@ -3569,7 +3681,7 @@ async function shareHighlightNew(uid, tipo, name, label, title, pts, piratecas, 
 function isAdmin() { const u = S.users[S.me]; return !!(u&&u.isAdmin); }
 
 // ================================================================
-//  SETTINGS
+//  SETTINGS (mantido)
 // ================================================================
 function renderSettingsPage() {
   updateDataSourceLabel();
@@ -3587,7 +3699,7 @@ function renderSettingsPage() {
   if (notifY) notifY.value = S.settings.notifMinsLockBet ?? 15;
   const sceneBgToggle = document.getElementById('s-scene-bg');
   if (sceneBgToggle) sceneBgToggle.checked = !!S.settings.sceneBg;
-
+  
   ['s-exact','s-result','s-streak','s-semi','s-final','s-lock-bet','s-lock-vote','s-scene-bg','adm-game','adm-a','adm-b','adm-status','s-notif-x','s-notif-y','s-notif-msg'].forEach(id => {
     const el = document.getElementById(id); if(el) el.disabled = !admin;
   });
@@ -3615,7 +3727,7 @@ function renderSettingsPage() {
 
 async function saveSettings() {
   if (!isAdmin()) { toast('Acesso negado','warn'); return; }
-
+  
   toast('Enviando para o Google Sheets...', 'info');
 
   const exact = parseInt(document.getElementById('s-exact').value)||10;
@@ -3625,7 +3737,7 @@ async function saveSettings() {
   const final = parseInt(document.getElementById('s-final').value)||25;
   const lockMinsBet = parseInt(document.getElementById('s-lock-bet').value) ?? 10;
   const lockMinsVote = parseInt(document.getElementById('s-lock-vote').value) ?? 10;
-
+  
   S.settings.sceneBg = !!document.getElementById('s-scene-bg')?.checked;
   applySceneBackground();
   persistSettings();
@@ -3635,11 +3747,11 @@ async function saveSettings() {
       action: 'adminSaveSettings', callerEmail: S.me,
       exact, result, streak, semi, final, lockMinsBet, lockMinsVote
     });
-
+    
     if (!res.ok) { toast(res.error || 'Erro ao salvar na nuvem', 'err'); return; }
-
+    
     S.settings = { ...S.settings, exact, result, streak, semi, final, lockMinsBet, lockMinsVote };
-
+    
     renderGames(); renderRanking(); renderStats();
     toast('✅ Regras salvas no Google Sheets!', 'ok');
   } catch(e) {
@@ -3659,7 +3771,7 @@ function adminSetResult() {
 }
 
 // ================================================================
-//  PROFILE
+//  PROFILE (mantido)
 // ================================================================
 function renderProfile() {
   const u = S.users[S.me]; if(!u) return;
@@ -3689,7 +3801,7 @@ function renderProfile() {
 }
 
 async function handleProfileAvatar(inp) {
-  const f = inp.files[0];
+  const f = inp.files[0]; 
   if (!f||f.size>2e6) { toast('Foto muito grande (máx 2MB)','err'); return; }
 
   const pav = document.getElementById('pav-display');
@@ -3707,7 +3819,7 @@ async function handleProfileAvatar(inp) {
       saveSession(S.users[S.me]);
       persistSettings();
       pav.innerHTML = `<img src="${data.data.url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-      refreshNavUser();
+      refreshNavUser(); 
       gsSaveUser(S.users[S.me]);
       toast('Foto atualizada com sucesso! 📸','ok');
     } else {
@@ -3729,7 +3841,7 @@ function saveProfileEdits() {
 }
 
 // ================================================================
-//  ADMIN PANEL
+//  ADMIN PANEL (mantido)
 // ================================================================
 async function loadAdminUsers() {
   if (!isAdmin()) { toast('Acesso negado','err'); navTo('games'); return; }
@@ -4119,7 +4231,7 @@ async function voteExtra(gameId, target, type) {
 async function setTestMode(mode) {
   if (!isAdmin()) { toast('Acesso negado','err'); return; }
   const turningOn = mode === 'true';
-
+  
   if (turningOn) {
     toast('Ligando modo de teste...', 'info');
     try {
@@ -4149,12 +4261,12 @@ async function adminSetTestResult() {
   const h  = parseInt(document.getElementById('adm-a').value);
   const a  = parseInt(document.getElementById('adm-b').value);
   const st = document.getElementById('adm-status').value;
-
+  
   try {
     const res = await gsCall({ action:'adminSetTestResult', callerEmail:S.me, gameId:id, h:h, a:a, status:st });
     if (!res.ok) { toast(res.error||'Erro ao salvar resultado de teste','err'); return; }
   } catch(e) { toast('Erro de conexão ao salvar no Sheets','err'); return; }
-
+  
   S.results[id] = { h, a, status:st, source:'test' };
   persistSettings();
   toast(`🧪 Resultado de teste do jogo #${id} salvo no Sheets e aplicado! ⚽`,'ok');
@@ -4162,7 +4274,7 @@ async function adminSetTestResult() {
 }
 
 // ================================================================
-//  PIBET
+//  PIBET (com agrupamento e botão cancelar)
 // ================================================================
 function renderPibets() {
   const content = document.getElementById('pibet-content');
@@ -4170,7 +4282,8 @@ function renderPibets() {
     content.innerHTML = '<div class="hl-empty">Nenhuma aposta criada ainda.</div>';
     return;
   }
-
+  
+  // Separar em ativas (pending, active) e finalizadas (creator_won, target_won, rejected)
   const ativas = S.pibets.filter(p => p.status === 'pending' || p.status === 'active');
   const finalizadas = S.pibets.filter(p => p.status === 'creator_won' || p.status === 'target_won' || p.status === 'rejected');
 
@@ -4180,6 +4293,7 @@ function renderPibets() {
 
   let html = '';
 
+  // Seção Ativas
   const activeHtml = ativas.map(pbt => renderPibetCard(pbt)).join('');
   html += `
     <div class="games-section" id="pibet-active-section">
@@ -4193,6 +4307,7 @@ function renderPibets() {
     </div>
   `;
 
+  // Seção Finalizadas (retraída por padrão)
   const finalHtml = finalizadas.map(pbt => renderPibetCard(pbt)).join('');
   html += `
     <div class="games-section is-collapsed" id="pibet-finalizadas-section">
@@ -4212,7 +4327,7 @@ function renderPibets() {
 function renderPibetCard(pbt) {
   const creator = S.users[pbt.creator] || { name: pbt.creator };
   const target = pbt.target ? (S.users[pbt.target] || { name: pbt.target }) : null;
-
+  
   let statusBadge = '';
   if (pbt.status === 'pending') statusBadge = '<span class="status-pill upcoming">⏳ Pendente (Adm)</span>';
   else if (pbt.status === 'active') statusBadge = '<span class="status-pill live" style="animation:none;background:rgba(42,57,141,0.2);color:#7b8fe8">🔥 Valendo</span>';
@@ -4221,11 +4336,14 @@ function renderPibetCard(pbt) {
   else if (pbt.status === 'rejected') statusBadge = '<span class="status-pill" style="background:rgba(230,29,37,0.1);color:#ff7b7b">❌ Rejeitada</span>';
 
   let typeLabel = target ? `Desafiado: <strong>${esc(target.name)}</strong>` : 'Aposta Livre (Qualquer um pode entrar)';
-
+  
   let actionHtml = '';
   const isAdm = isAdmin();
   const isCreator = S.me === pbt.creator;
-
+  
+  // Botão Cancelar para o criador, se:
+  // - status 'pending' (ainda não aprovado) OU
+  // - status 'active' e nenhum duvidador (doubters vazio)
   const canCancel = isCreator && (
     pbt.status === 'pending' ||
     (pbt.status === 'active' && pbt.doubters.length === 0)
@@ -4250,7 +4368,7 @@ function renderPibetCard(pbt) {
         </div>
       </div>`;
     }
-
+    
     if (!target && S.me !== pbt.creator) {
       if (pbt.doubters.includes(S.me)) {
         actionHtml += `<div style="margin-top:10px;color:var(--green);font-size:12px;font-weight:bold;text-align:center;">✅ Você entrou nesta aposta!</div>`;
@@ -4312,6 +4430,11 @@ async function cancelPibet(id) {
   }
 }
 
+// ================================================================
+//  PIBET - funções existentes (openCreatePibet, submitPibet, joinPibet, adminResolvePibet)
+//  permanecem inalteradas – apenas importei as que já estavam no código.
+// ================================================================
+
 function openCreatePibet() {
   const sel = document.getElementById('pbt-target');
   let opts = '<option value="">Aposta Livre (Qualquer um pode duvidar)</option>';
@@ -4330,7 +4453,7 @@ async function submitPibet() {
   const desc = document.getElementById('pbt-desc').value.trim();
   const wager = parseInt(document.getElementById('pbt-wager').value) || 0;
   const target = document.getElementById('pbt-target').value;
-
+  
   if (!desc) { toast('Descreva a aposta!','warn'); return; }
   if (wager <= 0) { toast('Valor inválido!','warn'); return; }
 
@@ -4342,11 +4465,11 @@ async function submitPibet() {
     if (res.ok) {
       await forceSyncAll();
       navTo('pibet');
-
+      
       const typeLabel = target ? `desafiou *( ${S.users[target]?.name || target} )*` : 'lançou uma *APOSTA LIVRE*';
       const wText = `*PIRATABET: ${esc(S.users[S.me].name)}* ${typeLabel} valendo *${wager} Piratecas* 🏴‍☠️\n\n📌 _"${esc(desc)}"_\n\n⚠️ Adm, aprova lá no site para começar a valer!`;
       const wpUrl = `https://wa.me/?text=${encodeURIComponent(wText)}`;
-
+      
       document.getElementById('btn-pibet-whatsapp').onclick = () => window.open(wpUrl, '_blank');
       document.getElementById('pibet-share-modal').classList.remove('hidden');
     } else {
@@ -4383,90 +4506,16 @@ async function adminResolvePibet(id, status) {
       toast('Aposta resolvida/atualizada! ✅','ok');
       await forceSyncAll();
       navTo('pibet');
-      renderRanking();
+      renderRanking(); 
       renderStats();
     } else {
       toast(res.error || 'Erro ao atualizar','err');
     }
   } catch(e) { toast('Erro de conexão','err'); }
 }
-
-function renderTeamLogo(logo, flag) { return logo ? `<img class="team-logo" src="${esc(logo)}" alt="">` : `<span class="team-logo placeholder">${flag||'🏳️'}</span>`; }
-function renderTeamMark(game, side, className) {
-  const logo = game[side+'Logo']; const flag = game[side+'Flag']||'🏳️';
-  if (logo) return `<img class="${className==='team-flag'?'team-crest':className}" src="${esc(logo)}" alt="">`;
-  return `<span class="${className}">${flag}</span>`;
-}
-
+  
 // ================================================================
-//  GROUPS
-// ================================================================
-function renderGroupsPage() {
-  updateDataSourceLabel();
-  const groups = [...new Set(GAMES.filter(g=>g.group).map(g=>g.group))].sort((a,b)=>String(a).localeCompare(String(b),'pt-BR',{numeric:true}));
-  const pill = document.getElementById('groups-count-pill'); if(pill) pill.textContent = `${groups.length} grupos`;
-  document.getElementById('groups-content').innerHTML = groups.map(renderGroupCard).join('') || '<div class="group-empty">Nenhum grupo carregado.</div>';
-}
-
-function renderGroupCard(group) {
-  const rows  = getGroupRows(group);
-  const games = GAMES.filter(g=>g.group===group).sort((a,b)=>new Date(a.date)-new Date(b.date));
-  const table = rows.length ? `<table class="standings-table"><thead><tr><th>#</th><th class="team-td">Seleção</th><th>J</th><th>V</th><th>E</th><th>D</th><th>SG</th><th>Pts</th></tr></thead><tbody>${rows.map(renderStandingRow).join('')}</tbody></table>` : '<div class="group-empty">Classificação ainda não disponível.</div>';
-  const gamesHtml = games.length ? games.map(renderGroupGameRow).join('') : '<div class="group-empty">Jogos ainda não disponíveis.</div>';
-  return `<section class="group-card"><div class="group-card-head"><div class="group-title">${esc(group)}</div><div class="group-meta">${games.length} jogos</div></div>${table}<div class="group-games">${gamesHtml}</div></section>`;
-}
-
-function getGroupRows(group) {
-  if (!S.testMode) {
-    const standing = STANDINGS.find(s=>s.group===group);
-    if (standing&&standing.table&&standing.table.length) return standing.table;
-  }
-  const teams = new Map();
-  GAMES.filter(g=>g.group===group).forEach(g => {
-    ['h','a'].forEach(side => {
-      const code = g[side+'Code'];
-      if (!code||teams.has(code)) return;
-      teams.set(code, { position:teams.size+1, team:{code, name:g[side+'Name']||code, logo:g[side+'Logo']||'', flag:g[side+'Flag']||'🏳️'}, played:0,won:0,draw:0,lost:0,gf:0,ga:0,gd:0,points:0 });
-    });
-  });
-  GAMES.filter(g=>g.group===group).forEach(g => {
-    const r = S.results[g.id];
-    if (!r || r.status !== 'finished' || r.h === null) return;
-    const home = teams.get(g.hCode); const away = teams.get(g.aCode);
-    if (!home || !away) return;
-    home.played++; away.played++;
-    home.gf += r.h; home.ga += r.a; home.gd = home.gf - home.ga;
-    away.gf += r.a; away.ga += r.h; away.gd = away.gf - away.ga;
-    if (r.h > r.a) { home.won++; home.points+=3; away.lost++; }
-    else if (r.a > r.h) { away.won++; away.points+=3; home.lost++; }
-    else { home.draw++; away.draw++; home.points++; away.points++; }
-  });
-  const sorted = [...teams.values()].sort((a,b) => {
-    if (b.points !== a.points) return b.points - a.points;
-    if (b.gd !== a.gd) return b.gd - a.gd;
-    return b.gf - a.gf;
-  });
-  sorted.forEach((row, i) => row.position = i+1);
-  return sorted;
-}
-
-function renderStandingRow(row) {
-  const team = row.team||{};
-  return `<tr><td>${row.position||''}</td><td class="team-td"><div class="team-line">${renderTeamLogo(team.logo,team.flag)}<span class="team-name" title="${esc(team.name||team.code)}">${esc(team.code||team.name||'A definir')}</span></div></td><td>${row.played||0}</td><td>${row.won||0}</td><td>${row.draw||0}</td><td>${row.lost||0}</td><td>${row.gd||0}</td><td class="points-cell">${row.points||0}</td></tr>`;
-}
-
-function renderGroupGameRow(game) {
-  const r = S.results[game.id]||game.result||{h:null,a:null,status:'upcoming'};
-  const isFinished = r.status === 'finished';
-  const finishedCls = isFinished ? ' finished' : '';
-  const tipLabel = isFinished
-    ? `Encerrado ${r.h}–${r.a} · clique para ver palpites · ${esc(game.venue||'A confirmar')}`
-    : `Clique para ir ao jogo · ${esc(game.venue||'A confirmar')}`;
-  return `<div class="group-game-row${finishedCls}" onclick="goToGameFromGroup(${game.id})" title="${tipLabel}"><div class="group-game-date">${game.date?formatShortDate(game.date):'A definir'}</div><div class="group-game-team">${renderTeamMark(game,'h','team-mini-logo')}<span class="team-code-small">${esc(game.hCode)}</span></div><div class="group-game-score">${r.h!==null?`${r.h}–${r.a}`:'vs'}</div><div class="group-game-team away"><span class="team-code-small">${esc(game.aCode)}</span>${renderTeamMark(game,'a','team-mini-logo')}</div></div>`;
-}
-
-// ================================================================
-//  ONESIGNAL
+//  ONESIGNAL (mantido)
 // ================================================================
 function initOneSignal() {
   if (typeof ONESIGNAL_APP_ID === 'undefined' || ONESIGNAL_APP_ID.includes('COLE_SEU')) return;
@@ -4574,8 +4623,7 @@ applyStoredTheme();
 initOneSignal();
 boot();
 </script>
-
-<!-- ── iOS Install Banner ── -->
+<!-- ── iOS Install Banner (só aparece no Safari iOS fora do PWA) ── -->
 <div id="ios-install-banner" style="display:none">
   <div class="ios-icon">⚽</div>
   <div class="ios-text">
