@@ -2362,88 +2362,143 @@ function calcGamePoints(user, gameId) {
   return pts;
 }
 
-function calcUserPiratecas(email) {
+// ================================================================
+//  PIRATECAS — função unificada (ranking + extrato usam a mesma)
+// ================================================================
+function calcPiratecasDetailed(email) {
   let balance = 100;
+  const entries = []; // cada entrada: { tipo, label, diff, ... }
   const u = S.users[email];
-  if(!u) return balance;
+  if (!u) return { total: balance, entries };
 
+  // ── 1. Pé quente / frio / nem fede (por rodada) ──────────────
   const rodadas = {};
   GAMES.forEach(g => {
     const r = S.results[g.id];
-    if(r && (r.status === 'finished' || r.status === 'live') && r.h !== null) {
-       const rodada = getRodada(g.id);
-       if(!rodadas[rodada]) rodadas[rodada] = { users: {} };
-       Object.values(S.users).forEach(user => {
-         if(!rodadas[rodada].users[user.email]) rodadas[rodada].users[user.email] = 0;
-         rodadas[rodada].users[user.email] += calcGamePoints(user, g.id);
-       });
+    if (r && (r.status === 'finished' || r.status === 'live') && r.h !== null) {
+      const rodada = getRodada(g.id);
+      if (!rodadas[rodada]) rodadas[rodada] = { users: {} };
+      Object.values(S.users).forEach(user => {
+        if (!rodadas[rodada].users[user.email]) rodadas[rodada].users[user.email] = 0;
+        rodadas[rodada].users[user.email] += calcGamePoints(user, g.id);
+      });
     }
   });
 
   Object.keys(rodadas).forEach(rodada => {
-     const rData = rodadas[rodada];
-     const ptsArray = Object.values(rData.users).sort((a,b)=>a-b);
-     const maxPts = ptsArray[ptsArray.length-1];
-     const minPts = ptsArray[0];
-     let medPts = (ptsArray.length % 2 === 0) ? (ptsArray[ptsArray.length/2 - 1] + ptsArray[ptsArray.length/2]) / 2 : ptsArray[Math.floor(ptsArray.length/2)];
+    const rData = rodadas[rodada];
+    const ptsArr = Object.values(rData.users).sort((a, b) => a - b);
+    const maxPts = ptsArr[ptsArr.length - 1];
+    const minPts = ptsArr[0];
+    const medPts = ptsArr.length % 2 === 0
+      ? (ptsArr[ptsArr.length / 2 - 1] + ptsArr[ptsArr.length / 2]) / 2
+      : ptsArr[Math.floor(ptsArr.length / 2)];
 
-     if (maxPts !== minPts) { 
-       const myPts = rData.users[email];
-       if (myPts === maxPts) balance += 5; 
-       else if (myPts === minPts) balance -= 5; 
-       else if (myPts === medPts) balance -= 1; 
-       else if (myPts < medPts && myPts > minPts) balance -= 1; 
-     }
-  });
-
-  Object.keys(S.apostas || {}).forEach(key => {
-     const parts = key.split('_'); const gId = parseInt(parts[1]); const targetNorm = parts.slice(2).join('_');
-     const votersObj = S.apostas[key];
-     if (votersObj[email]) {
-        const type = votersObj[email]; 
-        const r = S.results[gId];
-        if (r && (r.status === 'finished' || r.status === 'live') && r.h !== null) {
-           const realTargetEmail = Object.keys(S.users).find(usr => normEmail(usr) === targetNorm) || targetNorm;
-           const targetPts = calcGamePoints(S.users[realTargetEmail], gId);
-           const targetHit = targetPts > 0;
-           
-           if (type === 'bosta') { if (!targetHit) balance += 2; else balance -= 2; } 
-           else if (type === 'mestre') { if (targetHit) balance += 2; else balance -= 2; }
-        }
-     }
-  });
-  (S.pibets || []).forEach(pbt => {
-    if (pbt.status === 'creator_won' || pbt.status === 'target_won') {
-       const W = pbt.wager;
-       const isTargeted = pbt.target && pbt.target !== '';
-       
-       if (isTargeted) {
-         if (pbt.doubters.includes(pbt.target)) {
-           if (pbt.status === 'creator_won') {
-             if (email === pbt.creator) balance += W;
-             if (email === pbt.target) balance -= W;
-           } else {
-             if (email === pbt.creator) balance -= W;
-             if (email === pbt.target) balance += W;
-           }
-         }
-       } else {
-         const N = pbt.doubters.length;
-         if (N > 0) {
-           const share = Math.round(W / N);
-           if (pbt.status === 'creator_won') {
-             if (email === pbt.creator) balance += W;
-             if (pbt.doubters.includes(email)) balance -= share;
-           } else {
-             if (email === pbt.creator) balance -= W;
-             if (pbt.doubters.includes(email)) balance += share;
-           }
-         }
-       }
+    if (maxPts !== minPts) {
+      const myPts = rData.users[email];
+      let diff = 0, desc = '';
+      if      (myPts === maxPts)                              { diff =  5; desc = '🔥 Pé Quente'; }
+      else if (myPts === minPts)                              { diff = -5; desc = '🥶 Pé Frio'; }
+      else if (myPts === medPts || (myPts < medPts && myPts > minPts)) { diff = -1; desc = '😐 Nem fede nem cheira'; }
+      if (diff !== 0) {
+        balance += diff;
+        entries.push({ tipo: 'rodada', rodada, desc, myPts, diff });
+      }
     }
   });
 
-  return Math.round(balance);
+  // ── 2. Apostas Bosta/Mestre ───────────────────────────────────
+  //    A) Como VOTANTE: perde ou ganha 2 dependendo de acertar
+  //    B) Como ALVO: se pontuou e alguém votou Bosta nele → GANHA
+  //       2 piratecas por cada votante Bosta que errou (novo!)
+  Object.keys(S.apostas || {}).forEach(key => {
+    const parts = key.split('_');
+    if (parts[0] !== 'aposta') return;
+    const gId = parseInt(parts[1]);
+    const targetNorm = parts.slice(2).join('_');
+    const votersObj = S.apostas[key];
+    const r = S.results[gId];
+    if (!r || (r.status !== 'finished' && r.status !== 'live') || r.h === null) return;
+
+    const realTargetEmail = Object.keys(S.users).find(usr => normEmail(usr) === targetNorm) || targetNorm;
+    const targetUser = S.users[realTargetEmail];
+    const targetPts  = calcGamePoints(targetUser, gId);
+    const targetHit  = targetPts > 0;
+    const gObj = GAMES.find(g => g.id === gId);
+    const gameLabel = gObj
+      ? `${gObj.hFlag || '🏳️'} ${gObj.hCode} ${r.h}–${r.a} ${gObj.aCode} ${gObj.aFlag || '🏳️'}`
+      : `Jogo #${gId}`;
+
+    // A) email é o votante
+    if (votersObj[email]) {
+      const type = votersObj[email];
+      let diff = 0;
+      if      (type === 'bosta')  diff = targetHit ? -2 : 2;
+      else if (type === 'mestre') diff = targetHit ?  2 : -2;
+      if (diff !== 0) {
+        balance += diff;
+        entries.push({ tipo: 'aposta_voter', gId, gameLabel, targetEmail: realTargetEmail, targetName: targetUser?.name || realTargetEmail, voteType: type, targetHit, diff });
+      }
+    }
+
+    // B) email é o ALVO e pontuou → ganha 2 por cada votante Bosta
+    if (normEmail(email) === targetNorm && targetHit) {
+      Object.entries(votersObj).forEach(([voterEmail, voteType]) => {
+        if (voteType !== 'bosta') return;
+        const voterUser = S.users[voterEmail];
+        balance += 2;
+        entries.push({ tipo: 'aposta_target_won', gId, gameLabel, voterEmail, voterName: voterUser?.name || voterEmail, diff: 2 });
+      });
+    }
+  });
+
+  // ── 3. Pibets (apostas livres / desafios) ────────────────────
+  (S.pibets || []).forEach(pbt => {
+    if (pbt.status !== 'creator_won' && pbt.status !== 'target_won') return;
+    const W = pbt.wager;
+    const isTargeted = pbt.target && pbt.target !== '';
+    const isCreator  = pbt.creator === email;
+    const isTarget   = pbt.target  === email;
+    const isDoubter  = pbt.doubters && pbt.doubters.includes(email);
+    const N = pbt.doubters ? pbt.doubters.length : 0;
+    let diff = 0, label = '';
+
+    if (isTargeted) {
+      // Só aplica se o desafiado aceitou (aparece em doubters)
+      if (pbt.doubters && pbt.doubters.includes(pbt.target)) {
+        if (pbt.status === 'creator_won') {
+          if (isCreator) { diff =  W; label = '🏆 Criador venceu'; }
+          if (isTarget)  { diff = -W; label = '🏆 Criador venceu'; }
+        } else {
+          if (isCreator) { diff = -W; label = '🎯 Desafiado venceu'; }
+          if (isTarget)  { diff =  W; label = '🎯 Desafiado venceu'; }
+        }
+      }
+    } else {
+      if (N > 0) {
+        const share = Math.round(W / N);
+        if (pbt.status === 'creator_won') {
+          if (isCreator) { diff =  W;      label = '🏆 Criador venceu (aposta livre)'; }
+          if (isDoubter) { diff = -share;  label = '🏆 Criador venceu (aposta livre)'; }
+        } else {
+          if (isCreator) { diff = -W;     label = '🎯 Duvidadores venceram (aposta livre)'; }
+          if (isDoubter) { diff =  share; label = '🎯 Duvidadores venceram (aposta livre)'; }
+        }
+      }
+    }
+
+    if (diff !== 0) {
+      balance += diff;
+      entries.push({ tipo: 'pibet', pbt, label, diff });
+    }
+  });
+
+  return { total: Math.round(balance), entries };
+}
+
+// Wrapper simples usado em calcPoints, calcRankAll, etc.
+function calcUserPiratecas(email) {
+  return calcPiratecasDetailed(email).total;
 }
 
 function calcPoints(user) {
@@ -2685,7 +2740,18 @@ function renderGameCard(game) {
       let voteHtml = '';
       if (r.status==='finished' && r.h!==null) {
         if (isMeRow) {
-          voteHtml = `<span style="font-size:11px;color:var(--muted)">Você</span>`;
+          // Verificar se alguém votou Bosta em mim e errou → mostro o ganho
+          const myApostaKey = `aposta_${game.id}_${normEmail(S.me)}`;
+          const myVotersObj = (S.apostas||{})[myApostaKey] || {};
+          const myPts = calcGamePoints(S.users[S.me], game.id);
+          const iGotPoints = myPts > 0;
+          const bostaErradores = Object.entries(myVotersObj).filter(([, t]) => t === 'bosta');
+          if (iGotPoints && bostaErradores.length > 0) {
+            const ganho = bostaErradores.length * 2;
+            voteHtml = `<span class="pr-result-badge win">💰 +${ganho} 🏴‍☠️ (${bostaErradores.length}x Bosta errado em você)</span>`;
+          } else {
+            voteHtml = `<span style="font-size:11px;color:var(--muted)">Você</span>`;
+          }
         } else if (myVote) {
           const tPts = calcGamePoints(u, game.id);
           const win  = myVote==='bosta' ? (tPts===0) : (tPts>0);
@@ -2839,175 +2905,99 @@ function showHistoryModal(email, type) {
     html += `<div style="padding:8px;text-align:right;font-weight:bold;color:var(--gold);">Total: ${ptsObj.total} pts</div>`;
 
   } else {
-    // ---- PIRATECAS: same logic as before but grouped by game with flags + new text ----
-    let balance = 100;
+    // ── PIRATECAS: usa calcPiratecasDetailed para garantir que
+    //    o extrato bate EXATAMENTE com o número do ranking ──────
+    const detailed = calcPiratecasDetailed(email);
+
     html += `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
       <span>Saldo Inicial</span><span style="color:var(--gold);font-weight:bold;">100</span>
     </div>`;
 
-    const rodadas = {};
-    GAMES.forEach(g => {
-      const r = S.results[g.id];
-      if(r && (r.status==='finished'||r.status==='live') && r.h!==null) {
-        const rodada = getRodada(g.id);
-        if(!rodadas[rodada]) rodadas[rodada] = { users:{} };
-        Object.values(S.users).forEach(user => {
-          if(!rodadas[rodada].users[user.email]) rodadas[rodada].users[user.email] = 0;
-          rodadas[rodada].users[user.email] += calcGamePoints(user, g.id);
-        });
-      }
-    });
+    // Separa por categoria para exibição organizada
+    const entriesRodada      = detailed.entries.filter(e => e.tipo === 'rodada');
+    const entriesVoter       = detailed.entries.filter(e => e.tipo === 'aposta_voter');
+    const entriesTargetWon   = detailed.entries.filter(e => e.tipo === 'aposta_target_won');
+    const entriesPibet       = detailed.entries.filter(e => e.tipo === 'pibet');
 
-    Object.keys(rodadas).forEach(rodada => {
-      const rData = rodadas[rodada];
-      const ptsArray = Object.values(rData.users).sort((a,b)=>a-b);
-      const maxPts = ptsArray[ptsArray.length-1];
-      const minPts = ptsArray[0];
-      let medPts = (ptsArray.length % 2===0)
-        ? (ptsArray[ptsArray.length/2-1]+ptsArray[ptsArray.length/2])/2
-        : ptsArray[Math.floor(ptsArray.length/2)];
-      if (maxPts !== minPts) {
-        const myPts = rData.users[email];
-        let diff=0, desc='';
-        if (myPts===maxPts)                              { diff=5;  desc='🔥 Pé Quente'; }
-        else if (myPts===minPts)                          { diff=-5; desc='🥶 Pé Frio'; }
-        else if (myPts===medPts||(myPts<medPts&&myPts>minPts)) { diff=-1; desc='😐 Nem fede nem cheira'; }
-        if (diff!==0) {
-          balance += diff;
-          const color = diff>0?'var(--green)':'#ff7b7b';
-          html += `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
-            <span><span style="font-size:11px;color:var(--muted)">Rodada ${rodada}</span><br>${desc} (${myPts}pts)</span>
-            <span style="color:${color};font-weight:bold;">${diff>0?'+':''}${diff}</span>
-          </div>`;
-        }
-      }
-    });
+    // ── Rodadas ────────────────────────────────────────────────
+    if (entriesRodada.length > 0) {
+      entriesRodada.forEach(e => {
+        const color = e.diff > 0 ? 'var(--green)' : '#ff7b7b';
+        html += `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
+          <span><span style="font-size:11px;color:var(--muted)">Rodada ${e.rodada}</span><br>${e.desc} (${e.myPts}pts)</span>
+          <span style="color:${color};font-weight:bold;">${e.diff > 0 ? '+' : ''}${e.diff}</span>
+        </div>`;
+      });
+    }
 
-// Group apostas by game
-    const apostasForUser = [];
-    Object.keys(S.apostas || {}).forEach(key => {
-      const parts = key.split('_');
-      const gId = parseInt(parts[1]);
-      const target = parts.slice(2).join('_');
-      const votersObj = S.apostas[key];
-      if (!votersObj[email]) return;
-      const r = S.results[gId];
-      if (!r || (r.status!=='finished' && r.status!=='live') || r.h===null) return;
-      apostasForUser.push({ gId, target, tipo: votersObj[email] });
-    });
-
-    if (apostasForUser.length > 0) {
+    // ── Apostas Bosta/Mestre como votante ──────────────────────
+    if (entriesVoter.length > 0) {
+      html += `<div style="padding:6px 0 2px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Meus Votos Bosta/Mestre</div>`;
+      // Agrupa por jogo
       const byGame = {};
-      apostasForUser.forEach(a => { if(!byGame[a.gId]) byGame[a.gId]=[]; byGame[a.gId].push(a); });
-      const sortedGIds = Object.keys(byGame).map(Number).sort((a,b)=>a-b);
-
-      html += `<div style="padding:6px 0 2px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Apostas Bosta/Mestre</div>`;
-
-      sortedGIds.forEach(gId => {
-        const gObj = GAMES.find(g=>g.id===gId);
-        const r    = S.results[gId];
-        const gameLabel = gObj
-          ? `${gObj.hFlag||'🏳️'} ${esc(gObj.hCode)} ${r.h}–${r.a} ${esc(gObj.aCode)} ${gObj.aFlag||'🏳️'}`
-          : `Jogo #${gId}`;
-
-        html += `<div style="padding:6px 8px 4px;background:rgba(255,255,255,0.03);border-radius:6px;margin:4px 0;font-size:12px;font-weight:700;color:var(--muted);">${gameLabel}</div>`;
-
-      byGame[gId].forEach(({ target, tipo }) => {
-          const realTargetEmail = Object.keys(S.users).find(usr => normEmail(usr) === target) || target;
-          const tUser   = S.users[realTargetEmail];
-          const targetPts = calcGamePoints(tUser, gId);
-          const targetHit = targetPts > 0;
-  
-          let diff = tipo==='bosta' ? (!targetHit?2:-2) : (targetHit?2:-2);
-          balance += diff;
-          const color    = diff>0?'var(--green)':'#ff7b7b';
-          const tName    = tUser?.name || target;
-          const tipoLabel = tipo==='mestre'
+      entriesVoter.forEach(e => { if (!byGame[e.gId]) byGame[e.gId] = []; byGame[e.gId].push(e); });
+      Object.keys(byGame).map(Number).sort((a,b) => a-b).forEach(gId => {
+        const firstEntry = byGame[gId][0];
+        html += `<div style="padding:6px 8px 4px;background:rgba(255,255,255,0.03);border-radius:6px;margin:4px 0;font-size:12px;font-weight:700;color:var(--muted);">${firstEntry.gameLabel}</div>`;
+        byGame[gId].forEach(e => {
+          const color = e.diff > 0 ? 'var(--green)' : '#ff7b7b';
+          const tipoLabel = e.voteType === 'mestre'
             ? `<span style="color:var(--green);font-weight:bold;">Mestre ✅</span>`
-            : `💩`;
-
-          const tBet = (tUser && tUser.bets) ? tUser.bets[gId] : null;
-          const palpiteAmigo = tBet ? ` (Palpite: ${tBet.h}–${tBet.a})` : ' (Sem palpite)';
-
+            : `💩 Bosta`;
+          const tUser = S.users[e.targetEmail];
+          const tBet  = tUser?.bets?.[gId];
+          const palpiteAmigo = tBet ? ` · Palpite: ${tBet.h}–${tBet.a}` : '';
           html += `<div style="padding:7px 8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;">
             <span style="font-size:13px;flex:1;min-width:0;">
-              <strong style="color:var(--text)">${esc(tName)}</strong> 
-              <span style="color:var(--muted)">• Voto:</span> ${tipoLabel}
-              <span style="color:var(--muted); font-size:12px;">${palpiteAmigo}</span>
+              <strong style="color:var(--text)">${esc(e.targetName)}</strong>
+              <span style="color:var(--muted)"> • Voto: </span>${tipoLabel}
+              <span style="color:var(--muted);font-size:12px;">${esc(palpiteAmigo)}</span>
             </span>
-            <span style="color:${color};font-weight:bold;white-space:nowrap;">${diff>0?'+':''}${diff} 🏴‍☠️</span>
+            <span style="color:${color};font-weight:bold;white-space:nowrap;">${e.diff > 0 ? '+' : ''}${e.diff} 🏴‍☠️</span>
           </div>`;
         });
       });
     }
 
-    // ============================================================
-    // NOVO BLOCO: APOSTAS PIRATABET
-    // ============================================================
-    if (S.pibets && S.pibets.length > 0) {
-      const resolvedPibets = S.pibets.filter(p => p.status === 'creator_won' || p.status === 'target_won');
-      if (resolvedPibets.length > 0) {
-        html += `<div style="padding:6px 0 2px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Apostas Piratabet</div>`;
-        resolvedPibets.forEach(pbt => {
-          const isCreator = (pbt.creator === email);
-          const isTarget = (pbt.target === email);
-          const isDoubter = pbt.doubters && pbt.doubters.includes(email);
-          let diff = 0;
-          let label = '';
-          const W = pbt.wager;
-          const N = pbt.doubters ? pbt.doubters.length : 0;
-
-          if (pbt.target && pbt.target !== '') {
-            // Aposta direcionada (creator vs target)
-            if (isCreator || isTarget) {
-              if (pbt.status === 'creator_won') {
-                if (isCreator) { diff = W; label = '🏆 Criador venceu'; }
-                else if (isTarget) { diff = -W; label = '🏆 Criador venceu'; }
-              } else if (pbt.status === 'target_won') {
-                if (isCreator) { diff = -W; label = '🎯 Desafiado venceu'; }
-                else if (isTarget) { diff = W; label = '🎯 Desafiado venceu'; }
-              }
-            }
-          } else {
-            // Aposta livre
-            if (isCreator) {
-              if (pbt.status === 'creator_won') {
-                diff = W;
-                label = '🏆 Criador venceu (aposta livre)';
-              } else if (pbt.status === 'target_won') {
-                diff = -W;
-                label = '🎯 Duvidadores venceram (aposta livre)';
-              }
-            } else if (isDoubter) {
-              const share = Math.round(W / N);
-              if (pbt.status === 'creator_won') {
-                diff = -share;
-                label = '🏆 Criador venceu (aposta livre)';
-              } else if (pbt.status === 'target_won') {
-                diff = share;
-                label = '🎯 Duvidadores venceram (aposta livre)';
-              }
-            }
-          }
-          if (diff !== 0) {
-            const color = diff > 0 ? 'var(--green)' : '#ff7b7b';
-            const desc = pbt.desc ? `"${esc(pbt.desc)}"` : '';
-            html += `<div style="padding:7px 8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;">
-              <span style="font-size:13px;flex:1;min-width:0;">
-                <strong style="color:var(--text)">${label}</strong>
-                <span style="color:var(--muted); font-size:12px;"> ${desc}</span>
-              </span>
-              <span style="color:${color};font-weight:bold;white-space:nowrap;">${diff>0?'+':''}${diff} 🏴‍☠️</span>
-            </div>`;
-            balance += diff;
-          }
+    // ── Ganhos como ALVO de Bosta que erraram (novo!) ──────────
+    if (entriesTargetWon.length > 0) {
+      html += `<div style="padding:6px 0 2px;font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1px;">💰 Piratecas ganhos por ser alvo de Bosta</div>`;
+      const byGame = {};
+      entriesTargetWon.forEach(e => { if (!byGame[e.gId]) byGame[e.gId] = []; byGame[e.gId].push(e); });
+      Object.keys(byGame).map(Number).sort((a,b) => a-b).forEach(gId => {
+        const firstEntry = byGame[gId][0];
+        html += `<div style="padding:6px 8px 4px;background:rgba(60,172,59,0.06);border-radius:6px;margin:4px 0;font-size:12px;font-weight:700;color:var(--muted);">${firstEntry.gameLabel}</div>`;
+        byGame[gId].forEach(e => {
+          html += `<div style="padding:7px 8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <span style="font-size:13px;flex:1;min-width:0;">
+              <span style="color:var(--muted)">💩 </span><strong style="color:var(--text)">${esc(e.voterName)}</strong>
+              <span style="color:var(--muted)"> apostou Bosta em você e errou</span>
+            </span>
+            <span style="color:var(--green);font-weight:bold;white-space:nowrap;">+2 🏴‍☠️</span>
+          </div>`;
         });
-      }
+      });
     }
-    // FIM DO NOVO BLOCO
-    // ============================================================
 
-    html += `<div style="padding:8px;text-align:right;font-weight:bold;color:#ff7b7b;">Total: ${balance} 🏴‍☠️</div>`;
+    // ── Pibets ─────────────────────────────────────────────────
+    if (entriesPibet.length > 0) {
+      html += `<div style="padding:6px 0 2px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Apostas Piratabet</div>`;
+      entriesPibet.forEach(e => {
+        const color = e.diff > 0 ? 'var(--green)' : '#ff7b7b';
+        const desc  = e.pbt.desc ? `"${esc(e.pbt.desc)}"` : '';
+        html += `<div style="padding:7px 8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <span style="font-size:13px;flex:1;min-width:0;">
+            <strong style="color:var(--text)">${e.label}</strong>
+            <span style="color:var(--muted);font-size:12px;"> ${desc}</span>
+          </span>
+          <span style="color:${color};font-weight:bold;white-space:nowrap;">${e.diff > 0 ? '+' : ''}${e.diff} 🏴‍☠️</span>
+        </div>`;
+      });
+    }
+
+    html += `<div style="padding:10px 8px;text-align:right;font-weight:bold;font-size:15px;color:#ff7b7b;border-top:2px solid var(--border);margin-top:4px;">
+      Total: ${detailed.total} 🏴‍☠️
+    </div>`;
   }
     
   if(!html) html = '<div style="color:var(--muted);text-align:center;padding:20px;">Nenhum histórico disponível.</div>';
