@@ -1086,6 +1086,29 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
   justify-content: center; font-size: 18px; cursor: pointer; transition: 0.2s;
 }
 
+  /* --- Estilos para os vídeos no Loading --- */
+.loading-videos-container {
+  display: flex; gap: 10px; overflow-x: auto; max-width: 90vw; padding: 10px; margin-top: 15px;
+  -ms-overflow-style: none; scrollbar-width: none;
+}
+.loading-videos-container::-webkit-scrollbar { display: none; }
+
+.video-card {
+  min-width: 160px; max-width: 160px; background: rgba(0,0,0,0.6); border: 1px solid var(--border);
+  border-radius: 8px; overflow: hidden; cursor: pointer; transition: 0.2s; text-decoration: none;
+}
+.video-card:hover { border-color: var(--gold); transform: translateY(-3px); }
+.video-card img { width: 100%; height: 90px; object-fit: cover; }
+.video-card-title {
+  font-size: 11px; color: var(--text); padding: 8px; white-space: nowrap; 
+  overflow: hidden; text-overflow: ellipsis; text-align: center; font-weight: 600;
+}
+.btn-enter-app {
+  margin-top: 20px; background: var(--green); color: white; border: none; padding: 12px 24px;
+  border-radius: 12px; font-family: var(--font-display); font-size: 18px; font-weight: bold;
+  cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(60,172,59,0.4); display: none;
+}
+.btn-enter-app:hover { transform: scale(1.05); }
   
 </style>
 </head>
@@ -1094,8 +1117,17 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
 
 <div id="loading-overlay">
   <div class="loading-trophy"><img src="taca.png" alt="Troféu" style="height: 1em; vertical-align: middle;"></div>
-  <div class="loading-text">Carregando bolão...</div>
-  <div class="loading-spin"></div>
+  <div class="loading-text" id="loading-status-text">Carregando bolão...</div>
+  <div class="loading-spin" id="loading-spinner"></div>
+  
+  <button class="btn-enter-app" id="btn-enter-app" onclick="document.getElementById('loading-overlay').style.display = 'none'">ENTRAR NO BOLÃO ➡️</button>
+
+  <div style="margin-top: 30px; font-size: 12px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">
+    Ou assista aos melhores momentos:
+  </div>
+  <div class="loading-videos-container" id="loading-videos-list">
+    <span style="font-size: 12px; color: var(--muted);">Buscando vídeos...</span>
+  </div>
 </div>
 
 <div id="screen-auth" class="auth-screen hidden">
@@ -1962,9 +1994,45 @@ async function boot() {
   }
 }
 
-function hideLoading() {
-  document.getElementById('loading-overlay').style.display = 'none';
+async function loadLoadingVideos() {
+  try {
+    const res = await fetch('videos.json?nocache=' + new Date().getTime());
+    if (res.ok) {
+      const videos = await res.json();
+      const container = document.getElementById('loading-videos-list');
+      if (videos.length === 0) {
+        container.innerHTML = '<span style="font-size: 12px; color: var(--muted);">Nenhum vídeo recente encontrado.</span>';
+        return;
+      }
+      
+      container.innerHTML = videos.map(vid => `
+        <a href="https://www.youtube.com/watch?v=${vid.videoId}" target="_blank" class="video-card">
+          <img src="${vid.thumbnail}" alt="Thumbnail">
+          <div class="video-card-title">${esc(vid.title)}</div>
+        </a>
+      `).join('');
+    }
+  } catch(e) {
+    document.getElementById('loading-videos-list').innerHTML = '<span style="font-size: 12px; color: var(--muted);">Erro ao carregar vídeos.</span>';
+  }
 }
+
+// Chame a função assim que o JS começar a ler
+loadLoadingVideos();
+
+// Alteramos o hideLoading para não sumir com a tela à força, 
+// mas sim mostrar o botão "Entrar" para o usuário clicar quando quiser.
+function hideLoading() {
+  document.getElementById('loading-spinner').style.display = 'none';
+  const textEl = document.getElementById('loading-status-text');
+  if (textEl) {
+      textEl.textContent = 'Bolão Pronto!';
+      textEl.style.color = 'var(--green)';
+  }
+  document.getElementById('btn-enter-app').style.display = 'block';
+}
+
+  
 function showAuth() {
   document.getElementById('screen-auth').classList.remove('hidden');
 }
