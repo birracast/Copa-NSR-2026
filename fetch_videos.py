@@ -3,7 +3,7 @@ import json
 from googleapiclient.discovery import build
 
 # Pegando a chave da API salva no GitHub Secrets
-API_KEY = os.environ.get('YOUTUBE_API_KEY')
+API_KEY = os.environ.get('AIzaSyAaeoFNf5CwSk7XARYXuJScF_0a-OJLJwA')
 
 # Substitua pelo ID da PLAYLIST (Fica na URL do YouTube depois de "list=")
 PLAYLIST_ID = 'PLZuM_Kl1KELkV0PiJMj-zr5gJ9zVKhBvC' 
