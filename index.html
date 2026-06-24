@@ -1031,6 +1031,62 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
 .games-section.is-collapsed .games-section-body {
   display: none;
 }
+
+/* Layout da Arena Piratabet */
+.pibet-arena {
+  display: flex; align-items: center; justify-content: space-between; 
+  margin: 16px 0; background: var(--dark3); padding: 16px; 
+  border-radius: 12px; border: 1px solid var(--border);
+}
+.pibet-side {
+  display: flex; flex-direction: column; align-items: center; width: 40%; gap: 8px;
+}
+.pibet-side-title {
+  font-size: 11px; color: var(--muted); text-transform: uppercase; 
+  letter-spacing: 1px; font-weight: bold; text-align: center;
+}
+.pibet-avatars {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: -6px;
+}
+.pibet-avatar {
+  width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--dark3); 
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3); overflow: hidden; display: flex; 
+  align-items: center; justify-content: center; background: var(--dark4); 
+  font-size: 14px; margin-left: -8px; z-index: 1; transition: 0.2s;
+}
+.pibet-avatar:first-child { margin-left: 0; }
+.pibet-avatar:hover { transform: scale(1.1); z-index: 10; }
+.pibet-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.pibet-vs {
+  font-family: var(--font-display); font-size: 24px; font-weight: 900; 
+  color: var(--gold); text-shadow: 0 0 10px rgba(201,168,76,0.3);
+}
+
+/* Botões Customizados */
+.btn-black {
+  background: #000000; color: #ffffff; border: 1px solid #333333; 
+  transition: 0.2s; font-family: var(--font-display); font-size: 16px; 
+  font-weight: 700; letter-spacing: 1px; padding: 12px; border-radius: 12px;
+}
+.btn-black:hover { background: #1a1a1a; border-color: #555555; }
+
+.pibet-resolve-area {
+  display: flex; align-items: center; justify-content: space-around; width: 100%;
+}
+.btn-check-green {
+  background: rgba(60,172,59,0.15); color: var(--green); border: 2px solid var(--green); 
+  border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; 
+  justify-content: center; font-size: 18px; cursor: pointer; transition: 0.2s;
+}
+.btn-check-green:hover { background: var(--green); color: #fff; }
+
+.btn-check-red {
+  background: rgba(230,29,37,0.15); color: var(--red); border: 2px solid var(--red); 
+  border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; 
+  justify-content: center; font-size: 18px; cursor: pointer; transition: 0.2s;
+}
+
+  
 </style>
 </head>
 <body>
@@ -2510,36 +2566,46 @@ function calcPiratecasDetailed(email) {
   // ── 3. Pibets (apostas livres / desafios) ────────────────────
   (S.pibets || []).forEach(pbt => {
     if (pbt.status !== 'creator_won' && pbt.status !== 'target_won') return;
+    
     const W = pbt.wager;
-    const isTargeted = pbt.target && pbt.target !== '';
     const isCreator  = pbt.creator === email;
-    const isTarget   = pbt.target  === email;
-    const isDoubter  = pbt.doubters && pbt.doubters.includes(email);
-    const N = pbt.doubters ? pbt.doubters.length : 0;
+    const doubters = pbt.doubters || [];
+    const supporters = pbt.supporters || [];
+    const isTarget = pbt.target === email; 
+
+    const isFavor = isCreator || supporters.includes(email);
+    const isContra = doubters.includes(email);
+    
+    // Contagens de cada lado
+    const numFavor = 1 + supporters.length;
+    const numContra = doubters.length;
+    
     let diff = 0, label = '';
 
-    if (isTargeted) {
-      // Só aplica se o desafiado aceitou (aparece em doubters)
-      if (pbt.doubters && pbt.doubters.includes(pbt.target)) {
-        if (pbt.status === 'creator_won') {
-          if (isCreator) { diff =  W; label = '🏆 Criador venceu'; }
-          if (isTarget)  { diff = -W; label = '🏆 Criador venceu'; }
-        } else {
-          if (isCreator) { diff = -W; label = '🎯 Desafiado venceu'; }
-          if (isTarget)  { diff =  W; label = '🎯 Desafiado venceu'; }
-        }
-      }
+    if (pbt.target && pbt.target !== '') {
+       // Desafio Direto (Original)
+       if (doubters.includes(pbt.target)) {
+          if (pbt.status === 'creator_won') {
+            if (isCreator) { diff = W; label = '🏆 Criador venceu'; }
+            if (isTarget) { diff = -W; label = '🏆 Criador venceu'; }
+          } else {
+            if (isCreator) { diff = -W; label = '🎯 Desafiado venceu'; }
+            if (isTarget) { diff = W; label = '🎯 Desafiado venceu'; }
+          }
+       }
     } else {
-      if (N > 0) {
-        const share = Math.round(W / N);
-        if (pbt.status === 'creator_won') {
-          if (isCreator) { diff =  W;      label = '🏆 Criador venceu (aposta livre)'; }
-          if (isDoubter) { diff = -share;  label = '🏆 Criador venceu (aposta livre)'; }
-        } else {
-          if (isCreator) { diff = -W;     label = '🎯 Duvidadores venceram (aposta livre)'; }
-          if (isDoubter) { diff =  share; label = '🎯 Duvidadores venceram (aposta livre)'; }
-        }
-      }
+       // Aposta Livre - Dividindo o Pote
+       if (numContra > 0) {
+           if (pbt.status === 'creator_won') {
+               // Lado Favor Ganhou -> Eles pegam o dinheiro apostado pelos que perderam, dividido por todos a Favor
+               if (isFavor) { diff = Math.round((numContra * W) / numFavor); label = '🏆 A Favor venceu'; }
+               if (isContra) { diff = -W; label = '🏆 A Favor venceu'; }
+           } else {
+               // Lado Contra Ganhou -> Eles pegam o dinheiro apostado pelos que perderam, dividido por todos do Contra
+               if (isFavor) { diff = -W; label = '🎯 Duvidadores venceram'; }
+               if (isContra) { diff = Math.round((numFavor * W) / numContra); label = '🎯 Duvidadores venceram'; }
+           }
+       }
     }
 
     if (diff !== 0) {
@@ -2547,7 +2613,7 @@ function calcPiratecasDetailed(email) {
       entries.push({ tipo: 'pibet', pbt, label, diff });
     }
   });
-
+  
   return { total: Math.round(balance), entries };
 }
 
@@ -4435,88 +4501,114 @@ function renderPibetCard(pbt) {
   let statusBadge = '';
   if (pbt.status === 'pending') statusBadge = '<span class="status-pill upcoming">⏳ Pendente (Adm)</span>';
   else if (pbt.status === 'active') statusBadge = '<span class="status-pill live" style="animation:none;background:rgba(42,57,141,0.2);color:#7b8fe8">🔥 Valendo</span>';
-  else if (pbt.status === 'creator_won') statusBadge = '<span class="status-pill finished">🏆 Criador Venceu</span>';
-  else if (pbt.status === 'target_won') statusBadge = '<span class="status-pill finished">🎯 Desafiados Venceram</span>';
+  else if (pbt.status === 'creator_won') statusBadge = '<span class="status-pill finished">🏆 Lado Esquerdo Venceu</span>';
+  else if (pbt.status === 'target_won') statusBadge = '<span class="status-pill finished">🎯 Lado Direito Venceu</span>';
   else if (pbt.status === 'rejected') statusBadge = '<span class="status-pill" style="background:rgba(230,29,37,0.1);color:#ff7b7b">❌ Rejeitada</span>';
 
-  let typeLabel = target ? `Desafiado: <strong>${esc(target.name)}</strong>` : 'Aposta Livre (Qualquer um pode entrar)';
+  let typeLabel = target ? `Desafio Direto a: <strong>${esc(target.name)}</strong>` : 'Aposta Livre';
   
-  let actionHtml = '';
   const isAdm = isAdmin();
   const isCreator = S.me === pbt.creator;
   
-  // Botão Cancelar para o criador, se:
-  // - status 'pending' (ainda não aprovado) OU
-  // - status 'active' e nenhum duvidador (doubters vazio)
-  const canCancel = isCreator && (
-    pbt.status === 'pending' ||
-    (pbt.status === 'active' && pbt.doubters.length === 0)
-  );
+  // No novo formato o GAS enviará pbt.supporters também
+  const doubters = pbt.doubters || [];
+  const supporters = pbt.supporters || [];
+  
+  let actionHtml = '';
 
+  const canCancel = isCreator && (pbt.status === 'pending' || (pbt.status === 'active' && doubters.length === 0));
   if (canCancel) {
-    actionHtml += `<button class="btn-sm" style="border-color:var(--red);color:#ff7b7b;margin-top:10px;" onclick="cancelPibet('${pbt.id}')">🗑 Cancelar Aposta</button>`;
+    actionHtml += `<button class="btn-sm" style="border-color:var(--red);color:#ff7b7b;margin-top:10px;width:100%" onclick="cancelPibet('${pbt.id}')">🗑 Cancelar Aposta</button>`;
   }
 
+  // AÇÕES PENDENTES
   if (pbt.status === 'pending' && isAdm) {
     actionHtml += `<div style="margin-top:12px;border-top:1px dashed var(--border);padding-top:10px;display:flex;gap:8px">
       <button class="btn-gold" style="padding:8px 12px;font-size:12px;flex:1" onclick="adminResolvePibet('${pbt.id}', 'active')">✔️ Aprovar (Valendo)</button>
       <button class="btn-red" style="padding:8px 12px;font-size:12px;flex:1" onclick="adminResolvePibet('${pbt.id}', 'rejected')">✖️ Rejeitar</button>
     </div>`;
-  } else if (pbt.status === 'active') {
+  } 
+  // AÇÕES VALENDO
+  else if (pbt.status === 'active') {
     if (isAdm) {
-      actionHtml += `<div style="margin-top:12px;border-top:1px dashed var(--border);padding-top:10px">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Ações do Adm (Resolver Aposta):</div>
-        <div style="display:flex;gap:8px">
-          <button class="btn-gold" style="padding:8px 12px;font-size:12px;flex:1" onclick="adminResolvePibet('${pbt.id}', 'creator_won')">🏆 Criador Ganhou</button>
-          <button class="btn-red" style="padding:8px 12px;font-size:12px;flex:1" onclick="adminResolvePibet('${pbt.id}', 'target_won')">🎯 Duvidadores Ganharam</button>
+      actionHtml += `<div style="margin-top:12px;border-top:1px dashed var(--border);padding-top:12px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px;text-align:center;">Ações do Adm (Quem ganhou?):</div>
+        <div class="pibet-resolve-area">
+          <button class="btn-check-green" onclick="previewResolvePibet('${pbt.id}', 'creator_won', this)" title="A Favor Venceu">✔️</button>
+          <span style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:bold;">Definir Resultado</span>
+          <button class="btn-check-green" onclick="previewResolvePibet('${pbt.id}', 'target_won', this)" title="Duvidadores Venceram">✔️</button>
         </div>
       </div>`;
     }
     
-    if (!target && S.me !== pbt.creator) {
-      if (pbt.doubters.includes(S.me)) {
-        actionHtml += `<div style="margin-top:10px;color:var(--green);font-size:12px;font-weight:bold;text-align:center;">✅ Você entrou nesta aposta!</div>`;
+    // Área do Usuário Comum
+    const isDoubter = doubters.includes(S.me);
+    const isSupporter = supporters.includes(S.me);
+
+    if (!target && !isCreator) {
+      if (isDoubter || isSupporter) {
+        const lado = isDoubter ? 'CONTRA (DUVIDADOR)' : 'A FAVOR (CONCORDANDO)';
+        actionHtml += `<div style="margin-top:12px;color:var(--green);font-size:12px;font-weight:bold;text-align:center;">✅ Você já entrou: ${lado}!</div>`;
       } else {
-        actionHtml += `<button class="btn-red" style="margin-top:10px;width:100%" onclick="joinPibet('${pbt.id}')">DUVIDO! (Entrar na Aposta)</button>`;
+        actionHtml += `<div style="display:flex; gap:10px; margin-top:12px;">`;
+        // Só libera o botão de ir a favor se já tiver alguém duvidando
+        if (doubters.length > 0) {
+            actionHtml += `<button class="btn-black" style="flex:1;" onclick="joinPibet('${pbt.id}', 'supporter')">CONCORDO</button>`;
+        }
+        actionHtml += `<button class="btn-black" style="flex:1;" onclick="joinPibet('${pbt.id}', 'doubter')">DUVIDO!</button>
+        </div>`;
       }
     } else if (target && S.me === pbt.target) {
-      if (pbt.doubters.includes(S.me)) {
-        actionHtml += `<div style="margin-top:10px;color:var(--green);font-size:12px;font-weight:bold;text-align:center;">✅ Você aceitou o desafio!</div>`;
+      if (doubters.includes(S.me)) {
+        actionHtml += `<div style="margin-top:12px;color:var(--green);font-size:12px;font-weight:bold;text-align:center;">✅ Você aceitou o desafio!</div>`;
       } else {
-        actionHtml += `<button class="btn-red" style="margin-top:10px;width:100%" onclick="joinPibet('${pbt.id}')">ACEITAR DESAFIO</button>`;
+        actionHtml += `<button class="btn-red" style="margin-top:12px;width:100%" onclick="joinPibet('${pbt.id}', 'doubter')">ACEITAR DESAFIO</button>`;
       }
-    } else if (target && !pbt.doubters.includes(pbt.target)) {
-      actionHtml += `<div style="margin-top:10px;color:var(--muted);font-size:12px;text-align:center">Aguardando ${esc(target.name)} aceitar...</div>`;
     }
   }
 
-  let doubtersHtml = '';
-  if (pbt.doubters && pbt.doubters.length > 0) {
-    const names = pbt.doubters.map(d => (S.users[d]||{}).name || d).join(', ');
-    doubtersHtml = `<div style="margin-top:12px;font-size:12px;color:var(--muted)"><strong>Entraram na Aposta:</strong> ${esc(names)}</div>`;
-  }
+  // Montando Avatares
+  const favorAvatars = [pbt.creator, ...supporters].map(email => {
+     const u = S.users[email] || {};
+     return `<div class="pibet-avatar" title="${esc(u.name || email)}">${u.avatar ? `<img src="${u.avatar}">` : '🧑'}</div>`;
+  }).join('');
+
+  const contraAvatars = doubters.map(email => {
+     const u = S.users[email] || {};
+     return `<div class="pibet-avatar" title="${esc(u.name || email)}">${u.avatar ? `<img src="${u.avatar}">` : '🧑'}</div>`;
+  }).join('');
 
   return `<div class="game-card" style="margin-bottom:14px; padding:20px;">
     <div class="gcard-top" style="margin-bottom:14px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="rank-mini-av" style="width:34px;height:34px;font-size:16px">${creator.avatar?`<img src="${creator.avatar}">`:'🧑'}</div>
-        <div>
-          <div style="font-size:15px;font-weight:bold;color:var(--text)">${esc(creator.name)}</div>
-          <div style="font-size:11px;color:var(--muted)">${formatDateTime(pbt.createdAt)}</div>
-        </div>
-      </div>
+      <div style="font-size:11px;color:var(--muted)">Lançada em ${formatDateTime(pbt.createdAt)}</div>
       ${statusBadge}
     </div>
-    <div style="margin:16px 0;font-size:16px;line-height:1.5;color:var(--text);">"${esc(pbt.desc)}"</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--dark3);padding:10px 14px;border-radius:10px;border:1px solid var(--border)">
-      <div style="font-size:13px;color:var(--muted)">${typeLabel}</div>
-      <div style="font-size:16px;font-weight:bold;color:#ff7b7b">🏴‍☠️ ${pbt.wager} Piratecas</div>
+    
+    <div style="margin:10px 0;font-size:16px;line-height:1.5;color:var(--text);text-align:center;font-weight:600;">
+      "${esc(pbt.desc)}"
     </div>
-    ${doubtersHtml}
-    ${actionHtml ? `<div style="margin-top:10px;">${actionHtml}</div>` : ''}
+    <div style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:16px;">${typeLabel}</div>
+
+    <div class="pibet-arena">
+       <div class="pibet-side">
+          <div class="pibet-side-title" style="color:var(--gold);">A Favor</div>
+          <div class="pibet-avatars">${favorAvatars}</div>
+       </div>
+       <div class="pibet-vs">VS</div>
+       <div class="pibet-side">
+          <div class="pibet-side-title" style="color:#ff7b7b;">Duvidadores</div>
+          <div class="pibet-avatars">${contraAvatars || '<span style="color:var(--muted);font-size:11px;margin-top:8px;">Ninguém ainda</span>'}</div>
+       </div>
+    </div>
+
+    <div style="text-align:center; font-size:16px; font-weight:bold; color:var(--gold); margin-top:10px;">
+      🏴‍☠️ Aposta Base: ${pbt.wager} Piratecas
+    </div>
+
+    ${actionHtml ? `<div>${actionHtml}</div>` : ''}
   </div>`;
 }
-
+  
 async function cancelPibet(id) {
   if (!confirm('Tem certeza que deseja cancelar esta aposta? Esta ação não pode ser desfeita.')) return;
   toast('Cancelando aposta...','info');
@@ -4586,12 +4678,38 @@ function closePibetShareModal() {
   document.getElementById('pibet-share-modal').classList.add('hidden');
 }
 
-async function joinPibet(id) {
+window.previewResolvePibet = function(pbtId, winner, btnElement) {
+    const area = btnElement.closest('.pibet-resolve-area');
+    const btns = area.querySelectorAll('button');
+    
+    // Reseta visualmente primeiro
+    btns[0].className = 'btn-check-green'; btns[0].innerHTML = '✔️';
+    btns[1].className = 'btn-check-green'; btns[1].innerHTML = '✔️';
+    
+    // Animação de X
+    if (winner === 'creator_won') {
+        btns[1].className = 'btn-check-red'; btns[1].innerHTML = '✖️';
+    } else {
+        btns[0].className = 'btn-check-red'; btns[0].innerHTML = '✖️';
+    }
+    
+    // Dá um pequeno tempo pra interface atualizar antes do 'confirm' travar a tela
+    setTimeout(() => {
+        adminResolvePibet(pbtId, winner);
+        // Se o adm cancelar o confirm, reseta o botão para o normal
+        setTimeout(() => {
+            btns[0].className = 'btn-check-green'; btns[0].innerHTML = '✔️';
+            btns[1].className = 'btn-check-green'; btns[1].innerHTML = '✔️';
+        }, 100);
+    }, 50);
+}
+
+async function joinPibet(id, side = 'doubter') {
   toast('Entrando na aposta...','info');
   try {
-    const res = await gsCall({ action:'joinPibet', email:S.me, id });
+    const res = await gsCall({ action:'joinPibet', email:S.me, id, side });
     if (res.ok) {
-      toast('Você aceitou a aposta! ⚔️','ok');
+      toast('Você entrou na aposta! ⚔️','ok');
       await forceSyncAll();
       navTo('pibet');
     } else {
