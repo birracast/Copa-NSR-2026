@@ -2928,15 +2928,26 @@ function renderGames() {
     { id: 'proximos', label: 'Próximos Jogos', games: upcoming, defaultCollapsed: forceExpand ? false : true }
   ];
 
-  let html = '';
+ let html = '';
   sections.forEach(section => {
     const collapsedClass = section.defaultCollapsed ? ' is-collapsed' : '';
     const gamesHtml = section.games.map(game => renderGameCard(game)).join('');
     
+    // Botão extra apenas para a aba de finalizados
+    let btnUltimo = '';
+    if (section.id === 'finalizados' && section.games.length > 0) {
+      const lastGameId = section.games[section.games.length - 1].id;
+      // O event.stopPropagation() impede que o clique no botão feche/abra a aba
+      btnUltimo = `<button class="btn-sm" style="margin-left:14px; font-size:11px; padding:3px 10px; border-color:var(--border);" onclick="event.stopPropagation(); goToGameFromGroup(${lastGameId})">⬇️ Ir para último</button>`;
+    }
+    
     html += `
       <div class="games-section${collapsedClass}" id="games-section-${section.id}">
         <div class="games-section-header" onclick="toggleGamesSection('${section.id}')">
-          <span>${section.label} (${section.games.length})</span>
+          <div style="display:flex; align-items:center;">
+            <span>${section.label} (${section.games.length})</span>
+            ${btnUltimo}
+          </div>
           <span class="toggle-arrow">▲</span>
         </div>
         <div class="games-section-body">
@@ -3445,19 +3456,40 @@ function toggleGameDetails(gameId) {
 }
 
 // ================================================================
-//  NAVEGAR PARA JOGO A PARTIR DA PÁGINA GRUPOS
+//  NAVEGAR PARA JOGO A PARTIR DA PÁGINA GRUPOS OU BOTÃO
 // ================================================================
 function goToGameFromGroup(gameId) {
-  navTo('games');
+  if (currentPage !== 'games') navTo('games');
+  
   setTimeout(() => {
     const card = document.getElementById('gc-' + gameId);
     if (!card) return;
-    if (card.classList.contains('is-collapsed')) toggleGameDetails(gameId);
-    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    card.style.transition = 'box-shadow .3s ease, border-color .3s ease';
-    card.style.boxShadow  = '0 0 0 3px rgba(42,57,141,0.55)';
-    card.style.borderColor = 'var(--blue)';
-    setTimeout(() => { card.style.boxShadow = ''; card.style.borderColor = ''; }, 2000);
+    
+    // 1. Identifica a seção (agrupamento) do jogo
+    const sectionEl = card.closest('.games-section');
+    if (sectionEl) {
+      // Retrai todas as seções
+      document.querySelectorAll('#page-games .games-section').forEach(sec => {
+        sec.classList.add('is-collapsed');
+      });
+      // Expande apenas a seção onde o jogo está
+      sectionEl.classList.remove('is-collapsed');
+    }
+    
+    // 2. Dá um tempo minúsculo para o CSS renderizar a seção expandida
+    setTimeout(() => {
+      // Se o jogo estiver com os palpites retraídos, expande para o usuário ver
+      if (card.classList.contains('is-collapsed')) toggleGameDetails(gameId);
+      
+      // Rola a tela até o card
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.style.transition = 'box-shadow .4s ease, border-color .4s ease';
+      card.style.boxShadow  = '0 0 0 3px var(--gold)'; // Usei dourado para chamar mais atenção
+      card.style.borderColor = 'var(--gold)';
+      
+      // Tira o destaque depois de 2 segundos
+      setTimeout(() => { card.style.boxShadow = ''; card.style.borderColor = ''; }, 2000);
+    }, 50);
   }, 180);
 }
 
