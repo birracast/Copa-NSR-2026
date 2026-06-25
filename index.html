@@ -2701,21 +2701,21 @@ function calcPiratecasDetailed(email) {
             if (isCreator) { diff = W; label = '🏆 Criador venceu'; }
             if (isTarget) { diff = -W; label = '🏆 Criador venceu'; }
           } else {
-            if (isCreator) { diff = -W; label = '🎯 Desafiado venceu'; }
-            if (isTarget) { diff = W; label = '🎯 Desafiado venceu'; }
+            if (isCreator) { diff = -W; label = '🎯 Contra venceu'; }
+            if (isTarget) { diff = W; label = '🎯 Contra venceu'; }
           }
        }
     } else {
-       // Aposta Livre - Dividindo o Pote
+       // Aposta Livre - Valor Fixo Dividido (Ajustado)
        if (numContra > 0) {
            if (pbt.status === 'creator_won') {
-               // Lado Favor Ganhou -> Eles pegam o dinheiro apostado pelos que perderam, dividido por todos a Favor
-               if (isFavor) { diff = Math.round((numContra * W) / numFavor); label = '🏆 A Favor venceu'; }
+               // Lado Favor Ganhou -> Dividem o valor base (W) entre os vencedores, arredondando para baixo
+               if (isFavor) { diff = Math.floor(W / numFavor); label = '🏆 A Favor venceu'; }
                if (isContra) { diff = -W; label = '🏆 A Favor venceu'; }
            } else {
-               // Lado Contra Ganhou -> Eles pegam o dinheiro apostado pelos que perderam, dividido por todos do Contra
-               if (isFavor) { diff = -W; label = '🎯 Duvidadores venceram'; }
-               if (isContra) { diff = Math.round((numFavor * W) / numContra); label = '🎯 Duvidadores venceram'; }
+               // Lado Contra Ganhou -> Dividem o valor base (W) entre os vencedores, arredondando para baixo
+               if (isFavor) { diff = -W; label = '🎯 Contra venceram'; }
+               if (isContra) { diff = Math.floor(W / numContra); label = '🎯 Contra venceram'; }
            }
        }
     }
