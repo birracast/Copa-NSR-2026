@@ -267,8 +267,8 @@ header {
 .stat-box .sl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
 .sv.gold { color: var(--gold); } .sv.blue { color: #7b8fe8; } .sv.green { color: var(--green); } .sv.red { color: #ff7b7b; }
 
-/* ===== VIEW SELECTOR ===== */
-.view-selector { display: flex; gap: 8px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+/* ===== VIEW SELECTOR E FILTROS ===== */
+.view-selector { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .user-chip {
   display: flex; align-items: center; gap: 7px;
   border: 1px solid var(--border); border-radius: 20px;
@@ -279,6 +279,35 @@ header {
 .user-chip.active { border-color: var(--gold); background: rgba(201,168,76,0.1); color: var(--gold); }
 .user-chip.filter-active { border-color: var(--green) !important; background: rgba(60,172,59,0.28) !important; color: #7de87c !important; box-shadow: 0 0 14px rgba(60,172,59,0.25); }
 
+/* Estilos para as sanfonas de Filtro */
+.filter-section {
+  background: var(--dark2); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; overflow: hidden;
+}
+.filter-header {
+  padding: 12px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;
+  background: rgba(255,255,255,0.02); transition: background .2s;
+}
+.filter-header:hover { background: rgba(255,255,255,0.05); }
+.filter-header .toggle-arrow { font-size: 12px; transition: transform 0.25s ease; }
+.filter-section.is-collapsed .filter-header .toggle-arrow { transform: rotate(180deg); }
+.filter-body { padding: 12px 16px; border-top: 1px solid var(--border); }
+.filter-section.is-collapsed .filter-body { display: none; }
+
+/* Botão Flutuante Expandir/Retrair Todos (sempre visível) */
+.collapse-all-btn-games {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 999;
+  width: 50px; height: 50px; border-radius: 50%;
+  background: var(--dark3); border: 2px solid var(--border);
+  color: var(--gold); font-size: 20px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; box-shadow: 0 6px 20px rgba(0,0,0,0.7); transition: 0.2s;
+}
+.collapse-all-btn-games:hover { border-color: var(--gold); transform: scale(1.05); }
+
+  
 /* ===== PALPITE LIST ===== */
 .palpite-list { border-top: 1px solid var(--border); margin-top: 10px; padding-top: 8px; }
 .palpite-list-header { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; padding: 0 2px 6px; }
@@ -1257,11 +1286,25 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
   </div>
       <div class="stats-row" id="stats-row"></div>
     </div>
-    <div style="margin-bottom:16px">
-      <div style="font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">👁 VER PALPITES DE:</div>
-      <div class="view-selector" id="user-chips"></div>
+    <div style="margin-bottom:20px">
+      <div class="filter-section is-collapsed" id="filter-section-users">
+        <div class="filter-header" onclick="document.getElementById('filter-section-users').classList.toggle('is-collapsed')">
+          <span>👁 VER PALPITES DE</span>
+          <span class="toggle-arrow">▲</span>
+        </div>
+        <div class="filter-body view-selector" id="user-chips"></div>
+      </div>
+      
+      <div class="filter-section is-collapsed" id="filter-section-teams">
+        <div class="filter-header" onclick="document.getElementById('filter-section-teams').classList.toggle('is-collapsed')">
+          <span>🏳️ FILTRAR POR SELEÇÃO</span>
+          <span class="toggle-arrow">▲</span>
+        </div>
+        <div class="filter-body view-selector" id="team-chips"></div>
+      </div>
     </div>
-    <button class="collapse-all-btn-games" onclick="toggleAllGamesSections()" title="Retrair/Expandir todas as seções">▲</button>
+    
+    <button class="collapse-all-btn-games" onclick="toggleAllGamesSections()" title="Retrair/Expandir jogos">↕️</button>
     <div id="games-content"></div>
   </div>
 
@@ -2772,7 +2815,7 @@ function renderStats() {
 }
 
 // ================================================================
-//  USER CHIPS (com filtro para evitar usuários fantasmas)
+//  FILTROS: USER CHIPS E TEAM CHIPS
 // ================================================================
 function renderUserChips() {
   const chips = Object.values(S.users)
@@ -2795,14 +2838,51 @@ function setViewUser(email) {
   } else {
     S.viewingUser = email;
   }
-  renderGames(); renderUserChips();
+  renderGames(); 
 }
 
-// ================================================================
+function renderTeamChips() {
+  // Extrair todas as seleções únicas a partir dos jogos (GAMES)
+  const teamsMap = new Map();
+  GAMES.forEach(g => {
+    // Ignorar placeholders de mata-mata até as seleções serem definidas (R32, SF, etc)
+    if (g.hCode && g.hCode !== 'CASA' && !g.hCode.includes('R32') && !g.hCode.includes('R16') && !g.hCode.includes('QF') && !g.hCode.includes('SF') && !g.hCode.includes('FIN') && !g.hCode.includes('3P')) {
+      teamsMap.set(g.hCode, { code: g.hCode, name: g.hName, flag: g.hFlag });
+    }
+    if (g.aCode && g.aCode !== 'FORA' && !g.aCode.includes('R32') && !g.aCode.includes('R16') && !g.aCode.includes('QF') && !g.aCode.includes('SF') && !g.aCode.includes('FIN') && !g.aCode.includes('3P')) {
+      teamsMap.set(g.aCode, { code: g.aCode, name: g.aName, flag: g.aFlag });
+    }
+  });
+  
+  const sortedTeams = Array.from(teamsMap.values()).sort((a,b) => a.name.localeCompare(b.name));
+  
+  const chips = sortedTeams.map(t => {
+    const isFiltered = S.viewingTeam === t.code;
+    const chipClass = isFiltered ? 'filter-active' : '';
+    // Ajustar a flag para caber certinho no chip caso seja uma imagem da flagcdn
+    const flagHTML = t.flag && t.flag.includes('<img') ? t.flag.replace('width: 1em', 'width: 16px').replace('height: auto', 'height: 12px; border-radius:2px') : t.flag;
+    return `<div class="user-chip ${chipClass}" onclick="setViewTeam('${t.code}')"><div style="display:flex;align-items:center;justify-content:center;width:18px">${flagHTML}</div>${esc(t.name)}</div>`;
+  }).join('');
+  
+  const el = document.getElementById('team-chips');
+  if (el) el.innerHTML = chips;
+}
+
+function setViewTeam(code) {
+  if (S.viewingTeam === code) {
+    S.viewingTeam = null;
+  } else {
+    S.viewingTeam = code;
+  }
+  renderGames(); 
+}
+
+ // ================================================================
 //  RENDER GAMES (com seções colapsáveis)
 // ================================================================
 function renderGames() {
   renderUserChips();
+  renderTeamChips();
   
   const today = new Date();
   today.setHours(0,0,0,0);
@@ -2812,6 +2892,11 @@ function renderGames() {
   const upcoming = [];
 
   GAMES.forEach(game => {
+    // Se houver filtro de equipe, ignorar os jogos onde a equipe não participa
+    if (S.viewingTeam && game.hCode !== S.viewingTeam && game.aCode !== S.viewingTeam) {
+      return;
+    }
+
     const r = S.results[game.id] || {};
     const isFinishedStrict = r.status === 'finished';
     const gameDate = new Date(game.date);
@@ -2834,16 +2919,20 @@ function renderGames() {
   todayGames.sort(sortByDate);
   upcoming.sort(sortByDate);
 
+  // Quando o filtro de país está ativo, forçamos os grupos a ficarem expandidos
+  const forceExpand = S.viewingTeam !== null && S.viewingTeam !== undefined;
+
   const sections = [
-    { id: 'finalizados', label: 'Jogos Finalizados', games: finished, defaultCollapsed: true },
+    { id: 'finalizados', label: 'Jogos Finalizados', games: finished, defaultCollapsed: forceExpand ? false : true },
     { id: 'hoje', label: 'Jogos de Hoje', games: todayGames, defaultCollapsed: false },
-    { id: 'proximos', label: 'Próximos Jogos', games: upcoming, defaultCollapsed: true }
+    { id: 'proximos', label: 'Próximos Jogos', games: upcoming, defaultCollapsed: forceExpand ? false : true }
   ];
 
   let html = '';
   sections.forEach(section => {
     const collapsedClass = section.defaultCollapsed ? ' is-collapsed' : '';
     const gamesHtml = section.games.map(game => renderGameCard(game)).join('');
+    
     html += `
       <div class="games-section${collapsedClass}" id="games-section-${section.id}">
         <div class="games-section-header" onclick="toggleGamesSection('${section.id}')">
@@ -2858,7 +2947,7 @@ function renderGames() {
   });
 
   document.getElementById('games-content').innerHTML = html;
-}
+} 
 
 function toggleGamesSection(id) {
   const section = document.getElementById('games-section-' + id);
