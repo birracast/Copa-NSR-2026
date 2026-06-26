@@ -4854,6 +4854,22 @@ function renderPibetCard(pbt) {
      return `<div class="pibet-avatar" title="${esc(u.name || email)}">${u.avatar ? `<img src="${u.avatar}">` : '🧑'}</div>`;
   }).join('');
 
+  // Botão de Compartilhar no WhatsApp para apostas ativas/pendentes
+  let shareHtml = '';
+  if (pbt.status === 'pending' || pbt.status === 'active') {
+    const appBaseUrl = window.location.href.split('?')[0];
+    const shareLink = appBaseUrl + '?pibet=' + pbt.id;
+    const typeLabelShare = target ? `desafiou *( ${target.name || pbt.target} )*` : 'lançou uma *APOSTA LIVRE*';
+    const wText = `*PIRATABET: ${creator.name || pbt.creator}* ${typeLabelShare} valendo *${pbt.wager} Piratecas* 🏴‍☠️\n\n📌 _"${pbt.desc}"_\n\n🔗 *Acesse direto aqui:*\n${shareLink}`;
+    const wpUrl = `https://wa.me/?text=${encodeURIComponent(wText)}`;
+    
+    shareHtml = `<div style="margin-top:12px;">
+      <button class="help-share-btn" style="width:100%; justify-content:center; padding:10px; font-size:14px; border-radius:10px;" onclick="window.open('${wpUrl}', '_blank')">
+        📲 Compartilhar no WhatsApp
+      </button>
+    </div>`;
+  }
+
   return `<div class="game-card" data-pibet-id="${pbt.id}" style="margin-bottom:14px; padding:20px;">
     <div class="gcard-top" style="margin-bottom:14px">
       <div style="font-size:11px;color:var(--muted)">Lançada em ${formatDateTime(pbt.createdAt)}</div>
@@ -4881,6 +4897,7 @@ function renderPibetCard(pbt) {
       🏴‍☠️ Aposta Base: ${pbt.wager} Piratecas
     </div>
     ${actionHtml ? `<div>${actionHtml}</div>` : ''}
+    ${shareHtml}
   </div>`;
 }
   
