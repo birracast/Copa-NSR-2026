@@ -2512,10 +2512,10 @@ function showSaving(v) { document.getElementById('saving-indicator').classList.t
 // ================================================================
 //  SYNC TIMER
 // ================================================================
-let syncTimer, syncSecs = 300;
+let syncTimer, syncSecs = 60;
 function startSyncTimer() {
   if (syncTimer) clearInterval(syncTimer);
-  syncSecs = 300;
+  syncSecs = 60;
   syncTimer = setInterval(() => {
     const el = document.getElementById('sync-countdown');
     if (S.testMode) {
@@ -2524,13 +2524,12 @@ function startSyncTimer() {
     }
     syncSecs--;
     if (el) { const m=Math.floor(syncSecs/60).toString().padStart(2,'0'); const s=(syncSecs%60).toString().padStart(2,'0'); el.textContent = m+':'+s; }
-    if (syncSecs <= 0) { forceSyncAll(); syncSecs = 300; }
+    if (syncSecs <= 0) { forceSyncAll(); syncSecs = 60; }
   }, 1000);
 }
 function resetSyncTimer() {
-  if (!S.testMode) syncSecs = 300;
+  if (!S.testMode) syncSecs = 60;
 }
-
 // ================================================================
 //  GAME LOCK
 // ================================================================
@@ -4783,11 +4782,8 @@ function renderPibetCard(pbt) {
         const lado = isDoubter ? 'CONTRA (DUVIDADOR)' : 'A FAVOR (CONCORDANDO)';
         actionHtml += `<div style="margin-top:12px;color:var(--green);font-size:12px;font-weight:bold;text-align:center;">✅ Você já entrou: ${lado}!</div>`;
       } else {
-        actionHtml += `<div style="display:flex; gap:10px; margin-top:12px;">`;
-        // Só libera o botão de ir a favor se já tiver alguém duvidando
-        if (doubters.length > 0) {
-            actionHtml += `<button class="btn-black" style="flex:1;" onclick="joinPibet('${pbt.id}', 'supporter')">CONCORDO</button>`;
-        }
+       actionHtml += `<div style="display:flex; gap:10px; margin-top:12px;">`;
+        actionHtml += `<button class="btn-black" style="flex:1;" onclick="joinPibet('${pbt.id}', 'supporter')">CONCORDO</button>`;
         actionHtml += `<button class="btn-black" style="flex:1;" onclick="joinPibet('${pbt.id}', 'doubter')">DUVIDO!</button>
         </div>`;
       }
@@ -4844,15 +4840,21 @@ function renderPibetCard(pbt) {
   
 async function cancelPibet(id) {
   if (!confirm('Tem certeza que deseja cancelar esta aposta? Esta ação não pode ser desfeita.')) return;
-  toast('Cancelando aposta...','info');
+  
+  // Atualização ultra-rápida (otimista)
+  const pbt = S.pibets.find(p => p.id === id);
+  if (pbt) pbt.status = 'canceled';
+  renderPibets();
+  
+  toast('Cancelando aposta no servidor...','info');
   try {
     const res = await gsCall({ action:'cancelPibet', callerEmail:S.me, id });
     if (res.ok) {
       toast('✅ Aposta cancelada com sucesso!','ok');
-      await forceSyncAll();
-      navTo('pibet');
+      gsLoadAll().then(data => { if(data) mergeRemoteData(data); renderPibets(); });
     } else {
       toast(res.error || 'Erro ao cancelar aposta.','err');
+      gsLoadAll().then(data => { if(data) mergeRemoteData(data); renderPibets(); });
     }
   } catch(e) {
     toast('Erro de conexão.','err');
@@ -4891,9 +4893,13 @@ async function submitPibet() {
 
   try {
     const res = await gsCall({ action:'createPibet', email:S.me, target, wager, desc });
-    if (res.ok) {
-      await forceSyncAll();
-      navTo('pibet');
+      if (res.ok) {
+        // Atualização ultra-rápida (otimista)
+        S.pibets.unshift({ id: res.id || 'temp', creator: S.me, target, wager, desc, status: 'pending', doubters: [], supporters: [], createdAt: new Date().toISOString() });
+        renderPibets();
+        navTo('pibet');
+        
+        gsLoadAll().then(data => { if(data) mergeRemoteData(data); });
       
       const typeLabel = target ? `desafiou *( ${S.users[target]?.name || target} )*` : 'lançou uma *APOSTA LIVRE*';
       const wText = `*PIRATABET: ${esc(S.users[S.me].name)}* ${typeLabel} valendo *${wager} Piratecas* 🏴‍☠️\n\n📌 _"${esc(desc)}"_\n\n⚠️ Adm, aprova lá no site para começar a valer!`;
@@ -4938,33 +4944,45 @@ window.previewResolvePibet = function(pbtId, winner, btnElement) {
 }
 
 async function joinPibet(id, side = 'doubter') {
-  toast('Entrando na aposta...','info');
+  // Atualização ultra-rápida (otimista)
+  const pbt = S.pibets.find(p => p.id === id);
+  if (pbt) {
+    if (side === 'supporter' && !pbt.supporters.includes(S.me)) pbt.supporters.push(S.me);
+    else if (side === 'doubter' && !pbt.doubters.includes(S.me)) pbt.doubters.push(S.me);
+    renderPibets();
+  }
+  
+  toast('Registrando aposta no servidor...','info');
   try {
     const res = await gsCall({ action:'joinPibet', email:S.me, id, side });
     if (res.ok) {
       toast('Você entrou na aposta! ⚔️','ok');
-      await forceSyncAll();
-      navTo('pibet');
+      gsLoadAll().then(data => { if(data) mergeRemoteData(data); renderPibets(); });
     } else {
       toast(res.error || 'Erro ao entrar na aposta','err');
+      gsLoadAll().then(data => { if(data) mergeRemoteData(data); renderPibets(); }); // Reverte erro local
     }
   } catch(e) { toast('Erro de conexão','err'); }
 }
 
 async function adminResolvePibet(id, status) {
-  const text = status==='active' ? 'APROVAR aposta?' : status==='rejected' ? 'REJEITAR aposta?' : status==='creator_won' ? 'Dar a vitória para o CRIADOR da aposta?' : 'Dar a vitória para os DUVIDADORES/DESAFIADO?';
+  const text = status==='active' ? 'APROVAR aposta?' : status==='rejected' ? 'REJEITAR aposta?' : status==='creator_won' ? 'Dar a vitória para o LADO ESQUERDO (A Favor)?' : 'Dar a vitória para o LADO DIREITO (Duvidadores)?';
   if (!confirm(`Confirma: ${text}`)) return;
-  toast('Atualizando aposta...','info');
+  
+  // Atualização ultra-rápida (otimista)
+  const pbt = S.pibets.find(p => p.id === id);
+  if (pbt) pbt.status = status;
+  renderPibets();
+  
+  toast('Atualizando aposta no servidor...','info');
   try {
     const res = await gsCall({ action:'adminResolvePibet', callerEmail:S.me, id, status });
     if (res.ok) {
       toast('Aposta resolvida/atualizada! ✅','ok');
-      await forceSyncAll();
-      navTo('pibet');
-      renderRanking(); 
-      renderStats();
+      gsLoadAll().then(data => { if(data) { mergeRemoteData(data); renderPibets(); renderRanking(); renderStats(); } });
     } else {
       toast(res.error || 'Erro ao atualizar','err');
+      gsLoadAll().then(data => { if(data) { mergeRemoteData(data); renderPibets(); } });
     }
   } catch(e) { toast('Erro de conexão','err'); }
 }
