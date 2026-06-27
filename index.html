@@ -2071,25 +2071,20 @@ async function boot() {
     authMsg('Aviso: O administrador ainda não configurou a URL.', false); return;
   }
   if (S.me) {
-    // 1. ENTRADA IMEDIATA: Esconde loading e carrega a tela usando o Cache local instantaneamente!
-    hideLoading(); 
-    enterApp();
-    
-    // 2. CARREGAMENTO FANTASMA: Busca atualizações novas por trás sem travar a navegação
+    // Carrega tudo antes de liberar o botão de entrada
     try {
       await loadTournamentData(false);
       await syncGlobalSettings();
       const data = await gsLoadAll();
       if (data && data.users) {
         mergeRemoteData(data);
-        rerenderCurrentPage(); // Atualiza a tela discretamente com dados fresquinhos
-        
-        // Garante que o foco se mantenha na aposta da Piratabet caso os dados tenham mudado
-        const urlParams = new URLSearchParams(window.location.search);
-        const pibetId = urlParams.get('pibet');
-        if (pibetId) setTimeout(() => focusPibet(pibetId), 100);
       }
     } catch(e) {}
+    enterApp();
+    hideLoading(); // Mostra o botão "ENTRAR NO BOLÃO" só após tudo carregado
+    const urlParams = new URLSearchParams(window.location.search);
+    const pibetId = urlParams.get('pibet');
+    if (pibetId) setTimeout(() => focusPibet(pibetId), 100);
   } else {
     hideLoading(); showAuth();
   }
