@@ -668,17 +668,20 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
   box-shadow: 0 4px 12px rgba(201, 168, 76, 0.15);
 }
 
-/* ===== RANKING DUPLO ===== */
-.rank-dual { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+/* ===== RANKING TRIPLO ===== */
+.rank-dual { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+@media (max-width: 900px) { .rank-dual { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .rank-dual { grid-template-columns: 1fr; } }
 .rank-col-header {
-  font-family: var(--font-display); font-size: 18px; font-weight: 800;
+  font-family: var(--font-display); font-size: 16px; font-weight: 800;
   letter-spacing: 1px; text-transform: uppercase;
-  padding: 12px 18px; border-radius: 10px 10px 0 0;
-  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; border-radius: 10px 10px 0 0;
+  display: flex; align-items: center; gap: 8px;
   margin-bottom: 0;
 }
 .rank-col-header.pontos  { background: linear-gradient(135deg, rgba(201,168,76,0.2), rgba(201,168,76,0.05)); border: 1px solid rgba(201,168,76,0.3); color: var(--gold); border-bottom: none; }
 .rank-col-header.piratecas { background: linear-gradient(135deg, rgba(230,29,37,0.15), rgba(230,29,37,0.03)); border: 1px solid rgba(230,29,37,0.3); color: #ff7b7b; border-bottom: none; }
+.rank-col-header.piratecas-mm { background: linear-gradient(135deg, rgba(42,57,141,0.18), rgba(42,57,141,0.04)); border: 1px solid rgba(42,57,141,0.4); color: #7b8fe8; border-bottom: none; }
 .rank-col-body { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--border); border-radius: 0 0 10px 10px; padding: 10px; background: var(--dark2); }
 .rank-row-mini {
   background: var(--dark3); border: 1px solid var(--border);
@@ -1335,8 +1338,12 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
         <div class="rank-col-body" id="rank-table-pontos"></div>
       </div>
       <div>
-        <div class="rank-col-header piratecas">🏴‍☠️ Ranking de Piratecas</div>
+        <div class="rank-col-header piratecas">🏴‍☠️ Piratecas - Fase de Grupos</div>
         <div class="rank-col-body" id="rank-table-piratecas"></div>
+      </div>
+      <div>
+        <div class="rank-col-header piratecas-mm">⚔️ Piratecas - Mata Mata</div>
+        <div class="rank-col-body" id="rank-table-piratecas-mm"></div>
       </div>
     </div>
   </div>
@@ -1706,6 +1713,18 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
           <div class="fgroup"><label class="flabel">Time do coração</label><input type="text" id="pe-team" class="finput" placeholder="ex: Brasil"></div>
           <div class="fgroup"><label class="flabel">Frase / Apelido</label><input type="text" id="pe-motto" class="finput" placeholder="Vai Brasil! 🇧🇷"></div>
           <button class="btn-main" onclick="saveProfileEdits()">💾 SALVAR</button>
+        </div>
+        <div class="set-card" style="margin-top:16px">
+          <h3>🏆 Palpites Finais</h3>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Seus palpites para os desfechos do torneio. Acertar dá pontos extras!</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div class="fgroup" style="margin-bottom:0"><label class="flabel">🥇 Campeão <span style="color:var(--gold);font-size:10px">(+15 pts)</span></label><select id="pe-champion" class="finput"></select></div>
+            <div class="fgroup" style="margin-bottom:0"><label class="flabel">🥈 Vice-Campeão <span style="color:var(--muted);font-size:10px">(+10 pts)</span></label><select id="pe-runner-up" class="finput"></select></div>
+          </div>
+          <div class="fgroup"><label class="flabel">⚽ Artilheiro <span style="color:var(--muted);font-size:10px">(+10 pts)</span></label><input type="text" id="pe-top-scorer" class="finput" placeholder="Nome do jogador"></div>
+          <div class="fgroup"><label class="flabel">⚽ Vice-Artilheiro <span style="color:var(--muted);font-size:10px">(+5 pts)</span></label><input type="text" id="pe-runner-scorer" class="finput" placeholder="Nome do jogador"></div>
+          <div class="fgroup"><label class="flabel">🎯 Garçom <span style="color:var(--muted);font-size:10px">(+5 pts)</span></label><input type="text" id="pe-assist-king" class="finput" placeholder="Nome do jogador"></div>
+          <button class="btn-main" onclick="saveProfileEdits()">💾 SALVAR PALPITES</button>
         </div>
         <div class="set-card" style="margin-top:16px">
           <h3>📊 Histórico de Pontos</h3>
@@ -2488,7 +2507,12 @@ async function gsSaveUser(user) {
       name:user.name, 
       team:user.team, 
       motto:user.motto, 
-      avatar:user.avatar
+      avatar:user.avatar,
+      champion:    user.champion     || '',
+      runnerUp:    user.runnerUp     || '',
+      topScorer:   user.topScorer    || '',
+      runnerScorer:user.runnerScorer || '',
+      assistKing:  user.assistKing   || ''
     }); 
   } catch(e) {}
 }
@@ -2515,7 +2539,12 @@ function mergeRemoteData(data) {
         email, name: row.name || existing.name || email, team: row.team || existing.team || '',
         motto: row.motto || existing.motto || '', avatar: row.avatar || existing.avatar || '',
         isAdmin: row.isAdmin || existing.isAdmin || false, mustChangePass: row.mustChangePass || false,
-        since: row.since || existing.since || '', bets: { ...existing.bets, ...bets }
+        since: row.since || existing.since || '', bets: { ...existing.bets, ...bets },
+        champion:     row.champion     || existing.champion     || '',
+        runnerUp:     row.runnerUp     || existing.runnerUp     || '',
+        topScorer:    row.topScorer    || existing.topScorer    || '',
+        runnerScorer: row.runnerScorer || existing.runnerScorer || '',
+        assistKing:   row.assistKing   || existing.assistKing   || ''
       };
       if (email === S.me) saveSession(S.users[email]);
     });
@@ -2812,6 +2841,139 @@ function calcPiratecasDetailed(email) {
 function calcUserPiratecas(email) {
   return calcPiratecasDetailed(email).total;
 }
+
+// ================================================================
+//  PIRATECAS FILTRADAS POR FASE (Grupos ou Mata Mata)
+// ================================================================
+// filter: 'grupos'  → rodadas 1-3, apostas e pibets de jogos até id 72
+// filter: 'matamata' → rodadas 4-8, apostas e pibets de jogos id > 72
+function calcPiratecasFiltered(email, filter) {
+  const isGrupos = filter === 'grupos';
+  const gameInPhase = (gId) => isGrupos ? getRodada(gId) <= 3 : getRodada(gId) > 3;
+
+  let balance = 100;
+  const u = S.users[email];
+  if (!u) return { total: balance };
+
+  // ── 1. Pé quente / frio por rodada (apenas rodadas da fase) ──
+  const rodadas = {};
+  GAMES.forEach(g => {
+    if (!gameInPhase(g.id)) return;
+    const r = S.results[g.id];
+    if (r && (r.status === 'finished' || r.status === 'live') && r.h !== null) {
+      const rodada = getRodada(g.id);
+      if (!rodadas[rodada]) rodadas[rodada] = { users: {} };
+      Object.values(S.users).forEach(user => {
+        if (!rodadas[rodada].users[user.email]) rodadas[rodada].users[user.email] = 0;
+        rodadas[rodada].users[user.email] += calcGamePoints(user, g.id);
+      });
+    }
+  });
+
+  Object.keys(rodadas).forEach(rodada => {
+    const rData = rodadas[rodada];
+    const ptsArr = Object.values(rData.users).sort((a, b) => a - b);
+    const maxPts = ptsArr[ptsArr.length - 1];
+    const minPts = ptsArr[0];
+    const medPts = ptsArr.length % 2 === 0
+      ? (ptsArr[ptsArr.length / 2 - 1] + ptsArr[ptsArr.length / 2]) / 2
+      : ptsArr[Math.floor(ptsArr.length / 2)];
+    if (maxPts !== minPts) {
+      const myPts = rData.users[email] ?? 0;
+      let diff = 0;
+      if      (myPts === maxPts)                                       diff =  5;
+      else if (myPts === minPts)                                       diff = -5;
+      else if (myPts === medPts || (myPts < medPts && myPts > minPts)) diff = -1;
+      balance += diff;
+    }
+  });
+
+  // ── 2. Apostas Bosta/Mestre (apenas jogos da fase) ───────────
+  Object.keys(S.apostas || {}).forEach(key => {
+    const parts = key.split('_');
+    if (parts[0] !== 'aposta') return;
+    const gId = parseInt(parts[1]);
+    if (!gameInPhase(gId)) return;
+    const targetNorm = parts.slice(2).join('_');
+    const votersObj = S.apostas[key];
+    const r = S.results[gId];
+    if (!r || (r.status !== 'finished' && r.status !== 'live') || r.h === null) return;
+    const realTargetEmail = Object.keys(S.users).find(usr => normEmail(usr) === targetNorm) || targetNorm;
+    const targetUser = S.users[realTargetEmail];
+    const targetPts  = calcGamePoints(targetUser, gId);
+    const targetHit  = targetPts > 0;
+    const targetBet  = targetUser?.bets?.[gId];
+    const targetExact = targetHit && targetBet && (targetBet.h === r.h && targetBet.a === r.a);
+
+    if (votersObj[email]) {
+      const type = votersObj[email];
+      let diff = 0;
+      if      (type === 'bosta')  diff = targetHit ? -2 : 2;
+      else if (type === 'mestre') diff = targetHit ?  2 : -2;
+      else if (type === 'alvo')   diff = targetExact ? -15 : 5;
+      balance += diff;
+    }
+    if (normEmail(email) === targetNorm) {
+      Object.entries(votersObj).forEach(([, voteType]) => {
+        if (voteType === 'bosta'  && targetHit)   balance += 2;
+        if (voteType === 'alvo'   && targetExact)  balance += 15;
+      });
+    }
+  });
+
+  // ── 3. Pibets vinculados à fase ───────────────────────────────
+  // Pibet com gameId → classifica pelo jogo; sem gameId → vai para Mata Mata
+  (S.pibets || []).forEach(pbt => {
+    if (pbt.status !== 'creator_won' && pbt.status !== 'target_won') return;
+    const pibetGId = pbt.gameId ? parseInt(pbt.gameId) : null;
+    // Pibets com gameId → fase pelo jogo; sem gameId → pela data de criação (corte: 28/06/2026)
+    const MATA_MATA_CUTOFF = '2026-06-28';
+    const pibetIsGrupos = pibetGId
+      ? getRodada(pibetGId) <= 3
+      : (pbt.createdAt ? pbt.createdAt.slice(0, 10) < MATA_MATA_CUTOFF : false);
+    if (isGrupos && !pibetIsGrupos) return;
+    if (!isGrupos && pibetIsGrupos) return;
+
+    const W = pbt.wager;
+    const isCreator  = pbt.creator === email;
+    const doubters   = pbt.doubters   || [];
+    const supporters = pbt.supporters || [];
+    const isTarget   = pbt.target === email;
+    const isFavor    = isCreator || supporters.includes(email);
+    const isContra   = doubters.includes(email);
+    const numFavor   = 1 + supporters.length;
+    const numContra  = doubters.length;
+    let diff = 0;
+
+    if (pbt.target && pbt.target !== '') {
+      if (doubters.includes(pbt.target)) {
+        if (pbt.status === 'creator_won') {
+          if (isCreator) diff =  W;
+          if (isTarget)  diff = -W;
+        } else {
+          if (isCreator) diff = -W;
+          if (isTarget)  diff =  W;
+        }
+      }
+    } else {
+      if (numContra > 0) {
+        if (pbt.status === 'creator_won') {
+          if (isFavor)  diff =  Math.floor(W / numFavor);
+          if (isContra) diff = -W;
+        } else {
+          if (isFavor)  diff = -W;
+          if (isContra) diff =  Math.floor(W / numContra);
+        }
+      }
+    }
+    balance += diff;
+  });
+
+  return { total: Math.round(balance) };
+}
+
+function calcUserPiratecasGrupos(email)  { return calcPiratecasFiltered(email, 'grupos').total; }
+function calcUserPiratecasMataMata(email){ return calcPiratecasFiltered(email, 'matamata').total; }
 
 function calcPoints(user) {
   const s = S.settings; let total=0, exact=0, res=0, streak=0, maxStreak=0;
@@ -3581,6 +3743,18 @@ function calcRankPiratecas() {
     .map(u => ({...u, pts: calcPoints(u)}))
     .sort((a,b) => b.pts.piratecas - a.pts.piratecas);
 }
+function calcRankPiratecasGrupos() {
+  return Object.values(S.users)
+    .filter(u => !isUserHidden(u.email))
+    .map(u => ({...u, piratecasGrupos: calcUserPiratecasGrupos(u.email)}))
+    .sort((a,b) => b.piratecasGrupos - a.piratecasGrupos);
+}
+function calcRankPiratecasMataMata() {
+  return Object.values(S.users)
+    .filter(u => !isUserHidden(u.email))
+    .map(u => ({...u, piratecasMM: calcUserPiratecasMataMata(u.email)}))
+    .sort((a,b) => b.piratecasMM - a.piratecasMM);
+}
 function renderRankRow(u, pos) {
   const nc = pos===1?'n1':pos===2?'n2':pos===3?'n3':'';
   const rc = u.email===S.me?'me':pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
@@ -3618,14 +3792,54 @@ function renderRankRowPiratecas(u, pos) {
     </div>
   </div>`;
 }
+function renderRankRowPiratecasGrupos(u, pos) {
+  const nc = pos===1?'n1':pos===2?'n2':pos===3?'n3':'';
+  const rc = u.email===S.me?'me':pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
+  const medal = pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
+  const youTag = u.email===S.me ? '<span style="font-size:9px;background:rgba(201,168,76,0.2);color:var(--gold);padding:1px 5px;border-radius:8px;margin-left:3px">você</span>' : '';
+  return `<div class="rank-row-mini ${rc}" style="cursor:pointer;" onclick="showHistoryModal('${u.email}', 'piratecas')">
+    <div class="rank-mini-num ${nc}">${medal}</div>
+    <div class="rank-mini-av">${u.avatar?`<img src="${u.avatar}">`:'🧑'}</div>
+    <div class="rank-mini-info">
+      <div class="rank-mini-name">${esc(u.name)}${youTag}</div>
+      <div class="rank-mini-sub">⚽ ${esc(u.team||'—')}</div>
+    </div>
+    <div class="rank-mini-pts">
+      <div class="rank-mini-pts-val red">${u.piratecasGrupos}</div>
+      <div class="rank-mini-pts-lbl">piratecas 🏴‍☠️</div>
+    </div>
+  </div>`;
+}
+function renderRankRowPiratecasMM(u, pos) {
+  const nc = pos===1?'n1':pos===2?'n2':pos===3?'n3':'';
+  const rc = u.email===S.me?'me':pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
+  const medal = pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
+  const youTag = u.email===S.me ? '<span style="font-size:9px;background:rgba(201,168,76,0.2);color:var(--gold);padding:1px 5px;border-radius:8px;margin-left:3px">você</span>' : '';
+  return `<div class="rank-row-mini ${rc}" style="cursor:pointer;" onclick="showHistoryModal('${u.email}', 'piratecas')">
+    <div class="rank-mini-num ${nc}">${medal}</div>
+    <div class="rank-mini-av">${u.avatar?`<img src="${u.avatar}">`:'🧑'}</div>
+    <div class="rank-mini-info">
+      <div class="rank-mini-name">${esc(u.name)}${youTag}</div>
+      <div class="rank-mini-sub">⚽ ${esc(u.team||'—')}</div>
+    </div>
+    <div class="rank-mini-pts">
+      <div class="rank-mini-pts-val" style="color:#7b8fe8">${u.piratecasMM}</div>
+      <div class="rank-mini-pts-lbl">piratecas ⚔️</div>
+    </div>
+  </div>`;
+}
 function renderRanking() {
-  const ranked = calcRankAll();
-  const rankedP = calcRankPiratecas();
+  const ranked        = calcRankAll();
+  const rankedGrupos  = calcRankPiratecasGrupos();
+  const rankedMM      = calcRankPiratecasMataMata();
   document.getElementById('rank-count-pill').textContent = `${ranked.length} participantes`;
-  const htmlPontos = ranked.map((u,i) => renderRankRow(u, i+1)).join('') || '<div class="hl-empty">Nenhum participante ainda.</div>';
-  const htmlPiratecas = rankedP.map((u,i) => renderRankRowPiratecas(u, i+1)).join('') || '<div class="hl-empty">Nenhum participante ainda.</div>';
-  document.getElementById('rank-table-pontos').innerHTML = htmlPontos;
-  document.getElementById('rank-table-piratecas').innerHTML = htmlPiratecas;
+  const empty = '<div class="hl-empty">Nenhum participante ainda.</div>';
+  document.getElementById('rank-table-pontos').innerHTML =
+    ranked.map((u,i) => renderRankRow(u, i+1)).join('') || empty;
+  document.getElementById('rank-table-piratecas').innerHTML =
+    rankedGrupos.map((u,i) => renderRankRowPiratecasGrupos(u, i+1)).join('') || empty;
+  document.getElementById('rank-table-piratecas-mm').innerHTML =
+    rankedMM.map((u,i) => renderRankRowPiratecasMM(u, i+1)).join('') || empty;
 }
 
 // ================================================================
@@ -4202,6 +4416,29 @@ function renderProfile() {
   document.getElementById('pe-name').value  = u.name;
   document.getElementById('pe-team').value  = u.team||'';
   document.getElementById('pe-motto').value = u.motto||'';
+
+  // Palpites finais — campos de texto
+  document.getElementById('pe-top-scorer').value   = u.topScorer   || '';
+  document.getElementById('pe-runner-scorer').value = u.runnerScorer || '';
+  document.getElementById('pe-assist-king').value  = u.assistKing  || '';
+
+  // Selects de países — constrói a partir dos times da fase de grupos
+  const teamsMap = new Map();
+  GAMES.forEach(g => {
+    const valid = code => code && code !== 'CASA' && code !== 'FORA' &&
+      !['R32','R16','QF','SF','FIN','3P'].some(p => code.includes(p));
+    if (valid(g.hCode)) teamsMap.set(g.hCode, { code: g.hCode, name: g.hName || g.hCode });
+    if (valid(g.aCode)) teamsMap.set(g.aCode, { code: g.aCode, name: g.aName || g.aCode });
+  });
+  const teamOpts = ['<option value="">-- Selecione --</option>',
+    ...[...teamsMap.values()].sort((a,b) => a.name.localeCompare(b.name))
+      .map(t => `<option value="${esc(t.code)}">${esc(t.name)}</option>`)
+  ].join('');
+  ['pe-champion','pe-runner-up'].forEach(id => {
+    document.getElementById(id).innerHTML = teamOpts;
+  });
+  document.getElementById('pe-champion').value  = u.champion  || '';
+  document.getElementById('pe-runner-up').value = u.runnerUp  || '';
   const history = GAMES.filter(g=>(S.results[g.id]||{}).status==='finished'&&(u.bets||{})[g.id]).map(g => {
     const r=S.results[g.id]; const b=u.bets[g.id];
     let label='❌ Errou', cls='var(--red)', p=0;
@@ -4246,9 +4483,14 @@ async function handleProfileAvatar(inp) {
 
 function saveProfileEdits() {
   const u = S.users[S.me];
-  u.name  = document.getElementById('pe-name').value.trim()  || u.name;
-  u.team  = document.getElementById('pe-team').value.trim();
-  u.motto = document.getElementById('pe-motto').value.trim();
+  u.name        = document.getElementById('pe-name').value.trim()          || u.name;
+  u.team        = document.getElementById('pe-team').value.trim();
+  u.motto       = document.getElementById('pe-motto').value.trim();
+  u.champion    = document.getElementById('pe-champion').value.trim();
+  u.runnerUp    = document.getElementById('pe-runner-up').value.trim();
+  u.topScorer   = document.getElementById('pe-top-scorer').value.trim();
+  u.runnerScorer= document.getElementById('pe-runner-scorer').value.trim();
+  u.assistKing  = document.getElementById('pe-assist-king').value.trim();
   saveSession(u); persistSettings(); refreshNavUser(); gsSaveUser(u); toast('Perfil salvo! ✅','ok'); renderProfile();
 }
 
