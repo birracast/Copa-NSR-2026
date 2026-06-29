@@ -3448,17 +3448,25 @@ function showHistoryModal(email, type) {
   const u = S.users[email];
   if (!u) return;
   
-  const isPiratecas = type === 'piratecas';
-  document.getElementById('hm-icon').textContent = isPiratecas ? '🏴‍☠️' : '🏆';
-  document.getElementById('hm-title').innerHTML = isPiratecas ? 'Histórico de Piratecas' : 'Histórico de Pontos';
+  const isPiratecas = type.startsWith('piratecas');
+  const isMataMata = type === 'piratecas_mm';
+  const isGrupos = type === 'piratecas_grupos';
+  
+  document.getElementById('hm-icon').textContent = isPiratecas ? (isMataMata ? '⚔️' : '🏴‍☠️') : '🏆';
+  
+  let titleHtml = 'Histórico de Pontos';
+  if (isGrupos) titleHtml = 'Histórico de Piratecas <br><span style="font-size:14px;color:var(--muted)">Fase de Grupos</span>';
+  if (isMataMata) titleHtml = 'Histórico de Piratecas <br><span style="font-size:14px;color:var(--muted)">Mata Mata</span>';
+  document.getElementById('hm-title').innerHTML = titleHtml;
+  
   document.getElementById('hm-subtitle').innerHTML = `<strong>${esc(u.name)}</strong>${u.team?`<br><span style="font-size:12px;color:var(--muted)">⚽ ${esc(u.team)}</span>`:''}`;
   const hmAv = document.getElementById('hm-avatar');
   if (u.avatar) {
     hmAv.innerHTML = `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
-    hmAv.style.border = `3px solid ${isPiratecas ? 'var(--red)' : 'var(--gold)'}`;
+    hmAv.style.border = `3px solid ${isPiratecas ? (isMataMata ? '#7b8fe8' : 'var(--red)') : 'var(--gold)'}`;
   } else {
     hmAv.innerHTML = '🧑';
-    hmAv.style.border = `3px solid ${isPiratecas ? 'var(--red)' : 'var(--gold)'}`;
+    hmAv.style.border = `3px solid ${isPiratecas ? (isMataMata ? '#7b8fe8' : 'var(--red)') : 'var(--gold)'}`;
   }
   
   let html = '';
@@ -3500,9 +3508,9 @@ function showHistoryModal(email, type) {
     html += `<div style="padding:8px;text-align:right;font-weight:bold;color:var(--gold);">Total: ${ptsObj.total} pts</div>`;
 
   } else {
-    // ── PIRATECAS: usa calcPiratecasDetailed para garantir que
-    //    o extrato bate EXATAMENTE com o número do ranking ──────
-    const detailed = calcPiratecasDetailed(email);
+    // ── PIRATECAS: usa calcPiratecasFiltered para garantir que
+    //    o extrato bate EXATAMENTE com a fase correspondente ──────
+    const detailed = isGrupos ? calcPiratecasFiltered(email, 'grupos') : calcPiratecasFiltered(email, 'matamata');
 
     html += `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
       <span>Saldo Inicial</span><span style="color:var(--gold);font-weight:bold;">100</span>
@@ -3593,8 +3601,10 @@ function showHistoryModal(email, type) {
       });
     }
 
-    html += `<div style="padding:10px 8px;text-align:right;font-weight:bold;font-size:15px;color:#ff7b7b;border-top:2px solid var(--border);margin-top:4px;">
-      Total: ${detailed.total} 🏴‍☠️
+    const totalColor = isMataMata ? '#7b8fe8' : '#ff7b7b';
+    const totalIcon = isMataMata ? '⚔️' : '🏴‍☠️';
+    html += `<div style="padding:10px 8px;text-align:right;font-weight:bold;font-size:15px;color:${totalColor};border-top:2px solid var(--border);margin-top:4px;">
+      Total: ${detailed.total} ${totalIcon}
     </div>`;
   }
     
@@ -3811,30 +3821,12 @@ function renderRankRow(u, pos) {
   </div>`;
 }
 
-function renderRankRowPiratecas(u, pos) {
-  const nc = pos===1?'n1':pos===2?'n2':pos===3?'n3':'';
-  const rc = u.email===S.me?'me':pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
-  const medal = pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
-  const youTag = u.email===S.me ? '<span style="font-size:9px;background:rgba(201,168,76,0.2);color:var(--gold);padding:1px 5px;border-radius:8px;margin-left:3px">você</span>' : '';
-  return `<div class="rank-row-mini ${rc}" style="cursor:pointer;" onclick="showHistoryModal('${u.email}', 'piratecas')">
-    <div class="rank-mini-num ${nc}">${medal}</div>
-    <div class="rank-mini-av">${u.avatar?`<img src="${u.avatar}">`:'🧑'}</div>
-    <div class="rank-mini-info">
-      <div class="rank-mini-name">${esc(u.name)}${youTag}</div>
-      <div class="rank-mini-sub">⚽ ${esc(u.team||'—')}</div>
-    </div>
-    <div class="rank-mini-pts">
-      <div class="rank-mini-pts-val red">${u.pts.piratecas}</div>
-      <div class="rank-mini-pts-lbl">piratecas 🏴‍☠️</div>
-    </div>
-  </div>`;
-}
 function renderRankRowPiratecasGrupos(u, pos) {
   const nc = pos===1?'n1':pos===2?'n2':pos===3?'n3':'';
   const rc = u.email===S.me?'me':pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
   const medal = pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
   const youTag = u.email===S.me ? '<span style="font-size:9px;background:rgba(201,168,76,0.2);color:var(--gold);padding:1px 5px;border-radius:8px;margin-left:3px">você</span>' : '';
-  return `<div class="rank-row-mini ${rc}" style="cursor:pointer;" onclick="showHistoryModal('${u.email}', 'piratecas')">
+  return `<div class="rank-row-mini ${rc}" style="cursor:pointer;" onclick="showHistoryModal('${u.email}', 'piratecas_grupos')">
     <div class="rank-mini-num ${nc}">${medal}</div>
     <div class="rank-mini-av">${u.avatar?`<img src="${u.avatar}">`:'🧑'}</div>
     <div class="rank-mini-info">
@@ -3848,6 +3840,24 @@ function renderRankRowPiratecasGrupos(u, pos) {
   </div>`;
 }
 function renderRankRowPiratecasMM(u, pos) {
+  const nc = pos===1?'n1':pos===2?'n2':pos===3?'n3':'';
+  const rc = u.email===S.me?'me':pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
+  const medal = pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
+  const youTag = u.email===S.me ? '<span style="font-size:9px;background:rgba(201,168,76,0.2);color:var(--gold);padding:1px 5px;border-radius:8px;margin-left:3px">você</span>' : '';
+  return `<div class="rank-row-mini ${rc}" style="cursor:pointer;" onclick="showHistoryModal('${u.email}', 'piratecas_mm')">
+    <div class="rank-mini-num ${nc}">${medal}</div>
+    <div class="rank-mini-av">${u.avatar?`<img src="${u.avatar}">`:'🧑'}</div>
+    <div class="rank-mini-info">
+      <div class="rank-mini-name">${esc(u.name)}${youTag}</div>
+      <div class="rank-mini-sub">⚽ ${esc(u.team||'—')}</div>
+    </div>
+    <div class="rank-mini-pts">
+      <div class="rank-mini-pts-val" style="color:#7b8fe8">${u.piratecasMM}</div>
+      <div class="rank-mini-pts-lbl">piratecas ⚔️</div>
+    </div>
+  </div>`;
+}
+  function renderRankRowPiratecasMM(u, pos) {
   const nc = pos===1?'n1':pos===2?'n2':pos===3?'n3':'';
   const rc = u.email===S.me?'me':pos===1?'p1':pos===2?'p2':pos===3?'p3':'';
   const medal = pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
