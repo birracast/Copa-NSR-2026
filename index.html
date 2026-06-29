@@ -4935,10 +4935,17 @@ async function voteExtra(gameId, target, type) {
 
   const existingVote = S.apostas[key][S.me];
 
+  // Regra 1: Se for remover (ou se clicar no mesmo botão que já estava ativo)
   if (type === 'remove' || existingVote === type) {
     if (existingVote) {
-      delete S.apostas[key][S.me];
-      renderGames();
+      delete S.apostas[key][S.me]; // Remove localmente IMEDIATAMENTE
+      
+      // Limpa a chave do objeto se ficar vazia para evitar sujeira
+      if (Object.keys(S.apostas[key]).length === 0) {
+        delete S.apostas[key];
+      }
+      
+      renderGames(); // Atualiza a tela (liberando a contagem de limites)
       try {
         await gsCall({ action:'voteExtra', gameId: gameId, targetEmail: target, voterEmail: S.me, type: 'remove' });
         toast(`Voto removido!`, 'info');
@@ -4949,23 +4956,52 @@ async function voteExtra(gameId, target, type) {
     return;
   }
 
-  if (existingVote !== type) {
-    const count = countVotesInGame(S.me, gameId, type);
-    if (type === 'bosta' && count >= 2) { toast(`Limite atingido! Máximo de 2 votos "Bosta" por jogo.`, 'warn'); return; }
-    if (type === 'mestre' && count >= 2) { toast(`Limite atingido! Máximo de 2 votos "Mestre" por jogo.`, 'warn'); return; }
-    if (type === 'alvo' && count >= 1) { toast(`Limite atingido! Máximo de 1 voto "Zica Exata" por jogo.`, 'warn'); return; }
+  // Regra 2: Verificação RIGOROSA de Limites antes de aceitar um novo voto
+  // A verificação deve ser feita APÓS garantir que a pessoa não está apenas trocando de voto
+  // na MESMA pessoa. Se ela está trocando (ex: tirando Bosta para colocar Mestre no mesmo card),
+  // o limite do novo voto não pode ser barrado incorretamente.
+  
+  // Primeiro, calculamos quantos votos a pessoa JÁ TEM daquele tipo específico naquele jogo.
+  let currentCountOfType = countVotesInGame(S.me, gameId, type);
+  
+  // Se o usuário está TROCANDO o voto num card onde ele já tinha votado ESSE MESMO TIPO
+  // (teoricamente não entra aqui pq barraria no 'existingVote === type' lá em cima),
+  // mas se estiver trocando de "Mestre" para "Bosta", o currentCountOfType do "Bosta" será o valor real de bostas.
+  
+  if (type === 'bosta' && currentCountOfType >= 2) { 
+    toast(`Limite atingido! Máximo de 2 votos "Bosta" por jogo.`, 'warn'); 
+    return; 
+  }
+  if (type === 'mestre' && currentCountOfType >= 2) { 
+    toast(`Limite atingido! Máximo de 2 votos "Mestre" por jogo.`, 'warn'); 
+    return; 
+  }
+  if (type === 'alvo' && currentCountOfType >= 1) { 
+    toast(`Limite atingido! Máximo de 1 voto "Zica Exata" por jogo.`, 'warn'); 
+    return; 
   }
 
+  // Se passou pelos bloqueios, salva localmente e atualiza a tela
   const isChanging = existingVote !== undefined;
+  if (!S.apostas[key]) S.apostas[key] = {}; // Garante a chave caso tenha sido excluída
   S.apostas[key][S.me] = type;
+  
   renderGames();
 
+  // Envia pro servidor
   try {
     await gsCall({ action:'voteExtra', gameId: gameId, targetEmail: target, voterEmail: S.me, type: type });
     const nomeEmoji = type === 'bosta' ? '💩' : type === 'mestre' ? '✅' : '🎯 Zica Exata';
     toast(`Aposta ${isChanging?'atualizada':'registrada'}! ${nomeEmoji}`, 'ok');
   } catch(e) {
-    toast('Erro ao registrar aposta.', 'err');
+    // Se der erro de internet, desfaz a alteração local
+    if (existingVote) {
+      S.apostas[key][S.me] = existingVote;
+    } else {
+      delete S.apostas[key][S.me];
+    }
+    renderGames();
+    toast('Erro ao registrar aposta na nuvem.', 'err');
   }
 }
   
