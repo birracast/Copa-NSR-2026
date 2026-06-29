@@ -520,7 +520,7 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
 .points-cell { font-family: var(--font-display); font-size: 18px; font-weight: 800; color: var(--gold); }
 .group-games { border-top: 1px solid var(--border); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
 .group-game-row { display: grid; grid-template-columns: 68px minmax(0, 1fr) 44px minmax(0, 1fr); gap: 8px; align-items: center; padding: 8px 10px; background: var(--dark3); border-radius: 8px; }
-.group-game-date { font-size: 11px; color: var(--muted); }
+.group-game-date { font-size: 11px; color: var(--muted); line-height: 1.4; }
 .group-game-team { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .group-game-team.away { justify-content: flex-end; text-align: right; }
 .group-game-score { font-family: var(--font-display); font-size: 18px; font-weight: 800; color: var(--text); text-align: center; }
@@ -2852,8 +2852,9 @@ function calcPiratecasFiltered(email, filter) {
   const gameInPhase = (gId) => isGrupos ? getRodada(gId) <= 3 : getRodada(gId) > 3;
 
   let balance = 100;
+  const entries = [];
   const u = S.users[email];
-  if (!u) return { total: balance };
+  if (!u) return { total: balance, entries };
 
   // ── 1. Pé quente / frio por rodada (apenas rodadas da fase) ──
   const rodadas = {};
@@ -2880,11 +2881,14 @@ function calcPiratecasFiltered(email, filter) {
       : ptsArr[Math.floor(ptsArr.length / 2)];
     if (maxPts !== minPts) {
       const myPts = rData.users[email] ?? 0;
-      let diff = 0;
-      if      (myPts === maxPts)                                       diff =  5;
-      else if (myPts === minPts)                                       diff = -5;
-      else if (myPts === medPts || (myPts < medPts && myPts > minPts)) diff = -1;
-      balance += diff;
+      let diff = 0, desc = '';
+      if      (myPts === maxPts)                                        { diff =  5; desc = '🔥 Pé Quente'; }
+      else if (myPts === minPts)                                        { diff = -5; desc = '🥶 Pé Frio'; }
+      else if (myPts === medPts || (myPts < medPts && myPts > minPts)) { diff = -1; desc = '😐 Nem fede nem cheira'; }
+      if (diff !== 0) {
+        balance += diff;
+        entries.push({ tipo: 'rodada', rodada, desc, myPts, diff });
+      }
     }
   });
 
@@ -2902,7 +2906,11 @@ function calcPiratecasFiltered(email, filter) {
     const targetUser = S.users[realTargetEmail];
     const targetPts  = calcGamePoints(targetUser, gId);
     const targetHit  = targetPts > 0;
-    const targetBet  = targetUser?.bets?.[gId];
+    const gObj = GAMES.find(g => g.id === gId);
+    const gameLabel = gObj
+      ? `${gObj.hFlag || '🏳️'} ${gObj.hCode} ${r.h}–${r.a} ${gObj.aCode} ${gObj.aFlag || '🏳️'}`
+      : `Jogo #${gId}`;
+    const targetBet   = targetUser?.bets?.[gId];
     const targetExact = targetHit && targetBet && (targetBet.h === r.h && targetBet.a === r.a);
 
     if (votersObj[email]) {
@@ -2911,23 +2919,31 @@ function calcPiratecasFiltered(email, filter) {
       if      (type === 'bosta')  diff = targetHit ? -2 : 2;
       else if (type === 'mestre') diff = targetHit ?  2 : -2;
       else if (type === 'alvo')   diff = targetExact ? -15 : 5;
-      balance += diff;
+      if (diff !== 0) {
+        balance += diff;
+        entries.push({ tipo: 'aposta_voter', gId, gameLabel, targetEmail: realTargetEmail, targetName: targetUser?.name || realTargetEmail, voteType: type, targetHit, targetExact, diff });
+      }
     }
     if (normEmail(email) === targetNorm) {
-      Object.entries(votersObj).forEach(([, voteType]) => {
-        if (voteType === 'bosta'  && targetHit)   balance += 2;
-        if (voteType === 'alvo'   && targetExact)  balance += 15;
+      Object.entries(votersObj).forEach(([voterEmail, voteType]) => {
+        const voterUser = S.users[voterEmail];
+        if (voteType === 'bosta' && targetHit) {
+          balance += 2;
+          entries.push({ tipo: 'aposta_target_won', gId, gameLabel, voterEmail, voterName: voterUser?.name || voterEmail, diff: 2, voteType });
+        }
+        if (voteType === 'alvo' && targetExact) {
+          balance += 15;
+          entries.push({ tipo: 'aposta_target_won', gId, gameLabel, voterEmail, voterName: voterUser?.name || voterEmail, diff: 15, voteType });
+        }
       });
     }
   });
 
   // ── 3. Pibets vinculados à fase ───────────────────────────────
-  // Pibet com gameId → classifica pelo jogo; sem gameId → vai para Mata Mata
+  const MATA_MATA_CUTOFF = '2026-06-28';
   (S.pibets || []).forEach(pbt => {
     if (pbt.status !== 'creator_won' && pbt.status !== 'target_won') return;
     const pibetGId = pbt.gameId ? parseInt(pbt.gameId) : null;
-    // Pibets com gameId → fase pelo jogo; sem gameId → pela data de criação (corte: 28/06/2026)
-    const MATA_MATA_CUTOFF = '2026-06-28';
     const pibetIsGrupos = pibetGId
       ? getRodada(pibetGId) <= 3
       : (pbt.createdAt ? pbt.createdAt.slice(0, 10) < MATA_MATA_CUTOFF : false);
@@ -2943,33 +2959,36 @@ function calcPiratecasFiltered(email, filter) {
     const isContra   = doubters.includes(email);
     const numFavor   = 1 + supporters.length;
     const numContra  = doubters.length;
-    let diff = 0;
+    let diff = 0, label = '';
 
     if (pbt.target && pbt.target !== '') {
       if (doubters.includes(pbt.target)) {
         if (pbt.status === 'creator_won') {
-          if (isCreator) diff =  W;
-          if (isTarget)  diff = -W;
+          if (isCreator) { diff =  W; label = '🏆 Criador venceu'; }
+          if (isTarget)  { diff = -W; label = '🏆 Criador venceu'; }
         } else {
-          if (isCreator) diff = -W;
-          if (isTarget)  diff =  W;
+          if (isCreator) { diff = -W; label = '🎯 Contra venceu'; }
+          if (isTarget)  { diff =  W; label = '🎯 Contra venceu'; }
         }
       }
     } else {
       if (numContra > 0) {
         if (pbt.status === 'creator_won') {
-          if (isFavor)  diff =  Math.floor(W / numFavor);
-          if (isContra) diff = -W;
+          if (isFavor)  { diff =  Math.floor(W / numFavor);  label = '🏆 A Favor venceu'; }
+          if (isContra) { diff = -W;                          label = '🏆 A Favor venceu'; }
         } else {
-          if (isFavor)  diff = -W;
-          if (isContra) diff =  Math.floor(W / numContra);
+          if (isFavor)  { diff = -W;                          label = '🎯 Contra venceram'; }
+          if (isContra) { diff =  Math.floor(W / numContra); label = '🎯 Contra venceram'; }
         }
       }
     }
-    balance += diff;
+    if (diff !== 0) {
+      balance += diff;
+      entries.push({ tipo: 'pibet', pbt, label, diff });
+    }
   });
 
-  return { total: Math.round(balance) };
+  return { total: Math.round(balance), entries };
 }
 
 function calcUserPiratecasGrupos(email)  { return calcPiratecasFiltered(email, 'grupos').total; }
@@ -3078,6 +3097,9 @@ function setViewTeam(code) {
  // ================================================================
 //  RENDER GAMES (com seções colapsáveis)
 // ================================================================
+// Estado persistente das seções de jogos — sobrevive a re-renders por votos/apostas
+const gameSectionStates = {};
+
 function renderGames() {
   renderUserChips();
   renderTeamChips();
@@ -3128,7 +3150,16 @@ function renderGames() {
 
  let html = '';
   sections.forEach(section => {
-    const collapsedClass = section.defaultCollapsed ? ' is-collapsed' : '';
+    // Usa estado salvo pelo usuário; na primeira vez usa o default
+    let isCollapsed;
+    if (forceExpand) {
+      isCollapsed = false;
+    } else if (section.id in gameSectionStates) {
+      isCollapsed = gameSectionStates[section.id];
+    } else {
+      isCollapsed = section.defaultCollapsed;
+    }
+    const collapsedClass = isCollapsed ? ' is-collapsed' : '';
     const gamesHtml = section.games.map(game => renderGameCard(game)).join('');
     
     // Botão extra apenas para a aba de finalizados
@@ -3162,6 +3193,7 @@ function toggleGamesSection(id) {
   const section = document.getElementById('games-section-' + id);
   if (!section) return;
   section.classList.toggle('is-collapsed');
+  gameSectionStates[id] = section.classList.contains('is-collapsed');
 }
 
 function toggleAllGamesSections() {
@@ -3173,6 +3205,9 @@ function toggleAllGamesSections() {
     } else {
       el.classList.add('is-collapsed');
     }
+    // Persiste o novo estado
+    const id = el.id.replace('games-section-', '');
+    gameSectionStates[id] = !allCollapsed;
   });
 }
 
@@ -3366,7 +3401,7 @@ const rows = othersWithBet.map(u => {
 
   return `<div class="game-card ${cardClass}${locked?' locked':''}${collapsedClass}" id="gc-${game.id}">
     <div class="gcard-top"><span class="gcard-round">${game.group||game.phase}</span>${headerActions}</div>
-    <div class="gcard-top" style="margin-top:-8px;margin-bottom:10px"><span class="gcard-date">📅 ${formatDate(game.date)}</span><span class="gcard-date" style="font-size:10px">🏟 ${esc(game.venue)}</span></div>
+    <div class="gcard-top" style="margin-top:-8px;margin-bottom:10px"><span class="gcard-date" style="font-weight:700;color:var(--gold)">#${game.id}</span><span class="gcard-date">📅 ${formatDate(game.date)}</span><span class="gcard-date" style="font-size:10px">🏟 ${esc(game.venue)}</span></div>
     <div class="teams-section">
       <div class="team-col">${renderTeamMark(game,'h','team-flag')}<div class="team-code" title="${esc(game.hName||game.hCode)}">${esc(game.hCode)}</div></div>
       <div class="center-col">${realScore}<div class="venue-text">${r.h!==null?'Resultado oficial':''}</div></div>
@@ -3632,7 +3667,7 @@ function renderGroupGameRow(game) {
   const tipLabel = isFinished
     ? `Encerrado ${r.h}–${r.a} · clique para ver palpites · ${esc(game.venue||'A confirmar')}`
     : `Clique para ir ao jogo · ${esc(game.venue||'A confirmar')}`;
-  return `<div class="group-game-row${finishedCls}" onclick="goToGameFromGroup(${game.id})" title="${tipLabel}"><div class="group-game-date">${game.date?formatShortDate(game.date):'A definir'}</div><div class="group-game-team">${renderTeamMark(game,'h','team-mini-logo')}<span class="team-code-small">${esc(game.hCode)}</span></div><div class="group-game-score">${r.h!==null?`${r.h}–${r.a}`:'vs'}</div><div class="group-game-team away"><span class="team-code-small">${esc(game.aCode)}</span>${renderTeamMark(game,'a','team-mini-logo')}</div></div>`;
+  return `<div class="group-game-row${finishedCls}" onclick="goToGameFromGroup(${game.id})" title="${tipLabel}"><div class="group-game-date"><span style="color:var(--gold);font-weight:700">#${game.id}</span><br>${game.date?formatShortDate(game.date):'A definir'}</div><div class="group-game-team">${renderTeamMark(game,'h','team-mini-logo')}<span class="team-code-small">${esc(game.hCode)}</span></div><div class="group-game-score">${r.h!==null?`${r.h}–${r.a}`:'vs'}</div><div class="group-game-team away"><span class="team-code-small">${esc(game.aCode)}</span>${renderTeamMark(game,'a','team-mini-logo')}</div></div>`;
 }
 
 function renderTeamLogo(logo, flag) { return logo ? `<img class="team-logo" src="${esc(logo)}" alt="">` : `<span class="team-logo placeholder">${flag||'🏳️'}</span>`; }
@@ -3666,12 +3701,14 @@ function goToGameFromGroup(gameId) {
     // 1. Identifica a seção (agrupamento) do jogo
     const sectionEl = card.closest('.games-section');
     if (sectionEl) {
-      // Retrai todas as seções
+      // Retrai todas as seções e salva estado
       document.querySelectorAll('#page-games .games-section').forEach(sec => {
         sec.classList.add('is-collapsed');
+        gameSectionStates[sec.id.replace('games-section-', '')] = true;
       });
-      // Expande apenas a seção onde o jogo está
+      // Expande apenas a seção onde o jogo está e salva estado
       sectionEl.classList.remove('is-collapsed');
+      gameSectionStates[sectionEl.id.replace('games-section-', '')] = false;
     }
     
     // 2. Dá um tempo minúsculo para o CSS renderizar a seção expandida
