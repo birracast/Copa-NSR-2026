@@ -1002,6 +1002,31 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: var(--black); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── CHART RACE (CORRIDA DO BOLÃO) ─────────────────────────────── */
+.bar-wrapper { position: absolute; left: 0; right: 0; height: 56px; display: flex; align-items: center; gap: 10px; transition: transform .65s cubic-bezier(.4,0,.2,1); }
+.bar-label { flex-shrink: 0; width: 190px; display: flex; align-items: center; gap: 8px; overflow: hidden; }
+.bar-rank { font-family: var(--font-display); font-size: 13px; font-weight: 800; color: var(--muted); width: 26px; text-align: right; flex-shrink: 0; }
+.bar-rank.top1 { color: var(--gold); font-size: 15px; }
+.bar-rank.top2 { color: #C0C0C0; }
+.bar-rank.top3 { color: #CD7F32; }
+.bar-avatar-wrap { width: 34px; height: 34px; border-radius: 50%; overflow: hidden; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--dark3); font-size: 14px; }
+.bar-avatar-wrap img { width:100%; height:100%; object-fit:cover; }
+.bar-user-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+.bar-track { flex: 1; height: 42px; position: relative; }
+.bar { height: 100%; border-radius: 0 21px 21px 0; display: flex; align-items: center; justify-content: flex-end; padding-right: 14px; transition: width .65s cubic-bezier(.4,0,.2,1); min-width: 6px; box-shadow: 0 3px 10px rgba(0,0,0,.4); position: relative; overflow: hidden; }
+.bar::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,.12) 0%, transparent 60%); }
+.bar-pts { font-family: var(--font-display); font-size: 18px; font-weight: 900; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.6); position: relative; z-index: 1; }
+.bar-gain { width: 130px; flex-shrink: 0; font-size: 12px; color: var(--muted); text-align: left; line-height: 1.3; }
+.gain-badge { display: inline-block; background: rgba(60,172,59,.25); color: #7de87c; border: 1px solid rgba(60,172,59,.4); border-radius: 10px; padding: 1px 7px; font-weight: 800; font-size: 12px; margin-right: 4px; }
+.gain-game { color: var(--muted); font-size: 11px; }
+@keyframes scoreFlash { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
+.flash { animation: scoreFlash .35s ease; }
+@media (max-width: 680px) { .bar-label { width: 130px; } .bar-user-name { font-size: 12px; } .bar-gain { display: none; } }
+@media (max-width: 480px) { .bar-label { width: 100px; } .bar-rank { display: none; } }
+
+
+  
 /* ── iOS Install Banner ───────────────────────────────────── */
 #ios-install-banner {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
@@ -1259,7 +1284,7 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
         <button class="nav-tab active" id="nt-games"   onclick="navTo('games')">⚽ Jogos</button>
         <button class="nav-tab"        id="nt-groups"  onclick="navTo('groups')">📊 Grupos</button>
         <button class="nav-tab"        id="nt-ranking" onclick="navTo('ranking')"><img src="taca.png" alt="Troféu" style="height: 1.2em; vertical-align: text-bottom; margin-right: 4px;"> Ranking</button>
-        <button class="nav-tab"        id="nt-race"    onclick="window.open('race.html', '_blank')">🏎️ Corrida</button>
+        <button class="nav-tab"        id="nt-race"    onclick="navTo('race')">🏎️ Corrida</button>
         <button class="nav-tab"        id="nt-pibet"   onclick="navTo('pibet')">🎲 Piratabet</button>
         <button class="nav-tab"        id="nt-help"    onclick="navTo('help')">❓ Ajuda</button>
         <button class="nav-tab"        id="nt-settings" onclick="navTo('settings')">⚙️ Config</button>
@@ -1348,9 +1373,32 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
     </div>
   </div>
 
-<!-- BLOCO DE SUBSTITUIÇÃO: CONTEÚDO DA PÁGINA -->
-  <div id="page-highlights" class="hidden"></div>
-<!-- FIM DA SUBSTITUIÇÃO -->
+<div id="page-race" class="main-wrap hidden">
+    <div class="phase-hdr">
+      <span class="phase-hdr-text">🏎️ Corrida do Bolão</span>
+      <span class="phase-pill final">Replay</span>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px;">
+      <select class="finput" id="race-rank-type" onchange="raceChangeRanking()" style="width:auto; min-width:200px; padding:10px 16px;">
+        <option value="pontos">🏆 Ranking de Pontos</option>
+        <option value="grupos">⚽ Pontos — Fase de Grupos</option>
+        <option value="mm">⚔️ Pontos — Mata-Mata</option>
+      </select>
+      <button class="btn-main" style="width:auto; padding:10px 18px;" onclick="raceStepPrev()">⏮</button>
+      <button class="btn-main" style="width:auto; padding:10px 28px; background:var(--gold); color:#000;" id="race-btn-play" onclick="raceTogglePlay()">▶ PLAY</button>
+      <button class="btn-main" style="width:auto; padding:10px 18px;" onclick="raceStepNext()">⏭</button>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+      <div style="flex:1; height:6px; background:var(--dark3); border-radius:3px; overflow:hidden;">
+        <div id="race-progress-fill" style="height:100%; background:linear-gradient(90deg, var(--blue), var(--gold)); border-radius:3px; transition:width .6s ease; width:0%;"></div>
+      </div>
+      <span id="race-progress-label" style="font-size:13px; color:var(--muted); white-space:nowrap; font-weight:600;">— / —</span>
+    </div>
+    <div id="race-rodada-label" style="text-align:center; font-family:var(--font-display); font-size:20px; font-weight:800; color:var(--gold); letter-spacing:1px; min-height:28px; margin-bottom:20px;">Carregando dados…</div>
+    <div id="race-chart-container" style="position:relative; margin-top:8px;"></div>
+  </div>
+
+  <div id="page-highlights" class="main-wrap hidden">
   
     <div class="hl-tabs">
       <button class="hl-tab active" id="hlt-rodadas" onclick="hlTab('rodadas')">Por Rodada</button>
@@ -2378,17 +2426,19 @@ function enterApp() {
 // ================================================================
 //  NAVIGATION
 // ================================================================
-const pages = ['games','groups','ranking','highlights','pibet','help','settings','profile','admin'];
+const pages = ['games','groups','ranking','race','highlights','pibet','help','settings','profile','admin'];
 let currentPage = 'games';
 function navTo(p) {
   currentPage = p;
   pages.forEach(x => {
-    document.getElementById('page-'+x).classList.toggle('hidden', x!==p);
+    const pageEl = document.getElementById('page-'+x);
+    if(pageEl) pageEl.classList.toggle('hidden', x!==p);
     const n = document.getElementById('nt-'+x); if(n) n.classList.toggle('active', x===p);
   });
   if(p==='games')      { renderGames(); renderStats(); }
   if(p==='groups')     renderGroupsPage();
   if(p==='ranking')    renderRanking();
+  if(p==='race')       renderRacePage();
   if(p==='highlights') renderHighlights();
   if(p==='pibet')      renderPibets();
   if(p==='settings')   renderSettingsPage();
@@ -5532,6 +5582,208 @@ async function sendTestBroadcast() {
   }
 }
 
+// ================================================================
+//  RACE (CORRIDA DO BOLÃO)
+// ================================================================
+const RACE_BAR_COLORS = [
+  '#E61D25','#2A398D','#3CAC3B','#C9A84C','#FF6B35',
+  '#9B59B6','#1ABC9C','#E74C3C','#3498DB','#F39C12',
+  '#27AE60','#8E44AD','#16A085','#D35400','#2980B9',
+  '#C0392B','#7F8C8D','#F1C40F','#E91E63','#00BCD4'
+];
+const RACE_BAR_HEIGHT = 68;
+let raceSnapshots = [];
+let raceTick = 0;
+let raceIsPlaying = false;
+let raceTimer = null;
+let raceColorMap = {};
+let raceBarElMap = new Map();
+
+function renderRacePage() {
+  const sortedEmails = Object.keys(S.users).sort();
+  sortedEmails.forEach((e, i) => { raceColorMap[e] = RACE_BAR_COLORS[i % RACE_BAR_COLORS.length]; });
+
+  racePausePlay();
+  raceTick = 0;
+  raceBuildSnapshots(document.getElementById('race-rank-type').value);
+  raceInitBars();
+  raceRenderSnapshot(0);
+}
+
+function raceBuildSnapshots(tipo) {
+  raceSnapshots = [];
+  const usersList = Object.values(S.users).filter(u => !isUserHidden(u.email));
+
+  const initial = usersList.map(u => ({
+    id:       u.email,
+    name:     u.name || u.email,
+    avatar:   u.avatar || '',
+    color:    raceColorMap[u.email],
+    val:      0,
+    lastGain: 0,
+    lastGame: '',
+  }));
+  raceSnapshots.push({ data: JSON.parse(JSON.stringify(initial)), game: null });
+
+  const stageOk = (g) => {
+    if (tipo === 'grupos') return getRodada(g.id) <= 3;
+    if (tipo === 'mm')     return getRodada(g.id) > 3;
+    return true;
+  };
+
+  const played = GAMES
+    .filter(g => {
+      const r = S.results[g.id];
+      return r && (r.status === 'finished' || r.status === 'live') && r.h !== null;
+    })
+    .filter(stageOk)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  played.forEach(g => {
+    const cur = JSON.parse(JSON.stringify(raceSnapshots[raceSnapshots.length - 1].data));
+    cur.forEach(u => {
+      const userObj = S.users[u.id];
+      const gain = calcGamePoints(userObj, g.id);
+      u.val      += gain;
+      u.lastGain  = gain;
+      u.lastGame  = `${g.hCode} x ${g.aCode}`;
+    });
+    raceSnapshots.push({ data: cur, game: g });
+  });
+}
+
+function raceInitBars() {
+  const container = document.getElementById('race-chart-container');
+  container.innerHTML = '';
+  raceBarElMap.clear();
+  const usersList = Object.values(S.users).filter(u => !isUserHidden(u.email));
+  container.style.height = (usersList.length * RACE_BAR_HEIGHT) + 'px';
+
+  usersList.forEach((u, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'bar-wrapper';
+    wrap.style.transform = `translateY(${i * RACE_BAR_HEIGHT}px)`;
+
+    const avatarHtml = u.avatar
+      ? `<img src="${esc(u.avatar)}" alt="" onerror="this.parentNode.textContent='${esc((u.name||'?')[0].toUpperCase())}'">`
+      : esc((u.name || '?')[0].toUpperCase());
+
+    wrap.innerHTML = `
+      <div class="bar-label">
+        <span class="bar-rank">#${i + 1}</span>
+        <div class="bar-avatar-wrap">${avatarHtml}</div>
+        <span class="bar-user-name">${esc(u.name || u.email)}</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar" style="background:${raceColorMap[u.email]};width:0%">
+          <span class="bar-pts">0</span>
+        </div>
+      </div>
+      <div class="bar-gain"></div>
+    `;
+    container.appendChild(wrap);
+    raceBarElMap.set(u.email, wrap);
+  });
+}
+
+function raceRenderSnapshot(idx) {
+  if (idx < 0 || idx >= raceSnapshots.length) return;
+  const { data, game } = raceSnapshots[idx];
+  const maxVal = Math.max(...data.map(d => d.val), 1);
+
+  const sorted = [...data].sort((a, b) => b.val - a.val || a.name.localeCompare(b.name));
+
+  sorted.forEach((u, rank) => {
+    const wrap = raceBarElMap.get(u.id);
+    if (!wrap) return;
+
+    wrap.style.transform = `translateY(${rank * RACE_BAR_HEIGHT}px)`;
+
+    const rankEl = wrap.querySelector('.bar-rank');
+    rankEl.textContent = '#' + (rank + 1);
+    rankEl.className = 'bar-rank' + (rank === 0 ? ' top1' : rank === 1 ? ' top2' : rank === 2 ? ' top3' : '');
+
+    const bar     = wrap.querySelector('.bar');
+    const pct     = maxVal > 0 ? Math.max(0.6, (u.val / maxVal) * 82) : 0;
+    bar.style.width = pct + '%';
+
+    const ptsEl = wrap.querySelector('.bar-pts');
+    const prevVal = parseInt(ptsEl.textContent) || 0;
+    ptsEl.textContent = u.val;
+    if (u.val > prevVal) {
+      ptsEl.classList.remove('flash');
+      void ptsEl.offsetWidth;
+      ptsEl.classList.add('flash');
+    }
+
+    const gainEl = wrap.querySelector('.bar-gain');
+    if (idx > 0 && u.lastGain > 0) {
+      gainEl.innerHTML = `<span class="gain-badge">+${u.lastGain}</span><br><span class="gain-game">${esc(u.lastGame)}</span>`;
+    } else {
+      gainEl.innerHTML = '';
+    }
+  });
+
+  raceUpdateLabel(idx);
+  raceUpdateProgress(idx);
+}
+
+function raceUpdateLabel(idx) {
+  const el   = document.getElementById('race-rodada-label');
+  const total = raceSnapshots.length - 1;
+  if (idx === 0) {
+    el.textContent = total <= 0 ? '⏳ Nenhum jogo encerrado ainda' : '🏁 Largada — Pontuação inicial';
+  } else {
+    const g = raceSnapshots[idx].game;
+    if (g) {
+      const r = S.results[g.id];
+      const scoreStr = (r && r.h !== null) ? ` (${r.h}x${r.a})` : '';
+      el.textContent = `🎮 Jogo ${idx} de ${total} · ${g.hCode} x ${g.aCode}${scoreStr}`;
+    } else {
+      el.textContent = `Jogo ${idx} de ${total}`;
+    }
+  }
+}
+
+function raceUpdateProgress(idx) {
+  const total = Math.max(raceSnapshots.length - 1, 1);
+  document.getElementById('race-progress-fill').style.width = ((idx / total) * 100) + '%';
+  document.getElementById('race-progress-label').textContent = `${idx} / ${raceSnapshots.length - 1}`;
+}
+
+function raceChangeRanking() {
+  racePausePlay();
+  raceTick = 0;
+  raceBuildSnapshots(document.getElementById('race-rank-type').value);
+  raceRenderSnapshot(0);
+}
+
+function raceStepPrev() { if (raceTick > 0) { raceTick--; raceRenderSnapshot(raceTick); } }
+function raceStepNext() { if (raceTick < raceSnapshots.length - 1) { raceTick++; raceRenderSnapshot(raceTick); } }
+
+function raceTogglePlay() { raceIsPlaying ? racePausePlay() : raceStartPlay(); }
+
+function raceStartPlay() {
+  if (raceTick >= raceSnapshots.length - 1) raceTick = 0;
+  raceIsPlaying = true;
+  document.getElementById('race-btn-play').textContent = '⏸ PAUSE';
+  raceTimer = setInterval(() => {
+    if (raceTick < raceSnapshots.length - 1) {
+      raceTick++;
+      raceRenderSnapshot(raceTick);
+    } else {
+      racePausePlay();
+    }
+  }, 950);
+}
+
+function racePausePlay() {
+  raceIsPlaying = false;
+  clearInterval(raceTimer);
+  const btn = document.getElementById('race-btn-play');
+  if(btn) btn.textContent = '▶ PLAY';
+}
+  
 // ================================================================
 //  BOOT
 // ================================================================
