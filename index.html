@@ -1017,13 +1017,22 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
 .bar { height: 100%; border-radius: 0 21px 21px 0; display: flex; align-items: center; justify-content: flex-end; padding-right: 14px; transition: width .65s cubic-bezier(.4,0,.2,1); min-width: 6px; box-shadow: 0 3px 10px rgba(0,0,0,.4); position: relative; overflow: hidden; }
 .bar::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,.12) 0%, transparent 60%); }
 .bar-pts { font-family: var(--font-display); font-size: 18px; font-weight: 900; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.6); position: relative; z-index: 1; }
-.bar-gain { width: 130px; flex-shrink: 0; font-size: 12px; color: var(--muted); text-align: left; line-height: 1.3; }
+.bar-gain { width: 135px; flex-shrink: 0; font-size: 12px; color: var(--muted); text-align: left; line-height: 1.3; }
 .gain-badge { display: inline-block; background: rgba(60,172,59,.25); color: #7de87c; border: 1px solid rgba(60,172,59,.4); border-radius: 10px; padding: 1px 7px; font-weight: 800; font-size: 12px; margin-right: 4px; }
+.gain-badge.bonus { background: rgba(201,168,76,.15); color: #F0C040; border-color: rgba(201,168,76,.5); text-shadow: 0 0 8px rgba(201,168,76,0.6); margin-top: 2px; }
 .gain-game { color: var(--muted); font-size: 11px; }
 @keyframes scoreFlash { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
 .flash { animation: scoreFlash .35s ease; }
-@media (max-width: 680px) { .bar-label { width: 130px; } .bar-user-name { font-size: 12px; } .bar-gain { display: none; } }
-@media (max-width: 480px) { .bar-label { width: 100px; } .bar-rank { display: none; } }
+/* Ajustes para manter as pontuações no Celular Vertical */
+@media (max-width: 680px) {
+  .bar-label { width: 105px; gap: 5px; }
+  .bar-avatar-wrap { width: 24px; height: 24px; font-size: 10px; }
+  .bar-user-name { font-size: 11px; }
+  .bar-gain { width: 95px; }
+  .gain-badge { font-size: 10px; padding: 1px 5px; margin-right: 2px; }
+  .gain-game { font-size: 9px; }
+}
+@media (max-width: 480px) { .bar-rank { display: none; } }
 
 
   
@@ -1381,8 +1390,8 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px;">
       <select class="finput" id="race-rank-type" onchange="raceChangeRanking()" style="width:auto; min-width:200px; padding:10px 16px;">
         <option value="pontos">🏆 Ranking de Pontos</option>
-        <option value="grupos">⚽ Pontos — Fase de Grupos</option>
-        <option value="mm">⚔️ Pontos — Mata-Mata</option>
+        <option value="grupos">🏴‍☠️ Piratecas — Fase de Grupos</option>
+        <option value="mm">⚔️ Piratecas — Mata-Mata</option>
       </select>
       <button class="btn-main" style="width:auto; padding:10px 18px;" onclick="raceStepPrev()">⏮</button>
       <button class="btn-main" style="width:auto; padding:10px 28px; background:var(--gold); color:#000;" id="race-btn-play" onclick="raceTogglePlay()">▶ PLAY</button>
@@ -2429,6 +2438,7 @@ function enterApp() {
 const pages = ['games','groups','ranking','race','highlights','pibet','help','settings','profile','admin'];
 let currentPage = 'games';
 function navTo(p) {
+  const isSamePage = (currentPage === p);
   currentPage = p;
   pages.forEach(x => {
     const pageEl = document.getElementById('page-'+x);
@@ -2438,14 +2448,13 @@ function navTo(p) {
   if(p==='games')      { renderGames(); renderStats(); }
   if(p==='groups')     renderGroupsPage();
   if(p==='ranking')    renderRanking();
-  if(p==='race')       renderRacePage();
+  if(p==='race')       { if (!isSamePage || document.getElementById('race-chart-container').innerHTML === '') renderRacePage(); }
   if(p==='highlights') renderHighlights();
   if(p==='pibet')      renderPibets();
   if(p==='settings')   renderSettingsPage();
   if(p==='profile')    renderProfile();
   if(p==='admin')      loadAdminUsers();
-}
-function rerenderCurrentPage() { navTo(currentPage || 'games'); }
+}function rerenderCurrentPage() { navTo(currentPage || 'games'); }
 
 // ================================================================
 //  GS HTTP HELPERS
@@ -5613,15 +5622,18 @@ function renderRacePage() {
 function raceBuildSnapshots(tipo) {
   raceSnapshots = [];
   const usersList = Object.values(S.users).filter(u => !isUserHidden(u.email));
+  const isPiratecas = (tipo === 'grupos' || tipo === 'mm');
 
   const initial = usersList.map(u => ({
     id:       u.email,
     name:     u.name || u.email,
     avatar:   u.avatar || '',
     color:    raceColorMap[u.email],
-    val:      0,
+    val:      isPiratecas ? 100 : 0, // Piratecas começam com 100
     lastGain: 0,
+    lastBonus: 0,
     lastGame: '',
+    _streak:  0 // rastreio de sequências para os bônus
   }));
   raceSnapshots.push({ data: JSON.parse(JSON.stringify(initial)), game: null });
 
@@ -5639,14 +5651,69 @@ function raceBuildSnapshots(tipo) {
     .filter(stageOk)
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 
+  // Pré-calcula os extratos de piratecas (se necessário) para evitar sobrecarga na animação
+  const userLedgers = {};
+  const lastGameOfRodada = {};
+  if (isPiratecas) {
+     usersList.forEach(u => {
+        const det = tipo === 'grupos' ? calcPiratecasFiltered(u.email, 'grupos') : calcPiratecasFiltered(u.email, 'matamata');
+        userLedgers[u.email] = det.entries;
+     });
+     played.forEach(g => { lastGameOfRodada[getRodada(g.id)] = g.id; });
+  }
+
   played.forEach(g => {
     const cur = JSON.parse(JSON.stringify(raceSnapshots[raceSnapshots.length - 1].data));
     cur.forEach(u => {
       const userObj = S.users[u.id];
-      const gain = calcGamePoints(userObj, g.id);
-      u.val      += gain;
-      u.lastGain  = gain;
-      u.lastGame  = `${g.hCode} x ${g.aCode}`;
+      u.lastGain = 0;
+      u.lastBonus = 0;
+      u.lastGame = `${g.hCode} x ${g.aCode}`;
+
+      if (!isPiratecas) {
+         // LÓGICA: PONTOS NORMAIS E BÔNUS
+         const r = S.results[g.id];
+         const b = userObj.bets ? userObj.bets[g.id] : null;
+         let gain = calcGamePoints(userObj, g.id);
+         
+         if (b && r && r.h !== null) {
+             if (b.h === r.h && b.a === r.a) {
+                 u._streak++;
+                 if (u._streak === 3) {
+                     u.lastBonus = S.settings.streak || 5;
+                     gain += u.lastBonus;
+                 }
+             } else if (getWDL(b.h, b.a) === getWDL(r.h, r.a)) {
+                 u._streak = 0; // Acertou resultado, mas perdeu sequência do exato
+             } else {
+                 u._streak = 0;
+             }
+         }
+
+         if (gain > 0 || u.lastBonus > 0) {
+             u.lastGain = gain - u.lastBonus; // Isola apenas a pontuação "comum"
+             u.val += gain;
+         }
+      } else {
+         // LÓGICA: PIRATECAS
+         const entries = userLedgers[u.id] || [];
+         let roundGain = 0;
+         
+         // Atribui os ganhos da rodada (ou pibets sem partida) ao último jogo válido da fase para criar os degraus
+         const gameEntries = entries.filter(e =>
+            (e.gId === g.id) ||
+            (e.tipo === 'rodada' && lastGameOfRodada[e.rodada] === g.id) ||
+            (e.tipo === 'pibet' && e.pbt && e.pbt.gameId === g.id) ||
+            (e.tipo === 'pibet' && (!e.pbt || !e.pbt.gameId) && g.id === played[played.length-1].id)
+         );
+         
+         gameEntries.forEach(e => { roundGain += e.diff; });
+         
+         if (roundGain !== 0) {
+             u.lastGain = roundGain;
+             u.val += roundGain;
+         }
+      }
     });
     raceSnapshots.push({ data: cur, game: g });
   });
@@ -5690,6 +5757,7 @@ function raceRenderSnapshot(idx) {
   if (idx < 0 || idx >= raceSnapshots.length) return;
   const { data, game } = raceSnapshots[idx];
   const maxVal = Math.max(...data.map(d => d.val), 1);
+  const isPiratecas = document.getElementById('race-rank-type').value !== 'pontos';
 
   const sorted = [...data].sort((a, b) => b.val - a.val || a.name.localeCompare(b.name));
 
@@ -5708,17 +5776,37 @@ function raceRenderSnapshot(idx) {
     bar.style.width = pct + '%';
 
     const ptsEl = wrap.querySelector('.bar-pts');
-    const prevVal = parseInt(ptsEl.textContent) || 0;
+    const prevVal = parseInt(ptsEl.textContent) || (isPiratecas ? 100 : 0);
     ptsEl.textContent = u.val;
-    if (u.val > prevVal) {
+    if (u.val !== prevVal) {
       ptsEl.classList.remove('flash');
       void ptsEl.offsetWidth;
       ptsEl.classList.add('flash');
     }
 
     const gainEl = wrap.querySelector('.bar-gain');
-    if (idx > 0 && u.lastGain > 0) {
-      gainEl.innerHTML = `<span class="gain-badge">+${u.lastGain}</span><br><span class="gain-game">${esc(u.lastGame)}</span>`;
+    if (idx > 0) {
+        let gainHtml = '';
+        if (!isPiratecas) {
+            if (u.lastGain > 0 || u.lastBonus > 0) {
+                let normal = u.lastGain > 0 ? `<span class="gain-badge">+${u.lastGain}</span>` : '';
+                let bonus = u.lastBonus > 0 ? `<span class="gain-badge bonus">+${u.lastBonus} bônus</span>` : '';
+                let sep = (u.lastGain > 0 && u.lastBonus > 0) ? '' : ''; // Colocado lado a lado sem /
+                gainHtml = `${normal}${sep}${bonus}`;
+            }
+        } else {
+            if (u.lastGain !== 0) {
+                const sign = u.lastGain > 0 ? '+' : '';
+                const styleNegative = u.lastGain < 0 ? 'style="background:rgba(230,29,37,.25); color:#ff7b7b; border-color:rgba(230,29,37,.4);"' : '';
+                gainHtml = `<span class="gain-badge" ${styleNegative}>${sign}${u.lastGain} 🏴‍☠️</span>`;
+            }
+        }
+        
+        if (gainHtml) {
+            gainEl.innerHTML = `<div style="display:flex; flex-wrap:wrap; gap:2px;">${gainHtml}</div><span class="gain-game">${esc(u.lastGame)}</span>`;
+        } else {
+            gainEl.innerHTML = '';
+        }
     } else {
       gainEl.innerHTML = '';
     }
