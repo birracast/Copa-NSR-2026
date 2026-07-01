@@ -1780,7 +1780,7 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
           <div class="fgroup"><label class="flabel">⚽ Artilheiro <span style="color:var(--muted);font-size:10px">(+10 pts)</span></label><input type="text" id="pe-top-scorer" class="finput" placeholder="Nome do jogador"></div>
           <div class="fgroup"><label class="flabel">⚽ Vice-Artilheiro <span style="color:var(--muted);font-size:10px">(+5 pts)</span></label><input type="text" id="pe-runner-scorer" class="finput" placeholder="Nome do jogador"></div>
           <div class="fgroup"><label class="flabel">🎯 Garçom <span style="color:var(--muted);font-size:10px">(+5 pts)</span></label><input type="text" id="pe-assist-king" class="finput" placeholder="Nome do jogador"></div>
-          <button class="btn-main" onclick="saveProfileEdits()">💾 SALVAR PALPITES</button>
+          <button class="btn-main" id="btn-save-finals" onclick="saveProfileEdits()">💾 SALVAR PALPITES</button>
         </div>
         <div class="set-card" style="margin-top:16px">
           <h3>📊 Histórico de Pontos</h3>
@@ -4565,9 +4565,43 @@ function renderProfile() {
   ['pe-champion','pe-runner-up'].forEach(id => {
     document.getElementById(id).innerHTML = teamOpts;
   });
-  document.getElementById('pe-champion').value  = u.champion  || '';
+document.getElementById('pe-champion').value  = u.champion  || '';
   document.getElementById('pe-runner-up').value = u.runnerUp  || '';
+
+  // ── BLOQUEIO MANUAL DOS PALPITES FINAIS ──
+  // Trava os palpites finais imediatamente para todos.
+  const lockedFinals = true;
+
+  ['pe-champion', 'pe-runner-up', 'pe-top-scorer', 'pe-runner-scorer', 'pe-assist-king'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.disabled = lockedFinals;
+      if (lockedFinals) el.style.opacity = '0.6';
+    }
+  });
+
+  const btnSaveFinals = document.getElementById('btn-save-finals');
+  if (btnSaveFinals) {
+    if (lockedFinals) {
+      btnSaveFinals.disabled = true;
+      btnSaveFinals.innerHTML = '🔒 PALPITES ENCERRADOS';
+      btnSaveFinals.style.background = 'var(--dark4)';
+      btnSaveFinals.style.color = 'var(--muted)';
+      btnSaveFinals.style.boxShadow = 'none';
+      btnSaveFinals.style.cursor = 'not-allowed';
+    } else {
+      btnSaveFinals.disabled = false;
+      btnSaveFinals.innerHTML = '💾 SALVAR PALPITES';
+      btnSaveFinals.style.background = '';
+      btnSaveFinals.style.color = '';
+      btnSaveFinals.style.boxShadow = '';
+      btnSaveFinals.style.cursor = 'pointer';
+    }
+  }
+  // ──────────────────────────────────────────────
+
   const history = GAMES.filter(g=>(S.results[g.id]||{}).status==='finished'&&(u.bets||{})[g.id]).map(g => {
+    
     const r=S.results[g.id]; const b=u.bets[g.id];
     let label='❌ Errou', cls='var(--red)', p=0;
     if (b.h===r.h&&b.a===r.a) { label=`⭐ Exato`; cls='var(--green)'; p=S.settings.exact; }
