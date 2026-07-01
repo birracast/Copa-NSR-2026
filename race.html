@@ -1,131 +1,697 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Corrida do Bolão</title>
-    <style>
-        :root { --gold: #C9A84C; --black: #0D0D0D; --text: #F0F0F0; --green: #3CAC3B; }
-        body { background: var(--black); color: var(--text); font-family: 'Barlow', sans-serif; padding: 20px; }
-        .controls { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
-        button { background: #333; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        button#btn-play { background: var(--gold); color: black; }
-        #chart-container { position: relative; height: 500px; margin-top: 40px; border-left: 2px solid #333; }
-        .bar-wrapper { position: absolute; left: 0; width: 100%; height: 60px; transition: transform 0.6s ease-in-out; display: flex; align-items: center; }
-        .bar { height: 45px; border-radius: 22px; display: flex; align-items: center; padding: 0 10px; transition: width 0.6s ease-in-out; justify-content: space-between; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .avatar { width: 35px; height: 35px; border-radius: 50%; border: 2px solid #fff; margin-right: 10px; object-fit: cover; }
-        .game-info { font-size: 13px; color: #aaa; margin-left: 10px; font-weight: bold; }
-        .gain-pts { font-weight: 900; background: rgba(60,172,59,0.2); color: #7de87c; padding: 2px 8px; border-radius: 12px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>🏎️ Corrida do Bolão</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#C9A84C">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bolão Copa">
+  <link rel="apple-touch-icon" href="taca.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ── VARIÁVEIS (idênticas ao index.html) ───────────────── */
+    :root {
+      --red:    #E61D25; --blue:  #2A398D; --green: #3CAC3B;
+      --gold:   #C9A84C; --gold2: #F0C040;
+      --black:  #0D0D0D; --dark:  #121212; --dark2: #1A1A1A;
+      --dark3:  #222222; --dark4: #2C2C2C; --border: #333333;
+      --text:   #F0F0F0; --muted: #888888;
+      --font-display: 'Barlow Condensed', sans-serif;
+      --font-body: 'Barlow', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body);
+      background: var(--black);
+      color: var(--text);
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse 100% 60% at 50% 0%,  rgba(42,57,141,.15) 0%, transparent 60%),
+        radial-gradient(ellipse 60%  40% at 10% 80%, rgba(60,172,59,.08)  0%, transparent 50%),
+        radial-gradient(ellipse 50%  30% at 90% 70%, rgba(230,29,37,.08)  0%, transparent 50%);
+    }
+    body.light-mode {
+      --black: #F5F7FA; --dark: #FFF; --dark2: #FFF; --dark3: #F0F2F5;
+      --dark4: #E4E8EF; --border: #D0D7E3; --text: #1A1E2E; --muted: #6B7280;
+    }
+    body.light-mode header { background: rgba(42,57,141,.97) !important; }
+    body.light-mode .nav-tab        { color: rgba(255,255,255,.65); }
+    body.light-mode .nav-tab:hover  { color:#fff; background:rgba(255,255,255,.15); }
+    body.light-mode .nav-tab.active { background:rgba(255,255,255,.2); color:#fff; border-bottom-color:var(--gold); }
+    body.light-mode .nav-name, body.light-mode .logo-we,
+    body.light-mode .logo-bolao { color:rgba(255,255,255,.7); }
+    body.light-mode .logo-are { color:#fff; }
+    body.light-mode .btn-logout { border-color:rgba(255,255,255,.3); color:rgba(255,255,255,.75); }
+    body.light-mode .nav-avatar { border-color:var(--gold); }
+    body.light-mode .theme-toggle { border-color:rgba(255,255,255,.35); background:rgba(255,255,255,.18); color:#fff; }
+
+    /* ── HEADER (idêntico ao index.html) ───────────────────── */
+    header {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(13,13,13,.95);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+    }
+    .header-top {
+      display: flex; align-items: center; gap: 16px;
+      padding: 12px 24px; max-width: 1300px; margin: 0 auto;
+    }
+    .logo-wrap { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .logo-we   { font-family:var(--font-display); font-size:11px; font-weight:600; letter-spacing:4px; color:var(--muted); text-transform:uppercase; }
+    .logo-are  { font-family:var(--font-display); font-size:26px; font-weight:900; letter-spacing:2px; color:var(--text); }
+    .logo-bolao{ font-family:var(--font-display); font-size:11px; font-weight:600; letter-spacing:3px; color:var(--gold); text-transform:uppercase; }
+
+    .nav-tabs { display:flex; gap:2px; margin-left:auto; flex-wrap:wrap; }
+    .nav-tab {
+      font-family:var(--font-display); font-size:15px; font-weight:700;
+      letter-spacing:1px; text-transform:uppercase;
+      padding:8px 18px; border-radius:8px; border:none;
+      background:none; color:var(--muted); cursor:pointer; transition:.2s;
+      display:flex; align-items:center; gap:6px;
+    }
+    .nav-tab:hover  { color:var(--text); background:var(--dark3); }
+    .nav-tab.active { background:var(--dark3); color:var(--text); border-bottom:2px solid var(--gold); border-radius:8px 8px 0 0; }
+
+    .nav-user { display:flex; align-items:center; gap:10px; margin-left:16px; }
+    .nav-avatar {
+      width:38px; height:38px; border-radius:50%; border:2px solid var(--gold);
+      object-fit:cover; background:var(--dark3); cursor:pointer; overflow:hidden;
+      display:flex; align-items:center; justify-content:center; font-size:18px;
+    }
+    .nav-name { font-size:14px; font-weight:600; color:var(--text); }
+    .nav-pts  { font-family:var(--font-display); font-size:15px; font-weight:800; color:var(--gold); }
+    .btn-logout {
+      border:1px solid var(--border); background:none; border-radius:8px;
+      padding:7px 14px; color:var(--muted); font-family:var(--font-body);
+      font-size:13px; cursor:pointer; transition:.2s;
+    }
+    .btn-logout:hover { border-color:var(--red); color:var(--red); }
+
+    .theme-toggle {
+      width:38px; height:38px; border-radius:50%;
+      border:1.5px solid var(--border); background:var(--dark3);
+      color:var(--text); font-size:18px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition:.2s; flex-shrink:0;
+    }
+    .theme-toggle:hover { transform:rotate(20deg) scale(1.1); }
+
+    .flag-stripe { height:4px; background:linear-gradient(90deg,var(--red) 33.3%,var(--blue) 33.3% 66.6%,var(--green) 66.6%); }
+
+    /* ── RACE LAYOUT ────────────────────────────────────────── */
+    .race-wrap {
+      max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px;
+    }
+
+    .race-header-row {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 24px;
+    }
+    .race-title {
+      font-family: var(--font-display); font-size: 28px; font-weight: 900;
+      letter-spacing: 1px; text-transform: uppercase; color: var(--text);
+    }
+    .race-title span { color: var(--gold); }
+
+    /* Controls */
+    .controls {
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px;
+    }
+    .rc-select {
+      background: var(--dark2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 16px; font-family: var(--font-display); font-size: 16px;
+      font-weight: 700; cursor: pointer; outline: none; transition: .2s;
+    }
+    .rc-select:focus { border-color: var(--gold); }
+
+    .rc-btn {
+      background: var(--dark3); color: var(--text); border: 1px solid var(--border);
+      padding: 10px 18px; border-radius: 10px; cursor: pointer; font-weight: 700;
+      font-family: var(--font-display); font-size: 18px; transition: .2s; line-height: 1;
+    }
+    .rc-btn:hover { border-color: var(--muted); }
+    .rc-btn-play {
+      background: var(--gold); color: #000; border-color: var(--gold);
+      padding: 10px 28px; font-size: 17px; letter-spacing: 1px;
+    }
+    .rc-btn-play:hover { background: var(--gold2); border-color: var(--gold2); }
+
+    /* Progress */
+    .progress-row {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+    }
+    .progress-track {
+      flex: 1; height: 6px; background: var(--dark3); border-radius: 3px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: linear-gradient(90deg, var(--blue), var(--gold));
+      border-radius: 3px; transition: width .6s ease; width: 0%;
+    }
+    .progress-label { font-size: 13px; color: var(--muted); white-space: nowrap; font-weight: 600; }
+
+    /* Round label */
+    #rodada-label {
+      text-align: center; font-family: var(--font-display);
+      font-size: 20px; font-weight: 800; color: var(--gold);
+      letter-spacing: 1px; min-height: 28px; margin-bottom: 20px;
+    }
+
+    /* No-data message */
+    #no-data-msg {
+      background: rgba(230,29,37,.1); border: 1px solid rgba(230,29,37,.3);
+      border-radius: 12px; padding: 24px; text-align: center; margin-top: 20px;
+    }
+    #no-data-msg h3 { color: #ff7b7b; font-size: 18px; margin-bottom: 8px; }
+    #no-data-msg p  { color: var(--muted); font-size: 14px; line-height: 1.6; }
+    .hidden { display: none !important; }
+
+    /* ── CHART ──────────────────────────────────────────────── */
+    #chart-container {
+      position: relative;
+      margin-top: 8px;
+    }
+
+    .bar-wrapper {
+      position: absolute; left: 0; right: 0;
+      height: 56px;
+      display: flex; align-items: center; gap: 10px;
+      transition: transform .65s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* Left label: rank + avatar + name */
+    .bar-label {
+      flex-shrink: 0; width: 190px;
+      display: flex; align-items: center; gap: 8px;
+      overflow: hidden;
+    }
+    .bar-rank {
+      font-family: var(--font-display); font-size: 13px; font-weight: 800;
+      color: var(--muted); width: 26px; text-align: right; flex-shrink: 0;
+    }
+    .bar-rank.top1 { color: var(--gold); font-size: 15px; }
+    .bar-rank.top2 { color: #C0C0C0; }
+    .bar-rank.top3 { color: #CD7F32; }
+
+    .bar-avatar-wrap {
+      width: 34px; height: 34px; border-radius: 50%; overflow: hidden;
+      border: 2px solid var(--border); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--dark3); font-size: 14px;
+    }
+    .bar-avatar-wrap img { width:100%; height:100%; object-fit:cover; }
+
+    .bar-user-name {
+      font-size: 13px; font-weight: 600; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis; color: var(--text);
+    }
+
+    /* Bar track */
+    .bar-track {
+      flex: 1; height: 42px; position: relative;
+    }
+    .bar {
+      height: 100%;
+      border-radius: 0 21px 21px 0;
+      display: flex; align-items: center; justify-content: flex-end;
+      padding-right: 14px;
+      transition: width .65s cubic-bezier(.4,0,.2,1);
+      min-width: 6px;
+      box-shadow: 0 3px 10px rgba(0,0,0,.4);
+      position: relative; overflow: hidden;
+    }
+    /* Sheen overlay */
+    .bar::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,.12) 0%, transparent 60%);
+    }
+    .bar-pts {
+      font-family: var(--font-display); font-size: 18px; font-weight: 900;
+      color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.6);
+      position: relative; z-index: 1;
+    }
+
+    /* Right: gain info */
+    .bar-gain {
+      width: 130px; flex-shrink: 0;
+      font-size: 12px; color: var(--muted); text-align: left; line-height: 1.3;
+    }
+    .gain-badge {
+      display: inline-block;
+      background: rgba(60,172,59,.25); color: #7de87c;
+      border: 1px solid rgba(60,172,59,.4);
+      border-radius: 10px; padding: 1px 7px;
+      font-weight: 800; font-size: 12px; margin-right: 4px;
+    }
+    .gain-game { color: var(--muted); font-size: 11px; }
+
+    /* Flash animation on score increase */
+    @keyframes scoreFlash {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.18); }
+      100% { transform: scale(1); }
+    }
+    .flash { animation: scoreFlash .35s ease; }
+
+    /* Responsive */
+    @media (max-width: 680px) {
+      .bar-label     { width: 130px; }
+      .bar-user-name { font-size: 12px; }
+      .bar-gain      { display: none; }
+      .header-top    { padding: 10px 14px; gap: 10px; }
+      .nav-tab       { padding: 6px 10px; font-size: 13px; }
+      .nav-name, .nav-pts { display: none; }
+      .race-wrap     { padding: 16px 12px 50px; }
+    }
+    @media (max-width: 480px) {
+      .bar-label { width: 100px; }
+      .bar-rank  { display: none; }
+    }
+  </style>
 </head>
 <body>
-    <div class="controls">
-        <button id="btn-prev">⏮️</button>
-        <button id="btn-play">▶️ PLAY</button>
-        <button id="btn-next">⏭️</button>
+
+<!-- ══ HEADER ═════════════════════════════════════════════════ -->
+<header>
+  <div class="header-top">
+    <div class="logo-wrap">
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;">
+        <img src="header.png" alt="Bolão" style="height:80px;width:auto;object-fit:contain;border-radius:6px;"
+             onerror="this.style.display='none';document.getElementById('logo-text').style.display='flex'">
+        <div id="logo-text" style="display:none;flex-direction:column">
+          <span class="logo-we">WE ARE</span>
+          <span class="logo-are">BOLÃO</span>
+        </div>
+        <span class="logo-bolao" style="font-size:10px;letter-spacing:2px;">FIFA World Cup™</span>
+      </div>
     </div>
-    <div id="rodada-label" style="text-align:center; font-weight:bold; color:var(--gold); font-size: 1.5rem;">Aguardando...</div>
-    <div id="chart-container"></div>
 
-    <script>
-        // 1. CARREGAR DADOS
-        const S_DATA = JSON.parse(localStorage.getItem('bolao26_alldata'));
-        const GAMES = JSON.parse(localStorage.getItem('bolao26_games'));
-        const SETTINGS = { exact:10, result:5 }; // Ajuste conforme seu index.html se precisar
+    <nav class="nav-tabs" id="nav-tabs">
+      <button class="nav-tab" onclick="goTo('games')">⚽ Jogos</button>
+      <button class="nav-tab" onclick="goTo('groups')">📊 Grupos</button>
+      <button class="nav-tab" onclick="goTo('ranking')"><img src="taca.png" alt="🏆" style="height:1.1em;vertical-align:text-bottom;margin-right:3px"> Ranking</button>
+      <button class="nav-tab active" onclick="void(0)">🏎️ Corrida</button>
+      <button class="nav-tab" onclick="goTo('pibet')">🎲 Piratabet</button>
+      <button class="nav-tab" onclick="goTo('help')">❓ Ajuda</button>
+      <button class="nav-tab" onclick="goTo('settings')">⚙️ Config</button>
+      <button class="nav-tab" onclick="goTo('profile')">👤 Perfil</button>
+    </nav>
 
-        if(!S_DATA || !GAMES) { alert("Dados não encontrados. Abra o Bolão primeiro!"); }
-        
-        const users = Object.values(S_DATA.users);
-        const results = S_DATA.results;
+    <div class="nav-user">
+      <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Modo claro/escuro">🌙</button>
+      <div class="nav-avatar" id="nav-av">🧑</div>
+      <div>
+        <div class="nav-name" id="nav-name">—</div>
+        <div class="nav-pts"  id="nav-pts">0 pts</div>
+      </div>
+      <button class="btn-logout" onclick="goTo(null)">← Bolão</button>
+    </div>
+  </div>
+  <div class="flag-stripe"></div>
+</header>
 
-        // 2. FUNÇÕES DE CÁLCULO REPLICADAS
-        function getWDL(h,a) { if(h>a)return'H'; if(a>h)return'A'; return'D'; }
-        
-        function calcGamePoints(u, game) {
-            const r = results[game.id];
-            const b = (u.bets||{})[game.id];
-            if (!r || !b || r.h === null) return 0;
-            if (b.h === r.h && b.a === r.a) return SETTINGS.exact;
-            if (getWDL(b.h,b.a) === getWDL(r.h,r.a)) return SETTINGS.result;
-            return 0;
-        }
+<!-- ══ RACE ══════════════════════════════════════════════════ -->
+<div class="race-wrap">
+  <div class="race-header-row">
+    <div class="race-title">🏎️ <span>Corrida</span> do Bolão</div>
+  </div>
 
-        // 3. GERAR LINHA DO TEMPO (SNAPSHOTS)
-        let snapshots = [];
-        function gerarSnapshots() {
-            let ranking = users.map(u => ({ 
-                id: u.email, name: u.name, avatar: u.avatar, 
-                color: `hsl(${Math.random()*360}, 70%, 60%)`, pts: 0 
-            }));
-            
-            snapshots.push(JSON.parse(JSON.stringify(ranking)));
+  <div class="controls">
+    <select class="rc-select" id="rank-type" onchange="changeRanking()">
+      <option value="pontos">🏆 Ranking de Pontos</option>
+      <option value="grupos">⚽ Pontos — Fase de Grupos</option>
+      <option value="mm">⚔️ Pontos — Mata-Mata</option>
+    </select>
+    <button class="rc-btn" id="btn-prev" onclick="stepPrev()">⏮</button>
+    <button class="rc-btn rc-btn-play" id="btn-play" onclick="togglePlay()">▶ PLAY</button>
+    <button class="rc-btn" id="btn-next" onclick="stepNext()">⏭</button>
+  </div>
 
-            GAMES.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(g => {
-                if (results[g.id]?.status === 'finished') {
-                    ranking.forEach(u => {
-                        const userObj = S_DATA.users[u.id];
-                        const pts = calcGamePoints(userObj, g);
-                        u.pts += pts;
-                        u.lastGain = pts;
-                        u.lastGame = g.hCode + ' x ' + g.aCode;
-                    });
-                    snapshots.push(JSON.parse(JSON.stringify(ranking)));
-                }
-            });
-        }
+  <div class="progress-row">
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <span class="progress-label" id="progress-label">— / —</span>
+  </div>
 
-        // 4. RENDERIZAÇÃO
-        let tick = 0;
-        let isPlaying = false;
-        let timer = null;
-        const container = document.getElementById('chart-container');
-        const barrasDOM = {};
+  <div id="rodada-label">Carregando dados…</div>
 
-        function initBars() {
-            users.forEach(u => {
-                const wrap = document.createElement('div');
-                wrap.className = 'bar-wrapper';
-                wrap.innerHTML = `<div class="bar" style="background:${barrasDOM[u.email]?.color || '#333'}"><div class="bar-info"><img class="avatar" src="${u.avatar||'taca.png'}"><span>${u.name}</span></div><span class="score-text">0</span></div><div class="game-info"></div>`;
-                container.appendChild(wrap);
-                barrasDOM[u.email] = wrap;
-            });
-        }
+  <div id="no-data-msg" class="hidden">
+    <h3>⚠️ Dados não encontrados</h3>
+    <p>
+      Para usar a Corrida do Bolão, primeiro acesse o bolão principal, faça login
+      e aguarde o carregamento dos dados.<br><br>
+      A Corrida lê os dados do cache local — eles precisam ser carregados
+      pelo menos uma vez no <strong>index.html</strong>.
+    </p>
+    <button class="rc-btn" style="margin-top:16px" onclick="goTo(null)">← Voltar ao Bolão</button>
+  </div>
 
-        function renderSnapshot(index) {
-            const data = snapshots[index];
-            const maxVal = Math.max(...data.map(d => d.pts), 1);
-            const ordenado = [...data].sort((a, b) => b.pts - a.pts);
-            
-            document.getElementById('rodada-label').innerText = index === 0 ? 'Início' : `Jogo ${index}`;
+  <div id="chart-container"></div>
+</div>
 
-            ordenado.forEach((u, i) => {
-                const wrap = barrasDOM[u.id];
-                const bar = wrap.querySelector('.bar');
-                wrap.style.transform = `translateY(${i * 65}px)`;
-                bar.style.width = `${(u.pts / maxVal) * 70}%`;
-                bar.querySelector('.score-text').innerText = u.pts;
-                wrap.querySelector('.game-info').innerHTML = index > 0 ? `<span class="gain-pts">+${u.lastGain}</span> ${u.lastGame}` : '';
-            });
-        }
+<!-- ══ SCRIPT ════════════════════════════════════════════════ -->
+<script>
+// ── Paleta de cores estável ──────────────────────────────────
+const BAR_COLORS = [
+  '#E61D25','#2A398D','#3CAC3B','#C9A84C','#FF6B35',
+  '#9B59B6','#1ABC9C','#E74C3C','#3498DB','#F39C12',
+  '#27AE60','#8E44AD','#16A085','#D35400','#2980B9',
+  '#C0392B','#7F8C8D','#F1C40F','#E91E63','#00BCD4',
+];
+const BAR_HEIGHT = 68; // px por usuário (barra 56px + gap 12px)
 
-        // 5. CONTROLES
-        document.getElementById('btn-play').addEventListener('click', function() {
-            if(isPlaying) { clearInterval(timer); isPlaying=false; this.innerText='▶️ PLAY'; }
-            else { 
-                isPlaying=true; this.innerText='⏸ PAUSE';
-                timer = setInterval(() => { 
-                    if(tick < snapshots.length-1) { tick++; renderSnapshot(tick); }
-                    else { clearInterval(timer); isPlaying=false; this.innerText='▶️ PLAY'; }
-                }, 1000);
-            }
-        });
+// ── Leitura do localStorage ──────────────────────────────────
+let allData, RESULTS, SETTINGS, GAMES, USERS, colorMap;
 
-        document.getElementById('btn-next').addEventListener('click', () => { if(tick < snapshots.length-1) { tick++; renderSnapshot(tick); } });
-        document.getElementById('btn-prev').addEventListener('click', () => { if(tick > 0) { tick--; renderSnapshot(tick); } });
+function loadData() {
+  try {
+    const raw       = localStorage.getItem('bolao26_alldata');
+    const rawSet    = localStorage.getItem('bolao26_settings');
+    const rawGames  = localStorage.getItem('bolao26_games');
+    const rawSess   = localStorage.getItem('bolao26_session');
 
-        // INICIALIZAÇÃO
-        gerarSnapshots();
-        initBars();
-        renderSnapshot(0);
-    </script>
+    if (!raw || !rawGames) return false;
+
+    allData  = JSON.parse(raw);
+    const sd = JSON.parse(rawSet || '{}');
+
+    // Resultados dos jogos ficam em bolao26_settings.results
+    RESULTS  = sd.results || {};
+
+    // Configurações de pontuação (persistidas pelo index.html atualizado)
+    SETTINGS = {
+      exact:  sd.settings?.exact  ?? 10,
+      result: sd.settings?.result ?? 5,
+      streak: sd.settings?.streak ?? 5,
+      semi:   sd.settings?.semi   ?? 15,
+      final:  sd.settings?.final  ?? 25,
+    };
+
+    GAMES = JSON.parse(rawGames);
+    // allData.users é objeto { email: userObj }
+    USERS = Object.values(allData.users || {});
+
+    if (!USERS.length) return false;
+
+    // Mapa de cores estável (por ordem alfabética de email)
+    const sortedEmails = Object.keys(allData.users).sort();
+    colorMap = {};
+    sortedEmails.forEach((e, i) => { colorMap[e] = BAR_COLORS[i % BAR_COLORS.length]; });
+
+    // Preenche a info do usuário logado no nav
+    const sess = rawSess ? JSON.parse(rawSess) : null;
+    if (sess?.userData) populateNav(sess.userData, sess.email);
+
+    return true;
+  } catch(e) {
+    console.error('[Race] Erro ao carregar dados:', e);
+    return false;
+  }
+}
+
+// ── Nav: usuário logado ───────────────────────────────────────
+function populateNav(u, email) {
+  document.getElementById('nav-name').textContent = u.name || email;
+
+  // Calcula pontos totais do usuário logado
+  let totalPts = 0;
+  if (GAMES && RESULTS) {
+    GAMES.forEach(g => { totalPts += calcGameScore(email, g); });
+  }
+  document.getElementById('nav-pts').textContent = totalPts + ' pts';
+
+  const av = document.getElementById('nav-av');
+  if (u.avatar) {
+    av.innerHTML = `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g,
+    c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
+
+function getWDL(h, a) { return h > a ? 'H' : a > h ? 'A' : 'D'; }
+
+/**
+ * Calcula pontos de um usuário para um jogo específico.
+ * Lê resultados de RESULTS (bolao26_settings.results) e
+ * palpites de allData.users[email].bets.
+ */
+function calcGameScore(email, game) {
+  const r = RESULTS[game.id];
+  if (!r || r.h === null || r.h === undefined) return 0;
+  if (r.status !== 'finished' && r.status !== 'live') return 0;
+
+  const user = allData.users[email];
+  const b    = user ? (user.bets || {})[game.id] : null;
+  if (!b) return 0;
+
+  if (b.h === r.h && b.a === r.a) {
+    let pts = SETTINGS.exact;
+    if (game.phase === 'Semifinal') pts += SETTINGS.semi;
+    if (game.phase === 'Final')     pts += SETTINGS.final;
+    return pts;
+  }
+  if (getWDL(b.h, b.a) === getWDL(r.h, r.a)) return SETTINGS.result;
+  return 0;
+}
+
+// ── Snapshots ─────────────────────────────────────────────────
+let snapshots  = [];  // Array de { data: [...], game: obj|null }
+
+function buildSnapshots(tipo) {
+  snapshots = [];
+
+  // Estado inicial: todos em 0
+  const initial = USERS.map(u => ({
+    id:       u.email,
+    name:     u.name || u.email,
+    avatar:   u.avatar || '',
+    color:    colorMap[u.email],
+    val:      0,
+    lastGain: 0,
+    lastGame: '',
+  }));
+  snapshots.push({ data: deepCopy(initial), game: null });
+
+  // Filtra jogos com resultado e ordena por data
+  const stageOk = (g) => {
+    if (tipo === 'grupos') return g.stage === 'GROUP_STAGE';
+    if (tipo === 'mm')     return g.stage !== 'GROUP_STAGE';
+    return true;
+  };
+
+  const played = GAMES
+    .filter(g => {
+      const r = RESULTS[g.id];
+      return r && (r.status === 'finished' || r.status === 'live') && r.h !== null;
+    })
+    .filter(stageOk)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  played.forEach(g => {
+    const cur = deepCopy(snapshots[snapshots.length - 1].data);
+    cur.forEach(u => {
+      const gain = calcGameScore(u.id, g);
+      u.val      += gain;
+      u.lastGain  = gain;
+      u.lastGame  = `${g.hCode} x ${g.aCode}`;
+    });
+    snapshots.push({ data: cur, game: g });
+  });
+}
+
+function deepCopy(obj) { return JSON.parse(JSON.stringify(obj)); }
+
+// ── DOM das barras ────────────────────────────────────────────
+const container = document.getElementById('chart-container');
+const barElMap  = new Map();  // email → wrapper DOM
+
+function initBars() {
+  container.innerHTML = '';
+  barElMap.clear();
+  container.style.height = (USERS.length * BAR_HEIGHT) + 'px';
+
+  USERS.forEach((u, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'bar-wrapper';
+    wrap.style.transform = `translateY(${i * BAR_HEIGHT}px)`;
+
+    const avatarHtml = u.avatar
+      ? `<img src="${esc(u.avatar)}" alt="" onerror="this.parentNode.textContent='${esc((u.name||'?')[0].toUpperCase())}'">` 
+      : esc((u.name || '?')[0].toUpperCase());
+
+    wrap.innerHTML = `
+      <div class="bar-label">
+        <span class="bar-rank">#${i + 1}</span>
+        <div class="bar-avatar-wrap">${avatarHtml}</div>
+        <span class="bar-user-name">${esc(u.name || u.email)}</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar" style="background:${colorMap[u.email]};width:0%">
+          <span class="bar-pts">0</span>
+        </div>
+      </div>
+      <div class="bar-gain"></div>
+    `;
+    container.appendChild(wrap);
+    barElMap.set(u.email, wrap);
+  });
+}
+
+// ── Renderização de um snapshot ───────────────────────────────
+function renderSnapshot(idx) {
+  if (idx < 0 || idx >= snapshots.length) return;
+  const { data, game } = snapshots[idx];
+  const maxVal = Math.max(...data.map(d => d.val), 1);
+
+  // Ordena por pontos decrescente; em empate mantém ordem pelo nome
+  const sorted = [...data].sort((a, b) => b.val - a.val || a.name.localeCompare(b.name));
+
+  sorted.forEach((u, rank) => {
+    const wrap = barElMap.get(u.id);
+    if (!wrap) return;
+
+    wrap.style.transform = `translateY(${rank * BAR_HEIGHT}px)`;
+
+    // Rank badge
+    const rankEl = wrap.querySelector('.bar-rank');
+    rankEl.textContent = '#' + (rank + 1);
+    rankEl.className = 'bar-rank' + (rank === 0 ? ' top1' : rank === 1 ? ' top2' : rank === 2 ? ' top3' : '');
+
+    // Barra
+    const bar     = wrap.querySelector('.bar');
+    const pct     = maxVal > 0 ? Math.max(0.6, (u.val / maxVal) * 82) : 0;
+    const oldWidth = parseFloat(bar.style.width) || 0;
+    bar.style.width = pct + '%';
+
+    // Score
+    const ptsEl = wrap.querySelector('.bar-pts');
+    const prevVal = parseInt(ptsEl.textContent) || 0;
+    ptsEl.textContent = u.val;
+    if (u.val > prevVal) {
+      ptsEl.classList.remove('flash');
+      void ptsEl.offsetWidth; // reflow
+      ptsEl.classList.add('flash');
+    }
+
+    // Gain info
+    const gainEl = wrap.querySelector('.bar-gain');
+    if (idx > 0 && u.lastGain > 0) {
+      gainEl.innerHTML = `<span class="gain-badge">+${u.lastGain}</span><br><span class="gain-game">${esc(u.lastGame)}</span>`;
+    } else {
+      gainEl.innerHTML = '';
+    }
+  });
+
+  // Label da rodada
+  updateLabel(idx);
+  // Progresso
+  updateProgress(idx);
+}
+
+function updateLabel(idx) {
+  const el   = document.getElementById('rodada-label');
+  const total = snapshots.length - 1;
+  if (idx === 0) {
+    el.textContent = total === 0
+      ? '⏳ Nenhum jogo encerrado ainda'
+      : '🏁 Largada — Pontuação inicial';
+  } else {
+    const g = snapshots[idx].game;
+    if (g) {
+      const date = g.date ? new Date(g.date).toLocaleDateString('pt-BR', {day:'2-digit', month:'short'}) : '';
+      el.textContent = `🎮 Jogo ${idx} de ${total} · ${g.hCode} x ${g.aCode}${date ? ' · ' + date : ''} · ${g.phase || ''}`;
+    } else {
+      el.textContent = `Jogo ${idx} de ${total}`;
+    }
+  }
+}
+
+function updateProgress(idx) {
+  const total = Math.max(snapshots.length - 1, 1);
+  document.getElementById('progress-fill').style.width = ((idx / total) * 100) + '%';
+  document.getElementById('progress-label').textContent = `${idx} / ${snapshots.length - 1}`;
+}
+
+// ── Controles ─────────────────────────────────────────────────
+let tick = 0, isPlaying = false, timer = null;
+
+function changeRanking() {
+  const tipo = document.getElementById('rank-type').value;
+  pausePlay();
+  tick = 0;
+  buildSnapshots(tipo);
+  renderSnapshot(0);
+}
+
+function stepPrev() { if (tick > 0) { tick--; renderSnapshot(tick); } }
+function stepNext() { if (tick < snapshots.length - 1) { tick++; renderSnapshot(tick); } }
+
+function togglePlay() {
+  isPlaying ? pausePlay() : startPlay();
+}
+
+function startPlay() {
+  if (tick >= snapshots.length - 1) tick = 0; // reinicia do zero se chegou ao fim
+  isPlaying = true;
+  document.getElementById('btn-play').textContent = '⏸ PAUSE';
+  timer = setInterval(() => {
+    if (tick < snapshots.length - 1) {
+      tick++;
+      renderSnapshot(tick);
+    } else {
+      pausePlay();
+    }
+  }, 950);
+}
+
+function pausePlay() {
+  isPlaying = false;
+  clearInterval(timer);
+  document.getElementById('btn-play').textContent = '▶ PLAY';
+}
+
+// ── Navegação para index.html ─────────────────────────────────
+function goTo(page) {
+  const url = page ? `index.html?page=${page}` : 'index.html';
+  window.location.href = url;
+}
+
+// ── Tema ──────────────────────────────────────────────────────
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light-mode');
+  document.getElementById('theme-btn').textContent = isLight ? '☀️' : '🌙';
+  try { localStorage.setItem('bolao_theme', isLight ? 'light' : 'dark'); } catch(e) {}
+}
+function applyStoredTheme() {
+  try {
+    if (localStorage.getItem('bolao_theme') === 'light') {
+      document.body.classList.add('light-mode');
+      document.getElementById('theme-btn').textContent = '☀️';
+    }
+  } catch(e) {}
+}
+
+// ── Boot ──────────────────────────────────────────────────────
+applyStoredTheme();
+
+const ok = loadData();
+if (!ok) {
+  document.getElementById('rodada-label').textContent = '';
+  document.getElementById('no-data-msg').classList.remove('hidden');
+} else {
+  document.getElementById('no-data-msg').classList.add('hidden');
+  initBars();
+  buildSnapshots('pontos');
+  renderSnapshot(0);
+}
+</script>
 </body>
 </html>
