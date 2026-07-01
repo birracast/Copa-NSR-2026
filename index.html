@@ -3010,7 +3010,7 @@ function calcPoints(user) {
     else { streak=0; }
   });
   if (maxStreak>=3) total+=s.streak;
-  return { total, exact, res, piratecas: calcUserPiratecas(user.email) }; 
+  return { total, exact, res, piratecas: calcUserPiratecas(user.email), maxStreak }; 
 }
 
 // ================================================================
@@ -3505,6 +3505,15 @@ function showHistoryModal(email, type) {
       }
     });
     const ptsObj = calcPoints(u);
+    
+    // Se a sequência máxima foi 3 ou mais, imprime a linha do bônus
+    if (ptsObj.maxStreak >= 3) {
+      html += `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <span style="font-size:14px;">🌟 Bônus de Sequência (3+ Exatos)</span>
+        <span style="color:var(--gold);font-weight:bold;white-space:nowrap;">+${S.settings.streak}</span>
+      </div>`;
+    }
+    
     html += `<div style="padding:8px;text-align:right;font-weight:bold;color:var(--gold);">Total: ${ptsObj.total} pts</div>`;
 
   } else {
