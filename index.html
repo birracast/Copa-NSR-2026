@@ -1259,7 +1259,7 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
         <button class="nav-tab active" id="nt-games"   onclick="navTo('games')">⚽ Jogos</button>
         <button class="nav-tab"        id="nt-groups"  onclick="navTo('groups')">📊 Grupos</button>
         <button class="nav-tab"        id="nt-ranking" onclick="navTo('ranking')"><img src="taca.png" alt="Troféu" style="height: 1.2em; vertical-align: text-bottom; margin-right: 4px;"> Ranking</button>
-        <button class="nav-tab"        id="nt-highlights" onclick="navTo('highlights')">🏆 Highlights</button>
+        <button class="nav-tab"        id="nt-race"    onclick="window.open('race.html', '_blank')">🏎️ Corrida</button>
         <button class="nav-tab"        id="nt-pibet"   onclick="navTo('pibet')">🎲 Piratabet</button>
         <button class="nav-tab"        id="nt-help"    onclick="navTo('help')">❓ Ajuda</button>
         <button class="nav-tab"        id="nt-settings" onclick="navTo('settings')">⚙️ Config</button>
@@ -1348,11 +1348,10 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
     </div>
   </div>
 
-<div id="page-highlights" class="main-wrap hidden">
-    <div class="phase-hdr">
-      <span class="phase-hdr-text">🏆 Highlights</span>
-      <span class="phase-pill final">Destaques do Bolão</span>
-    </div>
+<!-- BLOCO DE SUBSTITUIÇÃO: CONTEÚDO DA PÁGINA -->
+  <div id="page-highlights" class="hidden"></div>
+<!-- FIM DA SUBSTITUIÇÃO -->
+  
     <div class="hl-tabs">
       <button class="hl-tab active" id="hlt-rodadas" onclick="hlTab('rodadas')">Por Rodada</button>
       <button class="hl-tab"        id="hlt-jogos"   onclick="hlTab('jogos')">Por Jogo</button>
@@ -2093,6 +2092,10 @@ async function boot() {
     // Carrega tudo antes de liberar o botão de entrada
     try {
       await loadTournamentData(false);
+      
+      // ADICIONE ESTA LINHA ABAIXO PARA O RACE.HTML LER OS JOGOS
+      localStorage.setItem('bolao26_games', JSON.stringify(GAMES));
+      
       await syncGlobalSettings();
       const data = await gsLoadAll();
       if (data && data.users) {
