@@ -2,20 +2,22 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Corrida do Bolão</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        /* Importe as mesmas variáveis do seu index para manter a identidade */
-        :root { --gold: #C9A84C; --black: #0D0D0D; --dark2: #1A1A1A; --text: #F0F0F0; }
+        :root { --gold: #C9A84C; --black: #0D0D0D; --dark2: #1A1A1A; --text: #F0F0F0; --green: #3CAC3B; --red: #E61D25; --blue: #2A398D; }
         body { background: var(--black); color: var(--text); font-family: 'Barlow', sans-serif; padding: 20px; }
-        .controls { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
-        button { background: #333; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .controls { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+        button { background: #333; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: 'Barlow Condensed'; }
         button#btn-play { background: var(--gold); color: black; }
-        select { background: #333; color: white; padding: 10px; border-radius: 8px; border: none; }
-        #chart-container { position: relative; height: 500px; margin-top: 20px; }
-        .bar-wrapper { position: absolute; left: 0; width: 100%; height: 55px; transition: transform 0.6s ease-in-out; display: flex; align-items: center; }
-        .bar { height: 45px; border-radius: 22px; display: flex; align-items: center; padding: 0 10px; transition: width 0.6s ease-in-out; justify-content: space-between; }
-        .avatar { width: 35px; height: 35px; border-radius: 50%; background: #000; margin-right: 10px; border: 2px solid #fff; }
-        .info-game { font-size: 12px; color: #ccc; margin-left: 10px; white-space: nowrap; }
+        select { background: #333; color: white; padding: 10px; border-radius: 8px; border: none; font-family: 'Barlow'; }
+        #chart-container { position: relative; height: 500px; margin-top: 40px; border-left: 2px solid #333; }
+        .bar-wrapper { position: absolute; left: 0; width: 100%; height: 60px; transition: transform 0.6s ease-in-out; display: flex; align-items: center; }
+        .bar { height: 45px; border-radius: 22px; display: flex; align-items: center; padding: 0 10px; transition: width 0.6s ease-in-out; justify-content: space-between; box-shadow: 0 4px 10px rgba(0,0,0,0.5); white-space: nowrap; overflow: hidden; }
+        .avatar { width: 35px; height: 35px; border-radius: 50%; border: 2px solid #fff; margin-right: 10px; object-fit: cover; }
+        .game-info { font-size: 13px; color: #aaa; margin-left: 10px; font-weight: bold; }
+        .gain-pts { font-weight: 900; background: rgba(60,172,59,0.2); color: #7de87c; padding: 2px 8px; border-radius: 12px; }
     </style>
 </head>
 <body>
@@ -30,22 +32,115 @@
         <button id="btn-play">▶️ PLAY</button>
         <button id="btn-next">⏭️</button>
     </div>
-    <div id="rodada-label" style="text-align:center; font-weight:bold; color:var(--gold);">Início</div>
+    <div id="rodada-label" style="text-align:center; font-weight:bold; color:var(--gold); font-size: 1.5rem;">Selecione um Ranking</div>
 
     <div id="chart-container"></div>
 
     <script>
-        // Carrega dados do localStorage compartilhado
-        const data = JSON.parse(localStorage.getItem('bolao26_alldata'));
-        const games = JSON.parse(localStorage.getItem('bolao26_games')); // Dica: salve GAMES no localStorage no index.html!
-        const users = data.users;
+        // 1. CARREGAR DADOS DO INDEX
+        const rawData = JSON.parse(localStorage.getItem('bolao26_alldata'));
+        const GAMES = JSON.parse(localStorage.getItem('bolao26_games'));
+        const SETTINGS = JSON.parse(localStorage.getItem('bolao26_settings'))?.settings || {exact:10, result:5};
         
-        // ... (AQUI VOCÊ COLOCA A LÓGICA DE CALCULAR SNAPSHOTS) ...
-        // Como você tem os dados (S.users, S.results), você deve replicar a lógica 
-        // de calcPoints e calcPiratecasFiltered para criar o array 'snapshots'.
+        if(!rawData) { alert("Dados não encontrados. Entre no bolão primeiro!"); }
+        const users = Object.values(rawData.users);
+
+        // 2. FUNÇÕES DE CÁLCULO (IMPORTADAS DO SEU SISTEMA)
+        function getWDL(h,a) { if(h>a)return'H'; if(a>h)return'A'; return'D'; }
+        function getRodada(id) { if (id <= 24) return 1; if (id <= 48) return 2; if (id <= 72) return 3; return 4; }
         
-        // DICA: Você precisará de uma função que percorra os jogos cronologicamente 
-        // e, para cada jogo, gere um objeto contendo o ranking atualizado.
+        // Simulação simplificada de cálculo de pontos
+        function calcGameScore(u, game) {
+            const r = rawData.results[game.id];
+            const b = (u.bets||{})[game.id];
+            if (!r || !b || r.h === null) return 0;
+            if (b.h === r.h && b.a === r.a) return SETTINGS.exact;
+            if (getWDL(b.h,b.a) === getWDL(r.h,r.a)) return SETTINGS.result;
+            return 0;
+        }
+
+        // 3. LÓGICA DE SNAPSHOTS
+        let snapshots = [];
+        let tick = 0;
+        let isPlaying = false;
+        let timer = null;
+        const container = document.getElementById('chart-container');
+        const barrasDOM = {};
+
+        function gerarSnapshots(tipo) {
+            snapshots = [];
+            let currentData = users.map(u => ({ 
+                id: u.email, name: u.name, avatar: u.avatar, 
+                color: '#'+Math.floor(Math.random()*16777215).toString(16), 
+                val: 0 
+            }));
+            
+            snapshots.push(JSON.parse(JSON.stringify(currentData)));
+
+            const sortedGames = GAMES.filter(g => rawData.results[g.id]?.status === 'finished')
+                                     .sort((a,b) => new Date(a.date) - new Date(b.date));
+
+            sortedGames.forEach(g => {
+                currentData.forEach(u => {
+                    const userObj = rawData.users[u.id];
+                    u.val += calcGameScore(userObj, g); // Ajuste aqui se quiser somar Piratecas
+                    u.lastGain = calcGameScore(userObj, g);
+                    u.lastGame = g.hCode + ' x ' + g.aCode;
+                });
+                snapshots.push(JSON.parse(JSON.stringify(currentData)));
+            });
+        }
+
+        // 4. RENDERIZAÇÃO
+        function initBars() {
+            container.innerHTML = '';
+            users.forEach(u => {
+                const wrap = document.createElement('div');
+                wrap.className = 'bar-wrapper';
+                wrap.innerHTML = `<div class="bar"><div class="bar-info"><img class="avatar" src="${u.avatar||'taca.png'}"><span>${u.name}</span></div><span class="score-text">0</span></div><div class="game-info"></div>`;
+                container.appendChild(wrap);
+                barrasDOM[u.email] = wrap;
+            });
+        }
+
+        function renderSnapshot(index) {
+            const data = snapshots[index];
+            const maxVal = Math.max(...data.map(d => d.val), 1);
+            const ordenado = [...data].sort((a, b) => b.val - a.val);
+
+            ordenado.forEach((u, i) => {
+                const wrap = barrasDOM[u.id];
+                const bar = wrap.querySelector('.bar');
+                const info = wrap.querySelector('.game-info');
+                wrap.style.transform = `translateY(${i * 65}px)`;
+                bar.style.width = `${(u.val / maxVal) * 70}%`;
+                bar.querySelector('.score-text').innerText = u.val;
+                info.innerHTML = index > 0 ? `<span class="gain-pts">+${u.lastGain}</span> ${u.lastGame}` : '';
+            });
+        }
+
+        // 5. CONTROLES
+        document.getElementById('rank-type').addEventListener('change', (e) => {
+            gerarSnapshots(e.target.value);
+            tick = 0; renderSnapshot(0);
+        });
+
+        document.getElementById('btn-play').addEventListener('click', function() {
+            if(isPlaying) { clearInterval(timer); isPlaying = false; this.innerText = '▶️ PLAY'; }
+            else { 
+                isPlaying = true; this.innerText = '⏸ PAUSE';
+                timer = setInterval(() => { if(tick < snapshots.length-1) { tick++; renderSnapshot(tick); } else { clearInterval(timer); isPlaying=false; this.innerText='▶️ PLAY'; } }, 1000);
+            }
+        });
+
+        document.getElementById('btn-next').addEventListener('click', () => { if(tick < snapshots.length-1) { tick++; renderSnapshot(tick); } });
+        document.getElementById('btn-prev').addEventListener('click', () => { if(tick > 0) { tick--; renderSnapshot(tick); } });
+        container.addEventListener('click', () => { if(tick < snapshots.length-1) { tick++; renderSnapshot(tick); } });
+
+        // Inicializar
+        initBars();
+        gerarSnapshots('pontos');
+        renderSnapshot(0);
     </script>
 </body>
 </html>
