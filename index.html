@@ -2024,7 +2024,14 @@ function isUserHidden(email) {
 //  PERSIST SETTINGS (only settings in localStorage, not users)
 // ================================================================
 function persistSettings() {
-  const localSettings = { sceneBg: S.settings.sceneBg };
+  const localSettings = {
+    sceneBg: S.settings.sceneBg,
+    exact:   S.settings.exact,
+    result:  S.settings.result,
+    streak:  S.settings.streak,
+    semi:    S.settings.semi,
+    final:   S.settings.final
+  };
   localStorage.setItem('bolao26_settings', JSON.stringify({ version:1, results:S.results, settings:localSettings }));
 }
 function hydrateSettings() {
@@ -2347,11 +2354,14 @@ function enterApp() {
   if (syncBtn) syncBtn.classList.toggle('hidden', !isAdm);
   
   const urlParams = new URLSearchParams(window.location.search);
-  const pibetId = urlParams.get('pibet');
-  
+  const pibetId  = urlParams.get('pibet');
+  const pageParam = urlParams.get('page');
+
   if (pibetId) {
     navTo('pibet');
     setTimeout(() => focusPibet(pibetId), 500);
+  } else if (pageParam && pages.includes(pageParam)) {
+    navTo(pageParam);
   } else {
     navTo('games');
   }
