@@ -2756,8 +2756,8 @@ function calcGamePoints(user, gameId) {
   const s = S.settings; const r = S.results[gameId]; const b = (user.bets||{})[gameId];
   if (!r || (r.status !== 'finished' && r.status !== 'live') || !b || r.h === null) return 0;
   // Mata-mata com placar empatado = prorrogação/pênaltis ainda não contabilizados.
-  // Aguarda o resultado final antes de distribuir pontos.
-  if (isKnockoutGame(gameId) && r.h === r.a) return 0;
+// Aguarda o resultado final antes de distribuir pontos (exceto se o jogo já estiver encerrado).
+  if (isKnockoutGame(gameId) && r.h === r.a && r.status !== 'finished') return 0;
   let pts = 0;
   const game = GAMES.find(g=>g.id===gameId);
   if (b.h === r.h && b.a === r.a) {
@@ -3084,8 +3084,8 @@ function calcPoints(user) {
   GAMES.forEach(g => {
     const r = S.results[g.id]; const b = (user.bets||{})[g.id];
     if (!r || (r.status !== 'finished' && r.status !== 'live') || !b || r.h === null) return;
-    // Mata-mata com empate = prorrogação/pênaltis ainda não contabilizados → não pontua.
-    if (isKnockoutGame(g.id) && r.h === r.a) return;
+    // Mata-mata com empate = prorrogação/pênaltis ainda não contabilizados → não pontua (exceto se encerrado).
+    if (isKnockoutGame(g.id) && r.h === r.a && r.status !== 'finished') return;
 
     if (b.h===r.h && b.a===r.a) { 
       total+=s.exact; exact++; streak++; 
@@ -3311,7 +3311,7 @@ function renderGameCard(game) {
 
   let outcome='', cardClass='';
   if (r.status==='finished' && myBet && r.h!==null) {
-    if (isKnockoutGame(game.id) && r.h === r.a) {
+    if (isKnockoutGame(game.id) && r.h === r.a && r.status !== 'finished') {
       // Mata-mata empatado nos 90min: prorrogação/pênaltis pendentes → não é resultado final.
       outcome='pending-ko'; cardClass='';
     } else if (myBet.h===r.h && myBet.a===r.a)             { outcome='exact';     cardClass='exact'; }
@@ -3340,7 +3340,7 @@ function renderGameCard(game) {
     </div>`;
   }
 
-  const isKoPending = r.h !== null && isKnockoutGame(game.id) && r.h === r.a;
+  const isKoPending = r.h !== null && isKnockoutGame(game.id) && r.h === r.a && r.status !== 'finished';
   const realScore = r.h!==null
     ? isKoPending
       ? `<div class="real-score">${r.h}–${r.a}<span style="display:block;font-size:10px;font-weight:700;color:var(--gold);letter-spacing:1px;text-align:center;">⏱ PRORR.</span></div>`
@@ -3393,8 +3393,8 @@ const rows = othersWithBet.map(u => {
       const isMeRow   = u.email === S.me;
 
       let scoreClass = '';
-      if (r.status==='finished' && ub && r.h!==null && !(isKnockoutGame(game.id) && r.h === r.a)) {
-        if (ub.h===r.h && ub.a===r.a)                       scoreClass='exact-sc';
+  if (r.status==='finished' && ub && r.h!==null && !(isKnockoutGame(game.id) && r.h === r.a && r.status !== 'finished')) {
+    if (ub.h===r.h && ub.a===r.a)                       scoreClass='exact-sc';
         else if (getWDL(ub.h,ub.a)===getWDL(r.h,r.a))       scoreClass='result-sc';
         else                                                  scoreClass='wrong-sc';
       }
@@ -3577,7 +3577,7 @@ function showHistoryModal(email, type) {
       const b = u.bets[g.id];
       const s = S.settings;
       let pts = 0, msg = '';
-      const koPending = isKnockoutGame(g.id) && r && r.h !== null && r.h === r.a;
+      const koPending = isKnockoutGame(g.id) && r && r.h !== null && r.h === r.a && r.status !== 'finished';
       if (koPending) {
         msg = `⏱ Aguard. resultado final (${b.h}-${b.a})`;
       } else if (b.h===r.h && b.a===r.a) {
@@ -5755,7 +5755,7 @@ function raceBuildSnapshots(tipo) {
          const b = userObj.bets ? userObj.bets[g.id] : null;
          // calcGamePoints já ignora mata-mata empatado (prorrogação pendente)
          let gain = calcGamePoints(userObj, g.id);
-         const koPending = isKnockoutGame(g.id) && r && r.h !== null && r.h === r.a;
+         const koPending = isKnockoutGame(g.id) && r.h !== null && r.h === r.a && r.status !== 'finished';
          
          if (b && r && r.h !== null && !koPending) {
              if (b.h === r.h && b.a === r.a) {
