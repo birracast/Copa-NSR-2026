@@ -6,7 +6,7 @@ from googleapiclient.discovery import build
 API_KEY = os.environ.get('YOUTUBE_API_KEY')
 
 # Substitua pelo ID da PLAYLIST (Fica na URL do YouTube depois de "list=")
-PLAYLIST_ID = 'PLZuM_Kl1KELkV0PiJMj-zr5gJ9zVKhBvC' 
+PLAYLIST_ID = 'PLsFWLnYCEXEXzxMxUPwbgzRhkYPZhAoQt' 
 
 def fetch_latest_videos():
     youtube = build('youtube', 'v3', developerKey=API_KEY)
