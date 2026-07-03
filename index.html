@@ -2735,6 +2735,16 @@ function getGameStatus(game) {
 // ================================================================
 function getWDL(h,a) { if(h>a)return'H'; if(a>h)return'A'; return'D'; }
 
+// Retorna true para qualquer fase eliminatória (não pode terminar em empate).
+// Em jogos de mata-mata, placar empatado no resultado armazenado significa que
+// a prorrogação / pênaltis ainda não foram contabilizados pelo Apps Script
+// (ele recebeu o resultado dos 90 min e marcou "finished" antes do resultado final).
+// Nesses casos NÃO pontuamos — esperamos o placar definitivo.
+function isKnockoutGame(gameId) {
+  const g = GAMES.find(x => x.id === gameId);
+  return !!g && g.stage !== '' && g.stage !== 'GROUP_STAGE';
+}
+
 function getRodada(id) {
   if (id <= 24) return 1; if (id <= 48) return 2; if (id <= 72) return 3;
   if (id <= 88) return 4; if (id <= 96) return 5; if (id <= 100) return 6;
@@ -2745,10 +2755,13 @@ function calcGamePoints(user, gameId) {
   if (!user) return 0;
   const s = S.settings; const r = S.results[gameId]; const b = (user.bets||{})[gameId];
   if (!r || (r.status !== 'finished' && r.status !== 'live') || !b || r.h === null) return 0;
+  // Mata-mata com placar empatado = prorrogação/pênaltis ainda não contabilizados.
+  // Aguarda o resultado final antes de distribuir pontos.
+  if (isKnockoutGame(gameId) && r.h === r.a) return 0;
   let pts = 0;
+  const game = GAMES.find(g=>g.id===gameId);
   if (b.h === r.h && b.a === r.a) {
     pts += s.exact;
-    const game = GAMES.find(g=>g.id===gameId);
     if (game && game.phase === 'Semifinal') pts += s.semi;
     if (game && game.phase === 'Final') pts += s.final;
   } else if (getWDL(b.h,b.a) === getWDL(r.h,r.a)) { pts += s.result; }
@@ -3071,7 +3084,9 @@ function calcPoints(user) {
   GAMES.forEach(g => {
     const r = S.results[g.id]; const b = (user.bets||{})[g.id];
     if (!r || (r.status !== 'finished' && r.status !== 'live') || !b || r.h === null) return;
-    
+    // Mata-mata com empate = prorrogação/pênaltis ainda não contabilizados → não pontua.
+    if (isKnockoutGame(g.id) && r.h === r.a) return;
+
     if (b.h===r.h && b.a===r.a) { 
       total+=s.exact; exact++; streak++; 
       if(streak>maxStreak)maxStreak=streak; 
@@ -3296,9 +3311,12 @@ function renderGameCard(game) {
 
   let outcome='', cardClass='';
   if (r.status==='finished' && myBet && r.h!==null) {
-    if (myBet.h===r.h && myBet.a===r.a)                          { outcome='exact';     cardClass='exact'; }
-    else if (getWDL(myBet.h,myBet.a)===getWDL(r.h,r.a))         { outcome='result-ok'; cardClass='result-ok'; }
-    else                                                           { outcome='wrong';    cardClass='wrong'; }
+    if (isKnockoutGame(game.id) && r.h === r.a) {
+      // Mata-mata empatado nos 90min: prorrogação/pênaltis pendentes → não é resultado final.
+      outcome='pending-ko'; cardClass='';
+    } else if (myBet.h===r.h && myBet.a===r.a)             { outcome='exact';     cardClass='exact'; }
+    else if (getWDL(myBet.h,myBet.a)===getWDL(r.h,r.a))   { outcome='result-ok'; cardClass='result-ok'; }
+    else                                                     { outcome='wrong';     cardClass='wrong'; }
   }
 
   const isFinished = status === 'finished';
@@ -3322,7 +3340,12 @@ function renderGameCard(game) {
     </div>`;
   }
 
-  const realScore = r.h!==null ? `<div class="real-score">${r.h}–${r.a}</div>` : `<div class="vs-label">VS</div>`;
+  const isKoPending = r.h !== null && isKnockoutGame(game.id) && r.h === r.a;
+  const realScore = r.h!==null
+    ? isKoPending
+      ? `<div class="real-score">${r.h}–${r.a}<span style="display:block;font-size:10px;font-weight:700;color:var(--gold);letter-spacing:1px;text-align:center;">⏱ PRORR.</span></div>`
+      : `<div class="real-score">${r.h}–${r.a}</div>`
+    : `<div class="vs-label">VS</div>`;
 
   let betSection = '';
   if (!locked) {
@@ -3344,10 +3367,11 @@ function renderGameCard(game) {
   }
 
   let badge = '';
-  if      (outcome==='exact')     badge = `<div class="bet-result-badge exact">⭐ PLACAR EXATO +${S.settings.exact}pts</div>`;
-  else if (outcome==='result-ok') badge = `<div class="bet-result-badge result-ok">✅ RESULTADO CERTO +${S.settings.result}pts</div>`;
-  else if (outcome==='wrong')     badge = `<div class="bet-result-badge wrong">❌ ERROU 0 pts</div>`;
-  else if (myBet)                 badge = `<div class="bet-result-badge pending">⏳ AGUARDANDO RESULTADO</div>`;
+  if      (outcome==='exact')      badge = `<div class="bet-result-badge exact">⭐ PLACAR EXATO +${S.settings.exact}pts</div>`;
+  else if (outcome==='result-ok')  badge = `<div class="bet-result-badge result-ok">✅ RESULTADO CERTO +${S.settings.result}pts</div>`;
+  else if (outcome==='wrong')      badge = `<div class="bet-result-badge wrong">❌ ERROU 0 pts</div>`;
+  else if (outcome==='pending-ko') badge = `<div class="bet-result-badge pending">⏱ AGUARDANDO RESULTADO FINAL (PRORR./PEN.)</div>`;
+  else if (myBet)                  badge = `<div class="bet-result-badge pending">⏳ AGUARDANDO RESULTADO</div>`;
 
   const filterEmail = (S.viewingUser && S.viewingUser !== S.me) ? S.viewingUser : null;
   const othersWithBet = Object.values(S.users).filter(u => {
@@ -3369,7 +3393,7 @@ const rows = othersWithBet.map(u => {
       const isMeRow   = u.email === S.me;
 
       let scoreClass = '';
-      if (r.status==='finished' && ub && r.h!==null) {
+      if (r.status==='finished' && ub && r.h!==null && !(isKnockoutGame(game.id) && r.h === r.a)) {
         if (ub.h===r.h && ub.a===r.a)                       scoreClass='exact-sc';
         else if (getWDL(ub.h,ub.a)===getWDL(r.h,r.a))       scoreClass='result-sc';
         else                                                  scoreClass='wrong-sc';
@@ -3553,7 +3577,10 @@ function showHistoryModal(email, type) {
       const b = u.bets[g.id];
       const s = S.settings;
       let pts = 0, msg = '';
-      if (b.h===r.h && b.a===r.a) {
+      const koPending = isKnockoutGame(g.id) && r && r.h !== null && r.h === r.a;
+      if (koPending) {
+        msg = `⏱ Aguard. resultado final (${b.h}-${b.a})`;
+      } else if (b.h===r.h && b.a===r.a) {
         pts += s.exact;
         msg = `⭐ Exato (${b.h}-${b.a})`;
         if(g.phase==='Semifinal') { pts+=s.semi; msg+=' + Semi'; }
@@ -3564,15 +3591,32 @@ function showHistoryModal(email, type) {
       } else {
         msg = `❌ Errou (${b.h}-${b.a})`;
       }
-      if (pts > 0) {
-        const hFlag = g.hFlag || '🏳️';
-        const aFlag = g.aFlag || '🏳️';
+      const hFlag = g.hFlag || '🏳️';
+      const aFlag = g.aFlag || '🏳️';
+      const scoreLabel = r.h !== null ? `<span style="font-size:11px;color:var(--muted);margin-left:4px">(${r.h}–${r.a})</span>` : '';
+      if (koPending) {
+        html += `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;opacity:0.75;">
+          <span>
+            <span style="font-size:14px;">${hFlag} ${esc(g.hCode)} <span style="color:var(--muted);font-size:11px">vs</span> ${esc(g.aCode)} ${aFlag} ${scoreLabel}</span>
+            <br><span style="font-size:12px;color:var(--gold)">${msg}</span>
+          </span>
+          <span style="color:var(--gold);font-size:12px;white-space:nowrap;">—</span>
+        </div>`;
+      } else if (pts > 0) {
         html += `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;">
           <span>
-            <span style="font-size:14px;">${hFlag} ${esc(g.hCode)} <span style="color:var(--muted);font-size:11px">vs</span> ${esc(g.aCode)} ${aFlag}</span>
+            <span style="font-size:14px;">${hFlag} ${esc(g.hCode)} <span style="color:var(--muted);font-size:11px">vs</span> ${esc(g.aCode)} ${aFlag} ${scoreLabel}</span>
             <br><span style="font-size:12px;color:var(--muted)">${msg}</span>
           </span>
           <span style="color:var(--gold);font-weight:bold;white-space:nowrap;">+${pts}</span>
+        </div>`;
+      } else {
+        html += `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;opacity:0.7;">
+          <span>
+            <span style="font-size:14px;">${hFlag} ${esc(g.hCode)} <span style="color:var(--muted);font-size:11px">vs</span> ${esc(g.aCode)} ${aFlag} ${scoreLabel}</span>
+            <br><span style="font-size:12px;color:#ff7b7b">${msg}</span>
+          </span>
+          <span style="color:#ff7b7b;font-weight:bold;white-space:nowrap;">0</span>
         </div>`;
       }
     });
@@ -4601,12 +4645,13 @@ document.getElementById('pe-champion').value  = u.champion  || '';
   // ──────────────────────────────────────────────
 
   const history = GAMES.filter(g=>(S.results[g.id]||{}).status==='finished'&&(u.bets||{})[g.id]).map(g => {
-    
     const r=S.results[g.id]; const b=u.bets[g.id];
+    const koPending = isKnockoutGame(g.id) && r.h !== null && r.h === r.a;
     let label='❌ Errou', cls='var(--red)', p=0;
-    if (b.h===r.h&&b.a===r.a) { label=`⭐ Exato`; cls='var(--green)'; p=S.settings.exact; }
+    if (koPending) { label='⏱ Aguard. resultado final'; cls='var(--gold)'; p=0; }
+    else if (b.h===r.h&&b.a===r.a) { label=`⭐ Exato`; cls='var(--green)'; p=S.settings.exact; }
     else if (getWDL(b.h,b.a)===getWDL(r.h,r.a)) { label='✅ Resultado'; cls='#7b8fe8'; p=S.settings.result; }
-    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--dark3);border-radius:8px;margin-bottom:6px;border-left:3px solid ${cls}"><span style="font-size:13px">${g.hCode} ${b.h}–${b.a} ${g.aCode}</span><span style="font-size:12px;color:var(--muted)">Real: ${r.h}–${r.a}</span><span style="font-size:13px;font-weight:600;color:${cls}">${label} +${p}pts</span></div>`;
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--dark3);border-radius:8px;margin-bottom:6px;border-left:3px solid ${cls}"><span style="font-size:13px">${g.hCode} ${b.h}–${b.a} ${g.aCode}</span><span style="font-size:12px;color:var(--muted)">Real: ${r.h}–${r.a}</span><span style="font-size:13px;font-weight:600;color:${cls}">${label}${p>0?' +'+p+'pts':''}</span></div>`;
   }).join('') || '<div style="color:var(--muted);font-size:13px;padding:16px 0">Nenhum jogo encerrado ainda.</div>';
   document.getElementById('p-history').innerHTML = history;
 }
@@ -5708,9 +5753,11 @@ function raceBuildSnapshots(tipo) {
          // LÓGICA: PONTOS NORMAIS E BÔNUS
          const r = S.results[g.id];
          const b = userObj.bets ? userObj.bets[g.id] : null;
+         // calcGamePoints já ignora mata-mata empatado (prorrogação pendente)
          let gain = calcGamePoints(userObj, g.id);
+         const koPending = isKnockoutGame(g.id) && r && r.h !== null && r.h === r.a;
          
-         if (b && r && r.h !== null) {
+         if (b && r && r.h !== null && !koPending) {
              if (b.h === r.h && b.a === r.a) {
                  u._streak++;
                  if (u._streak === 3) {
