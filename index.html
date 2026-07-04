@@ -3400,16 +3400,21 @@ function renderGameCard(game) {
     const myMestreCount = countVotesInGame(S.me, game.id, 'mestre');
     const voteLocked = isVoteLocked(game);
 
-const rows = othersWithBet.map(u => {
+const isBlindStage = ['SEMI_FINALS', 'THIRD_PLACE', 'FINAL'].includes(game.stage);
+
+    const rows = othersWithBet.map(u => {
       const ub   = (u.bets||{})[game.id];
       const apostaKey = `aposta_${game.id}_${normEmail(u.email)}`;
       const votersObj = (S.apostas||{})[apostaKey]||{};
       const myVote    = votersObj[S.me];
       const isMeRow   = u.email === S.me;
 
+      // NOVO: Verifica se deve ocultar o palpite do oponente
+      const hideGuess = isBlindStage && !locked && !isMeRow;
+
       let scoreClass = '';
-  if (r.status==='finished' && ub && r.h!==null && !(isKnockoutGame(game.id) && r.h === r.a && r.status !== 'finished')) {
-    if (ub.h===r.h && ub.a===r.a)                       scoreClass='exact-sc';
+      if (r.status==='finished' && ub && r.h!==null && !(isKnockoutGame(game.id) && r.h === r.a && r.status !== 'finished')) {
+        if (ub.h===r.h && ub.a===r.a)                       scoreClass='exact-sc';
         else if (getWDL(ub.h,ub.a)===getWDL(r.h,r.a))       scoreClass='result-sc';
         else                                                  scoreClass='wrong-sc';
       }
@@ -3456,6 +3461,9 @@ const rows = othersWithBet.map(u => {
         }
       } else if (isMeRow) {
         voteHtml = `<span style="font-size:11px;color:var(--muted)">Você</span>`;
+      } else if (hideGuess) {
+        // NOVO: Se está oculto, não permite botões de voto ainda
+        voteHtml = `<span style="font-size:11px;color:var(--gold);font-weight:bold;">🔒 Oculto</span>`;
       } else if (!voteLocked) {
         let currentIcon = '🏴‍☠️';
         if (myVote === 'bosta') currentIcon = '💩';
@@ -3474,22 +3482,28 @@ const rows = othersWithBet.map(u => {
       const allVoters = (S.apostas||{})[apostaKey2] || {};
       let bostaFaces = '', mestreFaces = '', alvoFaces = '';
       
-      Object.entries(allVoters).forEach(([ve, vtype]) => {
-        const voter = S.users[ve];
-        const faceAv = voter && voter.avatar ? `<img src="${voter.avatar}">` : '🧑';
-        if (vtype === 'bosta') bostaFaces += `<div class="voter-face bosta-face" title="${voter?voter.name:ve}">${faceAv}</div>`;
-        else if (vtype === 'mestre') mestreFaces += `<div class="voter-face mestre-face" title="${voter?voter.name:ve}">${faceAv}</div>`;
-        else if (vtype === 'alvo') alvoFaces += `<div class="voter-face alvo-face" title="${voter?voter.name:ve}">${faceAv}</div>`;
-      });
+      // Oculta visualmente os rostos de quem já votou se o palpite está em blind bet
+      if (!hideGuess) {
+        Object.entries(allVoters).forEach(([ve, vtype]) => {
+          const voter = S.users[ve];
+          const faceAv = voter && voter.avatar ? `<img src="${voter.avatar}">` : '🧑';
+          if (vtype === 'bosta') bostaFaces += `<div class="voter-face bosta-face" title="${voter?voter.name:ve}">${faceAv}</div>`;
+          else if (vtype === 'mestre') mestreFaces += `<div class="voter-face mestre-face" title="${voter?voter.name:ve}">${faceAv}</div>`;
+          else if (vtype === 'alvo') alvoFaces += `<div class="voter-face alvo-face" title="${voter?voter.name:ve}">${faceAv}</div>`;
+        });
+      }
       
       const bostaGroup = bostaFaces ? `<div class="voter-group"><span class="voter-type-icon">💩</span>${bostaFaces}</div>` : `<span style="color:var(--dark4);font-size:11px;">—</span>`;
       const mestreGroup = mestreFaces ? `<div class="voter-group"><span class="voter-type-icon" style="color:var(--green)">✅</span>${mestreFaces}</div>` : `<span style="color:var(--dark4);font-size:11px;">—</span>`;
       const alvoGroup = alvoFaces ? `<div class="voter-group"><span class="voter-type-icon icon-zica">💩</span>${alvoFaces}</div>` : `<span style="color:var(--dark4);font-size:11px;">—</span>`;
 
+      // Substitui o palpite visual por 🔒 caso oculto
+      const displayScore = hideGuess ? '🔒' : (ub ? `${ub.h}–${ub.a}` : '?–?');
+
       return `<div class="palpite-row">
         <div class="pr-col-av"><div class="pr-avatar">${av}</div></div>
         <div class="pr-col-name pr-name">${esc(u.name)}</div>
-        <div class="pr-col-score pr-score ${scoreClass}">${ub?`${ub.h}–${ub.a}`:'?–?'}</div>
+        <div class="pr-col-score pr-score ${scoreClass}">${displayScore}</div>
         <div class="pr-col-bosta">${bostaGroup}</div>
         <div class="pr-col-mestre">${mestreGroup}</div>
         <div class="pr-col-alvo">${alvoGroup}</div>
@@ -3500,9 +3514,15 @@ const rows = othersWithBet.map(u => {
     const bLeft = Math.max(0, 2 - myBostaCount);
     const mLeft = Math.max(0, 2 - myMestreCount);
     const aLeft = Math.max(0, 1 - countVotesInGame(S.me, game.id, 'alvo'));
-    const limitBar = (!voteLocked && r.status !== 'finished')
-      ? `<div class="vote-limit-info">Votos restantes neste jogo: 💩 ${bLeft} | ✅ ${mLeft} | <span class="icon-zica">💩</span> ${aLeft} · Bloqueia ${S.settings.lockMinsVote??10}min antes</div>`
-      : '';
+    
+    let limitBar = '';
+    if (!voteLocked && r.status !== 'finished') {
+      if (isBlindStage && !locked) {
+        limitBar = `<div class="vote-limit-info" style="color:var(--gold); font-weight:bold;">Votos extras serão liberados APÓS o bloqueio dos palpites</div>`;
+      } else {
+        limitBar = `<div class="vote-limit-info">Votos restantes neste jogo: 💩 ${bLeft} | ✅ ${mLeft} | <span class="icon-zica">💩</span> ${aLeft} · Bloqueia ${S.settings.lockMinsVote??10}min antes</div>`;
+      }
+    }
     
     palpiteListHtml = `<div class="palpite-list">
       <div class="palpite-list-header">🎯 Palpites dos jogadores${filterEmail?' · filtrado':''}</div>
