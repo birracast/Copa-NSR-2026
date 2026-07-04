@@ -1621,10 +1621,11 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
     <div class="settings-grid">
       <div class="set-card">
         <h3>🎯 Pontuação</h3>
-        <div class="pts-row"><div class="pts-label">⭐ Placar exato</div><input type="number" class="pts-inp" id="s-exact" value="10" min="1" max="50" onchange="saveSettings()"></div>
-        <div class="pts-row"><div class="pts-label">✅ Resultado certo</div><input type="number" class="pts-inp" id="s-result" value="5" min="1" max="30" onchange="saveSettings()"></div>
-        <div class="pts-row"><div class="pts-label">🌟 Bônus 3 exatos seguidos</div><input type="number" class="pts-inp" id="s-streak" value="5" min="0" max="20" onchange="saveSettings()"></div>
-        <div class="pts-row"><div class="pts-label"><img src="taca.png" alt="Troféu" style="height: 1.2em; vertical-align: text-bottom; margin-right: 4px;"> Bônus semifinal exato</div><input type="number" class="pts-inp" id="s-semi" value="15" min="0" max="50" onchange="saveSettings()"></div>
+        <div class="pts-row"><div class="pts-label">⭐ Placar exato (Grupos/16 avos)</div><input type="number" class="pts-inp" id="s-exact" value="10" min="1" max="50" onchange="saveSettings()"></div>
+        <div class="pts-row"><div class="pts-label">✅ Resultado certo (Grupos/16 avos)</div><input type="number" class="pts-inp" id="s-result" value="5" min="1" max="30" onchange="saveSettings()"></div>
+        <div class="pts-row"><div class="pts-label">🔥 Placar exato (Oitavas em diante)</div><input type="number" class="pts-inp" id="s-exact-ko" value="20" min="1" max="50" onchange="saveSettings()"></div>
+        <div class="pts-row"><div class="pts-label">🎯 Resultado certo (Oitavas em diante)</div><input type="number" class="pts-inp" id="s-result-ko" value="10" min="1" max="30" onchange="saveSettings()"></div>
+        <div class="pts-row"><div class="pts-label">🌟 Bônus 3 exatos seguidos</div><input type="number" class="pts-inp" id="s-streak" value="5" min="0" max="20" onchange="saveSettings()"></div>        <div class="pts-row"><div class="pts-label"><img src="taca.png" alt="Troféu" style="height: 1.2em; vertical-align: text-bottom; margin-right: 4px;"> Bônus semifinal exato</div><input type="number" class="pts-inp" id="s-semi" value="15" min="0" max="50" onchange="saveSettings()"></div>
         <div class="pts-row"><div class="pts-label">🥇 Bônus final exato</div><input type="number" class="pts-inp" id="s-final" value="25" min="0" max="100" onchange="saveSettings()"></div>
       </div>
       <div class="set-card">
@@ -2037,7 +2038,7 @@ function makeFallbackGame(data) {
 // ================================================================
 let S = {
   users: {}, me: null, results: {},
-  settings: { exact:10, result:5, streak:5, semi:15, final:25, lockMinsBet:10, lockMinsVote:1, sceneBg:false, notifMinsPre:30, notifMinsLockBet:15 },
+  settings: { exact:10, result:5, exactKo:20, resultKo:10, streak:5, semi:15, final:25, lockMinsBet:10, lockMinsVote:1, sceneBg:false, notifMinsPre:30, notifMinsLockBet:15 },
   viewingUser: null, apostas: {}, pibets: [], testMode: false
 };
 let saveTimers = {}; let adminUsers = []; let adminEditTarget = null;
@@ -2085,6 +2086,8 @@ function persistSettings() {
     sceneBg: S.settings.sceneBg,
     exact:   S.settings.exact,
     result:  S.settings.result,
+    exactKo: S.settings.exactKo,
+    resultKo: S.settings.resultKo,
     streak:  S.settings.streak,
     semi:    S.settings.semi,
     final:   S.settings.final
@@ -2760,11 +2763,15 @@ function calcGamePoints(user, gameId) {
   if (isKnockoutGame(gameId) && r.h === r.a && r.status !== 'finished') return 0;
   let pts = 0;
   const game = GAMES.find(g=>g.id===gameId);
+  const isAdvanced = game && game.stage !== 'GROUP_STAGE' && game.stage !== 'LAST_32';
+  const ptsExact = isAdvanced ? (s.exactKo || 20) : s.exact;
+  const ptsResult = isAdvanced ? (s.resultKo || 10) : s.result;
+
   if (b.h === r.h && b.a === r.a) {
-    pts += s.exact;
+    pts += ptsExact;
     if (game && game.phase === 'Semifinal') pts += s.semi;
     if (game && game.phase === 'Final') pts += s.final;
-  } else if (getWDL(b.h,b.a) === getWDL(r.h,r.a)) { pts += s.result; }
+  } else if (getWDL(b.h,b.a) === getWDL(r.h,r.a)) { pts += ptsResult; }
   return pts;
 }
 
@@ -3087,13 +3094,17 @@ function calcPoints(user) {
     // Mata-mata com empate = prorrogação/pênaltis ainda não contabilizados → não pontua (exceto se encerrado).
     if (isKnockoutGame(g.id) && r.h === r.a && r.status !== 'finished') return;
 
+    const isAdvanced = g.stage !== 'GROUP_STAGE' && g.stage !== 'LAST_32';
+    const ptsExact = isAdvanced ? (s.exactKo || 20) : s.exact;
+    const ptsResult = isAdvanced ? (s.resultKo || 10) : s.result;
+
     if (b.h===r.h && b.a===r.a) { 
-      total+=s.exact; exact++; streak++; 
+      total+=ptsExact; exact++; streak++; 
       if(streak>maxStreak)maxStreak=streak; 
       if(g.phase==='Semifinal')total+=s.semi; 
       if(g.phase==='Final')total+=s.final; 
     }
-    else if (getWDL(b.h,b.a)===getWDL(r.h,r.a)) { total+=s.result; res++; streak=0; }
+    else if (getWDL(b.h,b.a)===getWDL(r.h,r.a)) { total+=ptsResult; res++; streak=0; }
     else { streak=0; }
   });
   if (maxStreak>=3) total+=s.streak;
@@ -3367,8 +3378,12 @@ function renderGameCard(game) {
   }
 
   let badge = '';
-  if      (outcome==='exact')      badge = `<div class="bet-result-badge exact">⭐ PLACAR EXATO +${S.settings.exact}pts</div>`;
-  else if (outcome==='result-ok')  badge = `<div class="bet-result-badge result-ok">✅ RESULTADO CERTO +${S.settings.result}pts</div>`;
+  const isAdvanced = game.stage !== 'GROUP_STAGE' && game.stage !== 'LAST_32';
+  const ptsExact = isAdvanced ? (S.settings.exactKo || 20) : S.settings.exact;
+  const ptsResult = isAdvanced ? (S.settings.resultKo || 10) : S.settings.result;
+
+  if      (outcome==='exact')      badge = `<div class="bet-result-badge exact">⭐ PLACAR EXATO +${ptsExact}pts</div>`;
+  else if (outcome==='result-ok')  badge = `<div class="bet-result-badge result-ok">✅ RESULTADO CERTO +${ptsResult}pts</div>`;
   else if (outcome==='wrong')      badge = `<div class="bet-result-badge wrong">❌ ERROU 0 pts</div>`;
   else if (outcome==='pending-ko') badge = `<div class="bet-result-badge pending">⏱ AGUARDANDO RESULTADO FINAL (PRORR./PEN.)</div>`;
   else if (myBet)                  badge = `<div class="bet-result-badge pending">⏳ AGUARDANDO RESULTADO</div>`;
@@ -3576,17 +3591,21 @@ function showHistoryModal(email, type) {
       const r = S.results[g.id];
       const b = u.bets[g.id];
       const s = S.settings;
+      const isAdvanced = g.stage !== 'GROUP_STAGE' && g.stage !== 'LAST_32';
+      const ptsExact = isAdvanced ? (S.settings.exactKo || 20) : S.settings.exact;
+      const ptsResult = isAdvanced ? (S.settings.resultKo || 10) : S.settings.result;
+
       let pts = 0, msg = '';
       const koPending = isKnockoutGame(g.id) && r && r.h !== null && r.h === r.a && r.status !== 'finished';
       if (koPending) {
         msg = `⏱ Aguard. resultado final (${b.h}-${b.a})`;
       } else if (b.h===r.h && b.a===r.a) {
-        pts += s.exact;
+        pts += ptsExact;
         msg = `⭐ Exato (${b.h}-${b.a})`;
-        if(g.phase==='Semifinal') { pts+=s.semi; msg+=' + Semi'; }
-        if(g.phase==='Final')     { pts+=s.final; msg+=' + Final'; }
+        if(g.phase==='Semifinal') { pts+=S.settings.semi; msg+=' + Semi'; }
+        if(g.phase==='Final')     { pts+=S.settings.final; msg+=' + Final'; }
       } else if (getWDL(b.h,b.a)===getWDL(r.h,r.a)) {
-        pts += s.result;
+        pts += ptsResult;
         msg = `✅ Resultado (${b.h}-${b.a})`;
       } else {
         msg = `❌ Errou (${b.h}-${b.a})`;
@@ -4486,6 +4505,8 @@ function renderSettingsPage() {
   const admin = isAdmin();
   document.getElementById('s-exact').value  = S.settings.exact;
   document.getElementById('s-result').value = S.settings.result;
+  document.getElementById('s-exact-ko').value  = S.settings.exactKo ?? 20;
+  document.getElementById('s-result-ko').value = S.settings.resultKo ?? 10;
   document.getElementById('s-streak').value = S.settings.streak;
   document.getElementById('s-semi').value   = S.settings.semi;
   document.getElementById('s-final').value  = S.settings.final;
@@ -4498,8 +4519,7 @@ function renderSettingsPage() {
   const sceneBgToggle = document.getElementById('s-scene-bg');
   if (sceneBgToggle) sceneBgToggle.checked = !!S.settings.sceneBg;
   
-  ['s-exact','s-result','s-streak','s-semi','s-final','s-lock-bet','s-lock-vote','s-scene-bg','adm-game','adm-a','adm-b','adm-status','s-notif-x','s-notif-y','s-notif-msg'].forEach(id => {
-    const el = document.getElementById(id); if(el) el.disabled = !admin;
+  ['s-exact','s-result','s-exact-ko','s-result-ko','s-streak','s-semi','s-final','s-lock-bet','s-lock-vote','s-scene-bg','adm-game','adm-a','adm-b','adm-status','s-notif-x','s-notif-y','s-notif-msg'].forEach(id => {    const el = document.getElementById(id); if(el) el.disabled = !admin;
   });
   document.querySelectorAll('#page-settings button').forEach(btn => { btn.disabled=!admin; btn.style.opacity=admin?'1':'0.5'; });
   let ex = document.getElementById('readonly-warning');
@@ -4530,6 +4550,8 @@ async function saveSettings() {
 
   const exact = parseInt(document.getElementById('s-exact').value)||10;
   const result = parseInt(document.getElementById('s-result').value)||5;
+  const exactKo = parseInt(document.getElementById('s-exact-ko').value)||20;
+  const resultKo = parseInt(document.getElementById('s-result-ko').value)||10;
   const streak = parseInt(document.getElementById('s-streak').value)||5;
   const semi = parseInt(document.getElementById('s-semi').value)||15;
   const final = parseInt(document.getElementById('s-final').value)||25;
@@ -4543,12 +4565,12 @@ async function saveSettings() {
   try {
     const res = await gsCall({
       action: 'adminSaveSettings', callerEmail: S.me,
-      exact, result, streak, semi, final, lockMinsBet, lockMinsVote
+      exact, result, exactKo, resultKo, streak, semi, final, lockMinsBet, lockMinsVote
     });
     
     if (!res.ok) { toast(res.error || 'Erro ao salvar na nuvem', 'err'); return; }
     
-    S.settings = { ...S.settings, exact, result, streak, semi, final, lockMinsBet, lockMinsVote };
+    S.settings = { ...S.settings, exact, result, exactKo, resultKo, streak, semi, final, lockMinsBet, lockMinsVote };
     
     renderGames(); renderRanking(); renderStats();
     toast('✅ Regras salvas no Google Sheets!', 'ok');
@@ -4647,10 +4669,15 @@ document.getElementById('pe-champion').value  = u.champion  || '';
   const history = GAMES.filter(g=>(S.results[g.id]||{}).status==='finished'&&(u.bets||{})[g.id]).map(g => {
     const r=S.results[g.id]; const b=u.bets[g.id];
     const koPending = isKnockoutGame(g.id) && r.h !== null && r.h === r.a;
+
+    const isAdvanced = g.stage !== 'GROUP_STAGE' && g.stage !== 'LAST_32';
+    const ptsExact = isAdvanced ? (S.settings.exactKo || 20) : S.settings.exact;
+    const ptsResult = isAdvanced ? (S.settings.resultKo || 10) : S.settings.result;
+
     let label='❌ Errou', cls='var(--red)', p=0;
     if (koPending) { label='⏱ Aguard. resultado final'; cls='var(--gold)'; p=0; }
-    else if (b.h===r.h&&b.a===r.a) { label=`⭐ Exato`; cls='var(--green)'; p=S.settings.exact; }
-    else if (getWDL(b.h,b.a)===getWDL(r.h,r.a)) { label='✅ Resultado'; cls='#7b8fe8'; p=S.settings.result; }
+    else if (b.h===r.h&&b.a===r.a) { label=`⭐ Exato`; cls='var(--green)'; p=ptsExact; }
+    else if (getWDL(b.h,b.a)===getWDL(r.h,r.a)) { label='✅ Resultado'; cls='#7b8fe8'; p=ptsResult; }
     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--dark3);border-radius:8px;margin-bottom:6px;border-left:3px solid ${cls}"><span style="font-size:13px">${g.hCode} ${b.h}–${b.a} ${g.aCode}</span><span style="font-size:12px;color:var(--muted)">Real: ${r.h}–${r.a}</span><span style="font-size:13px;font-weight:600;color:${cls}">${label}${p>0?' +'+p+'pts':''}</span></div>`;
   }).join('') || '<div style="color:var(--muted);font-size:13px;padding:16px 0">Nenhum jogo encerrado ainda.</div>';
   document.getElementById('p-history').innerHTML = history;
