@@ -2911,10 +2911,10 @@ function calcPiratecasDetailed(email) {
            if (pbt.status === 'creator_won') {
                // Lado Favor Ganhou -> Dividem o valor base (W) entre os vencedores, arredondando para baixo
                if (isFavor) { diff = Math.floor(W / numFavor); label = '🏆 A Favor venceu'; }
-               if (isContra) { diff = -W; label = '🏆 A Favor venceu'; }
+               if (isContra) { diff = -Math.floor(W / numContra); label = '🏆 A Favor venceu'; }
            } else {
                // Lado Contra Ganhou -> Dividem o valor base (W) entre os vencedores, arredondando para baixo
-               if (isFavor) { diff = -W; label = '🎯 Contra venceram'; }
+               if (isFavor) { diff = -Math.floor(W / numFavor); label = '🎯 Contra venceram'; }
                if (isContra) { diff = Math.floor(W / numContra); label = '🎯 Contra venceram'; }
            }
        }
@@ -3067,9 +3067,9 @@ function calcPiratecasFiltered(email, filter) {
       if (numContra > 0) {
         if (pbt.status === 'creator_won') {
           if (isFavor)  { diff =  Math.floor(W / numFavor);  label = '🏆 A Favor venceu'; }
-          if (isContra) { diff = -W;                          label = '🏆 A Favor venceu'; }
+          if (isContra) { diff = -Math.floor(W / numContra); label = '🏆 A Favor venceu'; }
         } else {
-          if (isFavor)  { diff = -W;                          label = '🎯 Contra venceram'; }
+          if (isFavor)  { diff = -Math.floor(W / numFavor);  label = '🎯 Contra venceram'; }
           if (isContra) { diff =  Math.floor(W / numContra); label = '🎯 Contra venceram'; }
         }
       }
