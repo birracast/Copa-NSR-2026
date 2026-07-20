@@ -1629,6 +1629,20 @@ body.light-mode .group-game-row.finished:hover { background: rgba(230,29,37,0.14
         <div class="pts-row"><div class="pts-label">🥇 Bônus final exato</div><input type="number" class="pts-inp" id="s-final" value="25" min="0" max="100" onchange="saveSettings()"></div>
       </div>
       <div class="set-card">
+        <h3>🏆 Resultado Oficial do Torneio</h3>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Preencha aqui o resultado real da Copa assim que sair. O sistema soma os pontos automaticamente para quem acertou nos "Palpites Finais".</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div class="fgroup" style="margin-bottom:0"><label class="flabel">🥇 Campeão <span style="color:var(--gold);font-size:10px">(+15 pts)</span></label><select id="s-final-champion" class="finput" onchange="saveFinalResults()"></select></div>
+          <div class="fgroup" style="margin-bottom:0"><label class="flabel">🥈 Vice-Campeão <span style="color:var(--muted);font-size:10px">(+10 pts)</span></label><select id="s-final-runner-up" class="finput" onchange="saveFinalResults()"></select></div>
+        </div>
+        <div class="fgroup"><label class="flabel">⚽ Artilheiro <span style="color:var(--muted);font-size:10px">(+10 pts)</span></label><input type="text" id="s-final-top-scorer" class="finput" placeholder="Nome do jogador" onchange="saveFinalResults()"></div>
+        <div class="fgroup"><label class="flabel">⚽ Vice-Artilheiro <span style="color:var(--muted);font-size:10px">(+5 pts)</span></label><input type="text" id="s-final-runner-scorer" class="finput" placeholder="Nome do jogador" onchange="saveFinalResults()"></div>
+        <div class="fgroup"><label class="flabel">🎯 Garçom <span style="color:var(--muted);font-size:10px">(+5 pts)</span></label><input type="text" id="s-final-assist-king" class="finput" placeholder="Nome do jogador" onchange="saveFinalResults()"></div>
+        <div style="background:var(--dark3);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--muted);line-height:1.5;margin-top:4px;">
+          ⚠️ Para o Artilheiro/Vice/Garçom, digite o nome <strong style="color:var(--text)">exatamente igual</strong> ao que os jogadores usaram no palpite deles (maiúsculas/minúsculas não importam, mas a grafia sim).
+        </div>
+      </div>
+      <div class="set-card">
         <h3>⏰ Bloqueio de Palpites</h3>
         <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">Define quantos minutos antes do início do jogo os palpites e votos Bosta/Mestre ficam bloqueados.</div>
         <div class="pts-row">
@@ -2038,7 +2052,8 @@ function makeFallbackGame(data) {
 // ================================================================
 let S = {
   users: {}, me: null, results: {},
-  settings: { exact:10, result:5, exactKo:20, resultKo:10, streak:5, semi:15, final:25, lockMinsBet:10, lockMinsVote:1, sceneBg:false, notifMinsPre:30, notifMinsLockBet:15 },
+  settings: { exact:10, result:5, exactKo:20, resultKo:10, streak:5, semi:15, final:25, lockMinsBet:10, lockMinsVote:1, sceneBg:false, notifMinsPre:30, notifMinsLockBet:15,
+    finalChampion:'', finalRunnerUp:'', finalTopScorer:'', finalRunnerScorer:'', finalAssistKing:'' },
   viewingUser: null, apostas: {}, pibets: [], testMode: false
 };
 let saveTimers = {}; let adminUsers = []; let adminEditTarget = null;
@@ -2090,7 +2105,12 @@ function persistSettings() {
     resultKo: S.settings.resultKo,
     streak:  S.settings.streak,
     semi:    S.settings.semi,
-    final:   S.settings.final
+    final:   S.settings.final,
+    finalChampion:     S.settings.finalChampion,
+    finalRunnerUp:     S.settings.finalRunnerUp,
+    finalTopScorer:    S.settings.finalTopScorer,
+    finalRunnerScorer: S.settings.finalRunnerScorer,
+    finalAssistKing:   S.settings.finalAssistKing
   };
   localStorage.setItem('bolao26_settings', JSON.stringify({ version:1, results:S.results, settings:localSettings }));
 }
@@ -2101,6 +2121,11 @@ function hydrateSettings() {
     S.results  = d.results  || {};
     if (d.settings && d.settings.sceneBg !== undefined) {
       S.settings.sceneBg = d.settings.sceneBg;
+    }
+    if (d.settings) {
+      ['finalChampion','finalRunnerUp','finalTopScorer','finalRunnerScorer','finalAssistKing'].forEach(k => {
+        if (d.settings[k]) S.settings[k] = d.settings[k];
+      });
     }
   }
   applySceneBackground();
@@ -3086,6 +3111,41 @@ function calcPiratecasFiltered(email, filter) {
 function calcUserPiratecasGrupos(email)  { return calcPiratecasFiltered(email, 'grupos').total; }
 function calcUserPiratecasMataMata(email){ return calcPiratecasFiltered(email, 'matamata').total; }
 
+// ================================================================
+//  PALPITES FINAIS DO TORNEIO (Campeão, Vice, Artilheiro, Vice-Artilheiro, Garçom)
+// ================================================================
+// Pontos fixos, iguais aos exibidos na tela de Perfil (aba "Palpites Finais").
+const FINAL_PICKS_POINTS = { champion:15, runnerUp:10, topScorer:10, runnerScorer:5, assistKing:5 };
+
+function normalizeFinalPick(v) {
+  return (v||'').toString().trim().toLowerCase();
+}
+
+// Compara os palpites finais do usuário com o gabarito oficial (S.settings.finalXxx).
+// Campeão/Vice comparam o código do time (ex: "BRA"); Artilheiro/Vice/Garçom comparam nome (case-insensitive).
+function calcFinalPicksPoints(user) {
+  const s = S.settings;
+  let total = 0;
+  const hits = { champion:false, runnerUp:false, topScorer:false, runnerScorer:false, assistKing:false };
+
+  if (s.finalChampion && user.champion && normalizeFinalPick(user.champion) === normalizeFinalPick(s.finalChampion)) {
+    total += FINAL_PICKS_POINTS.champion; hits.champion = true;
+  }
+  if (s.finalRunnerUp && user.runnerUp && normalizeFinalPick(user.runnerUp) === normalizeFinalPick(s.finalRunnerUp)) {
+    total += FINAL_PICKS_POINTS.runnerUp; hits.runnerUp = true;
+  }
+  if (s.finalTopScorer && user.topScorer && normalizeFinalPick(user.topScorer) === normalizeFinalPick(s.finalTopScorer)) {
+    total += FINAL_PICKS_POINTS.topScorer; hits.topScorer = true;
+  }
+  if (s.finalRunnerScorer && user.runnerScorer && normalizeFinalPick(user.runnerScorer) === normalizeFinalPick(s.finalRunnerScorer)) {
+    total += FINAL_PICKS_POINTS.runnerScorer; hits.runnerScorer = true;
+  }
+  if (s.finalAssistKing && user.assistKing && normalizeFinalPick(user.assistKing) === normalizeFinalPick(s.finalAssistKing)) {
+    total += FINAL_PICKS_POINTS.assistKing; hits.assistKing = true;
+  }
+  return { total, hits };
+}
+
 function calcPoints(user) {
   const s = S.settings; let total=0, exact=0, res=0, streak=0, maxStreak=0;
   GAMES.forEach(g => {
@@ -3108,7 +3168,9 @@ function calcPoints(user) {
     else { streak=0; }
   });
   if (maxStreak>=3) total+=s.streak;
-  return { total, exact, res, piratecas: calcUserPiratecas(user.email), maxStreak }; 
+  const finalPicks = calcFinalPicksPoints(user);
+  total += finalPicks.total;
+  return { total, exact, res, piratecas: calcUserPiratecas(user.email), maxStreak, finalPicks }; 
 }
 
 // ================================================================
@@ -3668,6 +3730,24 @@ function showHistoryModal(email, type) {
         <span style="color:var(--gold);font-weight:bold;white-space:nowrap;">+${S.settings.streak}</span>
       </div>`;
     }
+
+    // ── Palpites Finais do Torneio (só mostra os que já têm gabarito oficial definido) ──
+    const fpRows = [
+      { key:'champion',     icon:'🥇', label:'Campeão',        pick:u.champion,     official:S.settings.finalChampion },
+      { key:'runnerUp',     icon:'🥈', label:'Vice-Campeão',   pick:u.runnerUp,     official:S.settings.finalRunnerUp },
+      { key:'topScorer',    icon:'⚽', label:'Artilheiro',      pick:u.topScorer,    official:S.settings.finalTopScorer },
+      { key:'runnerScorer', icon:'⚽', label:'Vice-Artilheiro', pick:u.runnerScorer, official:S.settings.finalRunnerScorer },
+      { key:'assistKing',   icon:'🎯', label:'Garçom',          pick:u.assistKing,   official:S.settings.finalAssistKing },
+    ].filter(row => row.official);
+    fpRows.forEach(row => {
+      const hit = ptsObj.finalPicks.hits[row.key];
+      const pts = hit ? FINAL_PICKS_POINTS[row.key] : 0;
+      const color = hit ? 'var(--gold)' : '#ff7b7b';
+      html += `<div style="padding:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <span style="font-size:14px;">${row.icon} ${row.label}<br><span style="font-size:12px;color:var(--muted)">Seu palpite: ${esc(row.pick||'—')}</span></span>
+        <span style="color:${color};font-weight:bold;white-space:nowrap;">${hit?'+':''}${pts}</span>
+      </div>`;
+    });
     
     html += `<div style="padding:8px;text-align:right;font-weight:bold;color:var(--gold);">Total: ${ptsObj.total} pts</div>`;
 
@@ -4538,8 +4618,31 @@ function renderSettingsPage() {
   if (notifY) notifY.value = S.settings.notifMinsLockBet ?? 15;
   const sceneBgToggle = document.getElementById('s-scene-bg');
   if (sceneBgToggle) sceneBgToggle.checked = !!S.settings.sceneBg;
+
+  // ── Resultado Oficial do Torneio ──
+  const fTeamsMap = new Map();
+  GAMES.forEach(g => {
+    const valid = code => code && code !== 'CASA' && code !== 'FORA' &&
+      !['R32','R16','QF','SF','FIN','3P'].some(p => code.includes(p));
+    if (valid(g.hCode)) fTeamsMap.set(g.hCode, { code: g.hCode, name: g.hName || g.hCode });
+    if (valid(g.aCode)) fTeamsMap.set(g.aCode, { code: g.aCode, name: g.aName || g.aCode });
+  });
+  const fTeamOpts = ['<option value="">-- Selecione --</option>',
+    ...[...fTeamsMap.values()].sort((a,b) => a.name.localeCompare(b.name))
+      .map(t => `<option value="${esc(t.code)}">${esc(t.name)}</option>`)
+  ].join('');
+  const fChampEl = document.getElementById('s-final-champion');
+  const fRunnerUpEl = document.getElementById('s-final-runner-up');
+  if (fChampEl) { fChampEl.innerHTML = fTeamOpts; fChampEl.value = S.settings.finalChampion || ''; }
+  if (fRunnerUpEl) { fRunnerUpEl.innerHTML = fTeamOpts; fRunnerUpEl.value = S.settings.finalRunnerUp || ''; }
+  const fTopScorerEl = document.getElementById('s-final-top-scorer');
+  const fRunnerScorerEl = document.getElementById('s-final-runner-scorer');
+  const fAssistKingEl = document.getElementById('s-final-assist-king');
+  if (fTopScorerEl) fTopScorerEl.value = S.settings.finalTopScorer || '';
+  if (fRunnerScorerEl) fRunnerScorerEl.value = S.settings.finalRunnerScorer || '';
+  if (fAssistKingEl) fAssistKingEl.value = S.settings.finalAssistKing || '';
   
-  ['s-exact','s-result','s-exact-ko','s-result-ko','s-streak','s-semi','s-final','s-lock-bet','s-lock-vote','s-scene-bg','adm-game','adm-a','adm-b','adm-status','s-notif-x','s-notif-y','s-notif-msg'].forEach(id => {    const el = document.getElementById(id); if(el) el.disabled = !admin;
+  ['s-exact','s-result','s-exact-ko','s-result-ko','s-streak','s-semi','s-final','s-lock-bet','s-lock-vote','s-scene-bg','adm-game','adm-a','adm-b','adm-status','s-notif-x','s-notif-y','s-notif-msg','s-final-champion','s-final-runner-up','s-final-top-scorer','s-final-runner-scorer','s-final-assist-king'].forEach(id => {    const el = document.getElementById(id); if(el) el.disabled = !admin;
   });
   document.querySelectorAll('#page-settings button').forEach(btn => { btn.disabled=!admin; btn.style.opacity=admin?'1':'0.5'; });
   let ex = document.getElementById('readonly-warning');
@@ -4594,6 +4697,40 @@ async function saveSettings() {
     
     renderGames(); renderRanking(); renderStats();
     toast('✅ Regras salvas no Google Sheets!', 'ok');
+  } catch(e) {
+    toast('Erro de conexão ao salvar na nuvem.', 'err');
+  }
+}
+
+// ================================================================
+//  RESULTADO OFICIAL DO TORNEIO (Campeão/Vice/Artilheiro/Vice-Art./Garçom)
+// ================================================================
+async function saveFinalResults() {
+  if (!isAdmin()) { toast('Acesso negado','warn'); return; }
+
+  const finalChampion     = document.getElementById('s-final-champion').value.trim();
+  const finalRunnerUp     = document.getElementById('s-final-runner-up').value.trim();
+  const finalTopScorer    = document.getElementById('s-final-top-scorer').value.trim();
+  const finalRunnerScorer = document.getElementById('s-final-runner-scorer').value.trim();
+  const finalAssistKing   = document.getElementById('s-final-assist-king').value.trim();
+
+  S.settings = { ...S.settings, finalChampion, finalRunnerUp, finalTopScorer, finalRunnerScorer, finalAssistKing };
+  persistSettings();
+  renderRanking(); renderStats();
+  toast('Enviando resultado oficial para o Google Sheets...', 'info');
+
+  try {
+    // Reenvia o pacote de configurações inteiro (regras de pontuação + resultado oficial),
+    // usando a mesma ação 'adminSaveSettings' já usada para o restante das configurações.
+    const res = await gsCall({
+      action: 'adminSaveSettings', callerEmail: S.me,
+      exact: S.settings.exact, result: S.settings.result, exactKo: S.settings.exactKo, resultKo: S.settings.resultKo,
+      streak: S.settings.streak, semi: S.settings.semi, final: S.settings.final,
+      lockMinsBet: S.settings.lockMinsBet, lockMinsVote: S.settings.lockMinsVote,
+      finalChampion, finalRunnerUp, finalTopScorer, finalRunnerScorer, finalAssistKing
+    });
+    if (!res.ok) { toast(res.error || 'Erro ao salvar na nuvem (verifique se o Apps Script já aceita esses campos)', 'err'); return; }
+    toast('✅ Resultado oficial salvo! Pontos atualizados no ranking.', 'ok');
   } catch(e) {
     toast('Erro de conexão ao salvar na nuvem.', 'err');
   }
