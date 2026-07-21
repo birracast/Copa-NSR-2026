@@ -1,10 +1,5 @@
 [
   {
-    "title": "Private video",
-    "videoId": "hjukuF95m5Q",
-    "thumbnail": ""
-  },
-  {
     "title": "O FUTEBOL DOMINANTE! TODOS OS GOLS DA ESPANHA CAMPEÃ NA COPA DO MUNDO FIFA™ 2026",
     "videoId": "Fylg0rfEyA0",
     "thumbnail": "https://i.ytimg.com/vi/Fylg0rfEyA0/mqdefault.jpg"
@@ -23,5 +18,10 @@
     "title": "A FINALISTA DO COLETIVO! TODOS OS GOLS DA ESPANHA ATÉ A FINAL DA COPA DO MUNDO FIFA™ 2026",
     "videoId": "uvBHFws3_tg",
     "thumbnail": "https://i.ytimg.com/vi/uvBHFws3_tg/mqdefault.jpg"
+  },
+  {
+    "title": "FINALISTA NA BASE DA GARRA! TODOS OS GOLS DA ARGENTINA ATÉ A FINAL DA COPA DO MUNDO 2026",
+    "videoId": "gorpaSh-ZO8",
+    "thumbnail": "https://i.ytimg.com/vi/gorpaSh-ZO8/mqdefault.jpg"
   }
 ]
